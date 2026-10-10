@@ -29,4 +29,8 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
-      - run: npm audit --audit-level=high
+      # Blocks on what ships to users only. Dev tools are covered by the next step.
+      - run: npm audit --omit=dev --audit-level=high
+      # Non-blocking: keeps dev-tool findings visible in the log.
+      - run: npm audit
+        continue-on-error: true
