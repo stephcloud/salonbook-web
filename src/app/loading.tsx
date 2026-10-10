@@ -1,6 +1,9 @@
 export default function Loading() {
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-2 px-4 py-12">
+    <main
+      id="main-content"
+      className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-2 px-4 py-12"
+    >
       <p role="status" className="font-semibold">
         Waking up the server...
       </p>

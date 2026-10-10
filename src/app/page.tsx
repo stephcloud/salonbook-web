@@ -21,7 +21,10 @@ export default async function Home() {
   const health = await getHealth();
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-6 px-4 py-12">
+    <main
+      id="main-content"
+      className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-6 px-4 py-12"
+    >
       <h1 className="text-2xl font-bold">SalonBook</h1>
       <Card>
         <CardHeader>
