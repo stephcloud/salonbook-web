@@ -87,11 +87,13 @@ src/
 ## Code rules
 - Default to Server Components; add `"use client"` only when needed (state, effects, browser APIs, event handlers).
 - All backend calls go through `lib/api.ts`; never scatter `fetch` with hardcoded URLs.
+- Pages that fetch from the API must be dynamic (for example export const dynamic = "force-dynamic"), never prerendered at build time. The build must not call the API.
 - Every page that fetches data handles loading, error (with retry) and empty states.
 - 401: clear the cookie and go to `/login?next=`. 403: show a role message. 409 on booking: slot taken, refresh slots. 422: show the server's field errors.
 - Forms: validate on the client, and always handle server validation errors too.
 - Cancel dialog explains the refund rule: refund only if cancelled more than `cancellation_hours` before the start. Use `refund_due` from the API for the outcome.
 - Accessibility: semantic HTML, a label on every input, `aria-label` on icon-only buttons, visible focus, keyboard-friendly, text contrast of 4.5:1.
+- Every page's `<main>` has `id="main-content"` so the skip link works.
 - Mobile-first, responsive with Tailwind breakpoints.
 - Use `next/image` for images and `next/link` for navigation.
 - No `any`; no secrets in client code; no `console.log` left in commits.
