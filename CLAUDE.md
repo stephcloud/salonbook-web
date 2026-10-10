@@ -39,6 +39,7 @@
 - Booking statuses: pending, confirmed, cancelled, completed, no_show. Payment statuses: pending, paid, refund_pending, refunded, failed.
 - A pending booking is held for 15 minutes. A client can have at most 3 pending bookings.
 - Slots come back as ISO times with +01:00. Show them as given. `starts_at` on booking create takes the same value.
+- `GET /stylists/{id}/slots` needs a signed-in user (any role), so the booking wizard is behind login.
 - `POST /bookings/{id}/pay` returns `authorization_url` (Paystack, test mode only).
 - NEVER trust the Paystack redirect. Save the booking id in sessionStorage before redirecting, then on `/payment/callback` poll `GET /bookings/{id}` every 2 seconds for up to 60 seconds.
 - Public stylist read: id, name, image_url, service_ids. Salons: name, address, phone, image_url, cancellation_hours, deposit_amount (no description, rating or hours).
@@ -49,6 +50,7 @@
 `API_URL`
 
 ## Deployment
+- Live URL: https://salonbook-web-theta.vercel.app
 - Frontend on Vercel. Set `API_URL` in the Vercel dashboard for Production, Preview and Development. Redeploy after changing a variable.
 - Function region Frankfurt (fra1), next to the Render backend.
 - Never put secrets in client code. Server-only variables have no `NEXT_PUBLIC_` prefix.
