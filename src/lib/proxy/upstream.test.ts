@@ -42,14 +42,11 @@ describe("fetchUpstream", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it("retries a POST after a connection failure", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockRejectedValueOnce(new TypeError("fetch failed"))
-      .mockResolvedValueOnce(new Response("ok"));
+  it("does not replay a POST after a connection error either", async () => {
+    const fetchMock = vi.fn().mockRejectedValue(new TypeError("fetch failed"));
     vi.stubGlobal("fetch", fetchMock);
     const result = await fetchUpstream("https://x/y", init("POST"));
-    expect(result.ok).toBe(true);
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(result).toEqual({ ok: false, reason: "unreachable" });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

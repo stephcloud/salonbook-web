@@ -25,6 +25,9 @@ describe("buildTargetUrl", () => {
     [[""]],
     [["bad%zz"]],
     [["a%00b"]],
+    [["login?"]],
+    [["login#x"]],
+    [["100%25"]],
   ])("rejects %j", (segments) => {
     expect(buildTargetUrl(API, segments, "")).toBeNull();
   });

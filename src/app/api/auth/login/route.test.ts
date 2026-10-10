@@ -109,14 +109,20 @@ describe("POST /api/auth/login", () => {
   });
 
   it("passes 422 field errors through", async () => {
-    const detail = [{ loc: ["body", "email"], msg: "bad", type: "x" }];
+    const detail = [
+      { loc: ["body", "email"], msg: "bad", type: "x", input: "hunter2" },
+    ];
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => Response.json({ detail }, { status: 422 })),
     );
     const res = await POST(loginRequest({ email: "x", password: "y" }));
     expect(res.status).toBe(422);
-    expect((await res.json()).detail).toEqual(detail);
+    const text = await res.text();
+    expect(text).not.toContain("hunter2");
+    expect(JSON.parse(text).detail).toEqual([
+      { loc: ["body", "email"], msg: "bad" },
+    ]);
   });
 
   it("returns a clear 502 when the API is unreachable", async () => {

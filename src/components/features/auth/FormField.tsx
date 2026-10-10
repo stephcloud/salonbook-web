@@ -19,8 +19,9 @@ export function FormField({
   const errorId = `${id}-error`;
   const hintId = `${id}-hint`;
   const describedBy =
-    [error ? errorId : null, hint ? hintId : null].filter(Boolean).join(" ") ||
-    undefined;
+    [error ? errorId : null, hint && !error ? hintId : null]
+      .filter(Boolean)
+      .join(" ") || undefined;
 
   return (
     <div className="flex flex-col gap-1.5">
@@ -28,6 +29,7 @@ export function FormField({
       <Input
         id={id}
         name={id}
+        required
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy}
         {...inputProps}

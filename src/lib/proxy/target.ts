@@ -15,6 +15,7 @@ function isUnsafeSegment(segment: string): boolean {
     decoded === ".." ||
     decoded.includes("/") ||
     decoded.includes("\\") ||
+    /[?#%]/.test(decoded) ||
     /[\u0000-\u001f\u007f]/.test(decoded)
   );
 }
@@ -31,5 +32,5 @@ export function buildTargetUrl(
   if (segments.length === 0 || segments.some(isUnsafeSegment)) return null;
   const base = apiUrl.replace(/\/+$/, "");
   const query = search && search !== "?" ? search : "";
-  return `${base}/${segments.join("/")}${query}`;
+  return `${base}/${segments.map(encodeURIComponent).join("/")}${query}`;
 }

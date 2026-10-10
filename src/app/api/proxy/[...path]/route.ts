@@ -18,10 +18,14 @@ type RouteContext = { params: Promise<{ path: string[] }> };
 // Login must go through /api/auth/login so the token is never sent to the
 // browser. Everything else is forwarded as is.
 function isBlocked(segments: string[]): boolean {
-  return (
-    segments[0]?.toLowerCase() === "auth" &&
-    segments[1]?.toLowerCase() === "login"
-  );
+  const [first, second] = segments.map((segment) => {
+    try {
+      return decodeURIComponent(segment).toLowerCase();
+    } catch {
+      return segment.toLowerCase();
+    }
+  });
+  return first === "auth" && second === "login";
 }
 
 async function forward(request: NextRequest, { params }: RouteContext) {

@@ -15,7 +15,7 @@ export function AuthShell({ title, subtitle, children }: AuthShellProps) {
     >
       <Link
         href="/"
-        className="inline-flex min-h-11 items-center self-start rounded-full text-lg font-bold text-primary focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-none"
+        className="inline-flex min-h-11 items-center self-start rounded-full px-2 text-lg font-bold text-primary focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-none"
       >
         SalonBook
       </Link>

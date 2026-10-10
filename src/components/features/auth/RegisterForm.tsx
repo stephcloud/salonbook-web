@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,14 @@ export function RegisterForm({ next }: RegisterFormProps) {
   const [accountCreated, setAccountCreated] = useState(false);
   const [pending, setPending] = useState(false);
   const waking = useSlowPending(pending);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Move focus to the first invalid field so keyboard and screen-reader users land on the problem.
+  useEffect(() => {
+    formRef.current
+      ?.querySelector<HTMLElement>('[aria-invalid="true"]')
+      ?.focus();
+  }, [errors]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -75,7 +83,12 @@ export function RegisterForm({ next }: RegisterFormProps) {
   }
 
   return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
+    <form
+      ref={formRef}
+      onSubmit={onSubmit}
+      noValidate
+      className="flex flex-col gap-4"
+    >
       {formError ? (
         <p
           role="alert"
@@ -98,6 +111,8 @@ export function RegisterForm({ next }: RegisterFormProps) {
         label="Email"
         type="email"
         autoComplete="email"
+        autoCapitalize="none"
+        spellCheck={false}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         error={errors.email}
@@ -124,7 +139,7 @@ export function RegisterForm({ next }: RegisterFormProps) {
         Already have an account?{" "}
         <Link
           href={next ? `/login?next=${encodeURIComponent(next)}` : "/login"}
-          className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline"
+          className="inline-flex min-h-11 items-center rounded-full px-1 font-semibold text-primary underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-none"
         >
           Sign in
         </Link>

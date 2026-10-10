@@ -48,7 +48,20 @@ export function RoleChoice({ value, onChange, error }: RoleChoiceProps) {
                 onChange={() => onChange(option.value)}
                 className="sr-only"
               />
-              <span className="font-semibold">{option.title}</span>
+              <span className="flex items-center gap-2 font-semibold">
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "flex size-5 shrink-0 items-center justify-center rounded-full border-2",
+                    checked ? "border-primary" : "border-input",
+                  )}
+                >
+                  {checked ? (
+                    <span className="size-2.5 rounded-full bg-primary" />
+                  ) : null}
+                </span>
+                {option.title}
+              </span>
               <span className="text-sm text-muted-foreground">
                 {option.text}
               </span>
@@ -57,7 +70,11 @@ export function RoleChoice({ value, onChange, error }: RoleChoiceProps) {
         })}
       </div>
       {error ? (
-        <p id={errorId} className="text-sm font-medium text-destructive">
+        <p
+          id={errorId}
+          role="alert"
+          className="text-sm font-medium text-destructive"
+        >
           {error}
         </p>
       ) : null}

@@ -2,7 +2,7 @@ const IDEMPOTENT_METHODS = new Set(["GET", "HEAD", "PUT", "DELETE"]);
 
 // The free tier can need about 50 seconds to wake up. Idempotent calls get a
 // shorter attempt and a second try; others get one long attempt and are never
-// replayed after a timeout, so a slow POST cannot be applied twice.
+// replayed, so a slow or reset POST cannot be applied twice.
 const IDEMPOTENT_TIMEOUT_MS = 40_000;
 const SINGLE_TIMEOUT_MS = 90_000;
 
@@ -36,7 +36,8 @@ export async function fetchUpstream(
     } catch (error) {
       const timedOut = isTimeout(error);
       lastReason = timedOut ? "timeout" : "unreachable";
-      if (timedOut && !idempotent) break;
+      // Never replay a POST/PATCH: a reset after sending could apply it twice.
+      if (!idempotent) break;
     }
   }
   return { ok: false, reason: lastReason };

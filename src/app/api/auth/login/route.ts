@@ -54,13 +54,26 @@ export async function POST(request: Request) {
   }
   if (login.response.status === 422) {
     const body: unknown = await login.response.json().catch(() => null);
-    const detail =
+    const raw =
       body && typeof body === "object" && "detail" in body
         ? (body as { detail: unknown }).detail
         : undefined;
+    // Keep only loc and msg: FastAPI's `input` echoes the submitted password.
+    const detail = Array.isArray(raw)
+      ? raw.map((item: { loc?: unknown; msg?: unknown }) => ({
+          loc: item?.loc,
+          msg: item?.msg,
+        }))
+      : undefined;
     return NextResponse.json(
       { error: "Check the form.", detail },
       { status: 422 },
+    );
+  }
+  if (login.response.status === 429) {
+    return NextResponse.json(
+      { error: "Too many attempts. Please wait a moment and try again." },
+      { status: 429 },
     );
   }
   if (!login.response.ok) {
@@ -92,7 +105,15 @@ export async function POST(request: Request) {
       { status: 502 },
     );
   }
-  const user = (await me.response.json()) as UserResponse;
+  const user = (await me.response
+    .json()
+    .catch(() => null)) as UserResponse | null;
+  if (!user) {
+    return NextResponse.json(
+      { error: "Could not sign in. Please try again." },
+      { status: 502 },
+    );
+  }
 
   const response = NextResponse.json({ user });
   response.cookies.set(TOKEN_COOKIE, token.access_token, tokenCookieOptions());

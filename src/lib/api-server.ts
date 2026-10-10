@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { components } from "@/lib/api-types";
@@ -12,7 +13,7 @@ export type CurrentUser = components["schemas"]["UserResponse"];
  * The signed-in user from GET /auth/me, or null when there is no cookie or the
  * token is no longer valid. Reading cookies makes the calling page dynamic.
  */
-export async function getCurrentUser(): Promise<CurrentUser | null> {
+export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const token = (await cookies()).get(TOKEN_COOKIE)?.value;
   const base = apiBaseUrl();
   if (!token || !base) return null;
@@ -24,9 +25,14 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
       authorization: `Bearer ${token}`,
     }),
   });
-  if (!result.ok || !result.response.ok) return null;
+  // Only a rejected token means "signed out". An outage must not bounce
+  // signed-in users to /login, so it throws and app/error.tsx offers a retry.
+  if (!result.ok) throw new Error("The server is not responding.");
+  const { status } = result.response;
+  if (status === 401 || status === 403) return null;
+  if (!result.response.ok) throw new Error("Could not load your account.");
   return (await result.response.json()) as CurrentUser;
-}
+});
 
 export function loginRedirectUrl(next: string): string {
   const safe = safeNextPath(next);

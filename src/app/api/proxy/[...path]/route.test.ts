@@ -113,6 +113,19 @@ describe("/api/proxy/[...path]", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it.each([["login?"], ["login#"], ["%6Cogin"], ["LOGIN"]])(
+    "blocks login even when disguised as %s",
+    async (last) => {
+      const fetchMock = vi.fn(async () => Response.json({}));
+      vi.stubGlobal("fetch", fetchMock);
+      const res = await POST(makeRequest("x", { method: "POST", body: "{}" }), {
+        params: Promise.resolve({ path: ["auth", last] }),
+      });
+      expect(res.status).toBe(404);
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
+
   it("clears the cookie and returns 401 when the API says 401", async () => {
     vi.stubGlobal(
       "fetch",
