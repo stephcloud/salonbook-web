@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "types": "openapi-typescript https://salonbook-api-etyz.onrender.com/openapi.json -o src/lib/api-types.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -28,6 +29,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.0",
+    "openapi-typescript": "^7.13.0",
     "prettier": "^3.9.9",
     "tailwindcss": "^4",
     "typescript": "^5"
