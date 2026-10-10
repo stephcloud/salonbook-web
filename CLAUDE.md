@@ -49,6 +49,7 @@
 `API_URL`
 
 ## Deployment
+- Live URL: https://salonbook-web-theta.vercel.app
 - Frontend on Vercel. Set `API_URL` in the Vercel dashboard for Production, Preview and Development. Redeploy after changing a variable.
 - Function region Frankfurt (fra1), next to the Render backend.
 - Never put secrets in client code. Server-only variables have no `NEXT_PUBLIC_` prefix.

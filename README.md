@@ -1,5 +1,7 @@
 # Claude Next.js Starter
 
+**Live site:** https://salonbook-web-theta.vercel.app
+
 Template for Next.js frontends built with Claude Code.
 
 ## Use
