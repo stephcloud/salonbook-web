@@ -1,7 +1,104 @@
-// Single place for backend calls. Server side only for now: the browser will
-// call /api/proxy/* once the route handlers exist.
+// Single place for backend calls. On the server this talks to API_URL directly
+// (see also api-server.ts for the signed-in user); in the browser everything
+// goes through /api/proxy/* and /api/auth/* on our own domain.
+
+import { safeNextPath } from "@/lib/auth/safe-next";
 
 const ATTEMPT_TIMEOUT_MS = 30_000;
+
+export type FieldErrors = Record<string, string>;
+
+export class ApiError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string,
+    public readonly fieldErrors: FieldErrors = {},
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
+/**
+ * Turns FastAPI's 422 `detail` array into { fieldName: message }. The field
+ * is the last part of `loc` (["body", "email"] -> "email"); the first message
+ * for a field wins.
+ */
+export function parseFieldErrors(detail: unknown): FieldErrors {
+  const out: FieldErrors = {};
+  if (!Array.isArray(detail)) return out;
+  for (const item of detail) {
+    if (!item || typeof item !== "object") continue;
+    const { loc, msg } = item as { loc?: unknown; msg?: unknown };
+    if (!Array.isArray(loc) || typeof msg !== "string") continue;
+    const field = loc[loc.length - 1];
+    if (typeof field === "string" && !(field in out)) out[field] = msg;
+  }
+  return out;
+}
+
+function messageFrom(body: unknown, fallback: string): string {
+  if (body && typeof body === "object") {
+    const { error, detail } = body as { error?: unknown; detail?: unknown };
+    if (typeof error === "string") return error;
+    if (typeof detail === "string") return detail;
+  }
+  return fallback;
+}
+
+async function request<T>(
+  url: string,
+  init: { method?: string; body?: unknown },
+  redirectOn401: boolean,
+): Promise<T> {
+  const hasBody = init.body !== undefined;
+  const res = await fetch(url, {
+    method: init.method ?? (hasBody ? "POST" : "GET"),
+    headers: {
+      accept: "application/json",
+      ...(hasBody ? { "content-type": "application/json" } : {}),
+    },
+    body: hasBody ? JSON.stringify(init.body) : undefined,
+    credentials: "same-origin",
+  });
+
+  if (res.status === 204) return undefined as T;
+  const body: unknown = await res.json().catch(() => null);
+
+  if (res.ok) return body as T;
+
+  if (res.status === 401 && redirectOn401) {
+    const here = safeNextPath(
+      window.location.pathname + window.location.search,
+    );
+    window.location.assign(
+      here ? `/login?next=${encodeURIComponent(here)}` : "/login",
+    );
+  }
+
+  const detail =
+    body && typeof body === "object"
+      ? (body as { detail?: unknown }).detail
+      : undefined;
+  throw new ApiError(
+    res.status,
+    messageFrom(body, "Something went wrong. Please try again."),
+    res.status === 422 ? parseFieldErrors(detail) : {},
+  );
+}
+
+/** Browser call to the backend via our proxy. A 401 sends the user to /login. */
+export function apiFetch<T>(
+  path: string,
+  init: { method?: string; body?: unknown } = {},
+): Promise<T> {
+  return request<T>(`/api/proxy/${path.replace(/^\/+/, "")}`, init, true);
+}
+
+/** Browser call to our own /api/auth/* handlers. A 401 here means wrong password. */
+export function authFetch<T>(path: string, body?: unknown): Promise<T> {
+  return request<T>(`/api/auth/${path}`, { method: "POST", body }, false);
+}
 
 export type HealthResult = { ok: true } | { ok: false; message: string };
 
