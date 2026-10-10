@@ -58,7 +58,10 @@ export async function POST(request: Request) {
       body && typeof body === "object" && "detail" in body
         ? (body as { detail: unknown }).detail
         : undefined;
-    return NextResponse.json({ error: "Check the form.", detail }, { status: 422 });
+    return NextResponse.json(
+      { error: "Check the form.", detail },
+      { status: 422 },
+    );
   }
   if (!login.response.ok) {
     return NextResponse.json(
