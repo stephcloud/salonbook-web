@@ -39,7 +39,3 @@ export async function requireUser(next: string): Promise<CurrentUser> {
   if (!user) redirect(loginRedirectUrl(next));
   return user;
 }
-
-export function homeForRole(role: string): string {
-  return role === "owner" ? "/dashboard" : "/salons";
-}
