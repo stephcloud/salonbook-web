@@ -1,0 +1,8 @@
+.next
+node_modules
+package-lock.json
+src/lib/api-types.ts
+.claude
+.github
+CLAUDE.md
+README.md
