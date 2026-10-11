@@ -57,7 +57,9 @@ describe("validateSalon", () => {
       expect(validateSalon({ ...GOOD, name: "   " }).name).toBe(
         "Enter the salon name.",
       );
-      expect(validateSalon({ ...GOOD, name: "a".repeat(100) }).name).toBeUndefined();
+      expect(
+        validateSalon({ ...GOOD, name: "a".repeat(100) }).name,
+      ).toBeUndefined();
       expect(validateSalon({ ...GOOD, name: "a".repeat(101) }).name).toBe(
         "Use at most 100 characters.",
       );
@@ -67,7 +69,9 @@ describe("validateSalon", () => {
       expect(validateSalon({ ...GOOD, address: "" }).address).toBe(
         "Enter the salon address.",
       );
-      expect(validateSalon({ ...GOOD, address: "a".repeat(255) }).address).toBeUndefined();
+      expect(
+        validateSalon({ ...GOOD, address: "a".repeat(255) }).address,
+      ).toBeUndefined();
       expect(validateSalon({ ...GOOD, address: "a".repeat(256) }).address).toBe(
         "Use at most 255 characters.",
       );
@@ -81,7 +85,9 @@ describe("validateSalon", () => {
         "Use at least 3 characters.",
       );
       expect(validateSalon({ ...GOOD, phone: "080" }).phone).toBeUndefined();
-      expect(validateSalon({ ...GOOD, phone: "1".repeat(30) }).phone).toBeUndefined();
+      expect(
+        validateSalon({ ...GOOD, phone: "1".repeat(30) }).phone,
+      ).toBeUndefined();
       expect(validateSalon({ ...GOOD, phone: "1".repeat(31) }).phone).toBe(
         "Use at most 30 characters.",
       );
@@ -122,13 +128,15 @@ describe("validateSalon", () => {
   describe("cancellation hours", () => {
     it.each([["0"], ["24"], ["720"]])("accepts %s", (hours) => {
       expect(
-        validateSalon({ ...GOOD, cancellation_hours: hours }).cancellation_hours,
+        validateSalon({ ...GOOD, cancellation_hours: hours })
+          .cancellation_hours,
       ).toBeUndefined();
     });
 
     it.each([["721"], ["1000"]])("rejects %s as out of range", (hours) => {
       expect(
-        validateSalon({ ...GOOD, cancellation_hours: hours }).cancellation_hours,
+        validateSalon({ ...GOOD, cancellation_hours: hours })
+          .cancellation_hours,
       ).toBe("Use a number from 0 to 720.");
     });
 
@@ -157,14 +165,19 @@ describe("validateSalon", () => {
       },
     );
 
-    it.each([[""], ["0"], ["-5"], ["abc"], ["5000.123"], ["1000000.01"], ["2000000"]])(
-      "rejects %j with the range message in naira",
-      (deposit) => {
-        expect(
-          validateSalon({ ...GOOD, deposit_amount: deposit }).deposit_amount,
-        ).toBe(DEPOSIT_RANGE_MESSAGE);
-      },
-    );
+    it.each([
+      [""],
+      ["0"],
+      ["-5"],
+      ["abc"],
+      ["5000.123"],
+      ["1000000.01"],
+      ["2000000"],
+    ])("rejects %j with the range message in naira", (deposit) => {
+      expect(
+        validateSalon({ ...GOOD, deposit_amount: deposit }).deposit_amount,
+      ).toBe(DEPOSIT_RANGE_MESSAGE);
+    });
 
     it("states the range in naira, not kobo", () => {
       expect(DEPOSIT_RANGE_MESSAGE).toContain("₦1,000,000");
@@ -217,7 +230,9 @@ describe("toSalonPayload", () => {
 
 describe("valuesFromSalon", () => {
   it("shows the stored kobo as naira and an empty image as empty text", () => {
-    expect(valuesFromSalon({ ...SALON, image_url: null, deposit_amount: 500050 })).toEqual({
+    expect(
+      valuesFromSalon({ ...SALON, image_url: null, deposit_amount: 500050 }),
+    ).toEqual({
       name: "Pink Studio",
       address: "12 Admiralty Way, Lekki",
       phone: "08012345678",
@@ -266,7 +281,9 @@ describe("changedFields (the body for editing)", () => {
   });
 
   it("does not count extra spaces as a change", () => {
-    expect(changedFields(SALON, { ...values(), name: " Pink Studio  " })).toEqual({});
+    expect(
+      changedFields(SALON, { ...values(), name: " Pink Studio  " }),
+    ).toEqual({});
   });
 
   it("clears the image with an explicit null when the field is emptied", () => {
@@ -277,7 +294,10 @@ describe("changedFields (the body for editing)", () => {
 
   it("changes the image when a different link is entered, and does nothing when none was set and none is entered", () => {
     expect(
-      changedFields(SALON, { ...values(), image_url: "https://example.com/b.png" }),
+      changedFields(SALON, {
+        ...values(),
+        image_url: "https://example.com/b.png",
+      }),
     ).toEqual({ image_url: "https://example.com/b.png" });
     const noImage = { ...SALON, image_url: null };
     expect(changedFields(noImage, valuesFromSalon(noImage))).toEqual({});

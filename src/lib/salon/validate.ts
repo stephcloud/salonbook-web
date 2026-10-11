@@ -171,7 +171,8 @@ export function salonServerErrors(serverErrors: FieldErrors): {
   const fields: FieldErrors = {};
   const other: string[] = [];
   for (const [field, message] of Object.entries(serverErrors)) {
-    if (field === "deposit_amount") fields.deposit_amount = DEPOSIT_RANGE_MESSAGE;
+    if (field === "deposit_amount")
+      fields.deposit_amount = DEPOSIT_RANGE_MESSAGE;
     else if ((SALON_FIELDS as readonly string[]).includes(field))
       fields[field] = message;
     else other.push(message);
