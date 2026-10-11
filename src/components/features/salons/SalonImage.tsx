@@ -3,12 +3,12 @@ import { cn } from "@/lib/utils";
 
 type SalonImageProps = {
   src: string | null;
-  name: string;
+  alt: string;
   className?: string;
 };
 
 /** Owner photo, or a soft pink gradient tile when there is none. */
-export function SalonImage({ src, name, className }: SalonImageProps) {
+export function SalonImage({ src, alt, className }: SalonImageProps) {
   return (
     <div
       className={cn(
@@ -19,7 +19,7 @@ export function SalonImage({ src, name, className }: SalonImageProps) {
       {src ? (
         <Image
           src={src}
-          alt={`Photo of ${name}`}
+          alt={alt}
           fill
           unoptimized
           sizes="(min-width: 768px) 50vw, 100vw"

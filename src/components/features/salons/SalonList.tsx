@@ -37,7 +37,10 @@ export function SalonList({ salons, page, pageSize }: SalonListProps) {
         ))}
       </ul>
       {hasPrevious || hasNext ? (
-        <nav aria-label="Salon pages" className="flex gap-3">
+        <nav
+          aria-label="Salon pages"
+          className="flex flex-wrap items-center gap-3"
+        >
           {hasPrevious ? (
             <Link
               href={page === 2 ? "/salons" : `/salons?page=${page - 1}`}
@@ -46,6 +49,7 @@ export function SalonList({ salons, page, pageSize }: SalonListProps) {
               Previous
             </Link>
           ) : null}
+          <span className="text-sm text-muted-foreground">Page {page}</span>
           {hasNext ? (
             <Link
               href={`/salons?page=${page + 1}`}

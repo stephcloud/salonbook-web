@@ -20,7 +20,7 @@ export function StylistAvatar({ name, src, className }: StylistAvatarProps) {
       {src ? (
         <Image
           src={src}
-          alt={`Photo of ${name}`}
+          alt=""
           fill
           unoptimized
           sizes="56px"

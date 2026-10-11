@@ -4,6 +4,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Salon, Service } from "@/lib/api";
 import { CopySalonLinkButton } from "./CopySalonLinkButton";
 import { LoadError } from "./LoadError";
+import { LoadingShell } from "./LoadingShell";
+import { SalonHeader } from "./SalonHeader";
 import { SalonImage } from "./SalonImage";
 import { SalonList } from "./SalonList";
 import { ServiceList } from "./ServiceList";
@@ -135,15 +137,16 @@ describe("image fallbacks", () => {
     expect(screen.queryByRole("img")).toBeNull();
   });
 
-  it("shows the photo when the stylist has one", () => {
-    render(<StylistAvatar name="Amara" src="https://img.test/a.jpg" />);
-    expect(
-      screen.getByRole("img", { name: "Photo of Amara" }),
-    ).toBeInTheDocument();
+  it("renders the stylist photo as decorative, since the name sits beside it", () => {
+    const { container } = render(
+      <StylistAvatar name="Amara" src="https://img.test/a.jpg" />,
+    );
+    expect(container.querySelector("img")).toHaveAttribute("alt", "");
+    expect(screen.queryByTestId("stylist-initial")).toBeNull();
   });
 
   it("shows the gradient tile when the salon has no photo", () => {
-    render(<SalonImage src={null} name="Pink Studio" />);
+    render(<SalonImage src={null} alt="Photo of Pink Studio" />);
     expect(screen.getByTestId("salon-image-fallback")).toBeInTheDocument();
     expect(screen.queryByRole("img")).toBeNull();
   });
@@ -160,7 +163,12 @@ describe("CopySalonLinkButton", () => {
     expect(writeText).toHaveBeenCalledWith(
       `${window.location.origin}/salons/${SALON_ID}`,
     );
-    expect(await screen.findByText("Link copied")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("button", { name: "Link copied" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Salon link copied to the clipboard.",
+    );
   });
 
   it("shows the link to copy by hand when the clipboard is blocked", async () => {
@@ -170,8 +178,83 @@ describe("CopySalonLinkButton", () => {
     );
     render(<CopySalonLinkButton salonId={SALON_ID} />);
     await user.click(screen.getByRole("button", { name: "Copy salon link" }));
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "Could not copy automatically",
+    );
     expect(await screen.findByLabelText("Copy this link")).toHaveValue(
       `${window.location.origin}/salons/${SALON_ID}`,
     );
+  });
+});
+
+describe("SalonList navigation", () => {
+  const two = [
+    makeSalon({ id: "a", name: "A" }),
+    makeSalon({ id: "b", name: "B" }),
+  ];
+
+  it("goes back to /salons from page 2 and to ?page= from later pages", () => {
+    const { rerender } = render(
+      <SalonList salons={two} page={2} pageSize={5} />,
+    );
+    expect(screen.getByRole("link", { name: "Previous" })).toHaveAttribute(
+      "href",
+      "/salons",
+    );
+    expect(screen.getByText("Page 2")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Next" })).toBeNull();
+
+    rerender(<SalonList salons={two} page={3} pageSize={5} />);
+    expect(screen.getByRole("link", { name: "Previous" })).toHaveAttribute(
+      "href",
+      "/salons?page=2",
+    );
+  });
+
+  it("says 'No more salons' past the last page", () => {
+    render(<SalonList salons={[]} page={4} pageSize={20} />);
+    expect(screen.getByText("No more salons")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Back to the first page" }),
+    ).toHaveAttribute("href", "/salons");
+  });
+});
+
+describe("SalonHeader", () => {
+  it("shows the deposit, refund rule, phone link and Book now link", () => {
+    render(<SalonHeader salon={makeSalon()} />);
+    expect(screen.getByText("₦5,000")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Refund only if you cancel more than 24 hours before your appointment.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "08012345678" })).toHaveAttribute(
+      "href",
+      "tel:08012345678",
+    );
+    expect(screen.getByRole("link", { name: "Book now" })).toHaveAttribute(
+      "href",
+      `/book/${SALON_ID}`,
+    );
+  });
+
+  it("uses the singular for a one hour window", () => {
+    render(<SalonHeader salon={makeSalon({ cancellation_hours: 1 })} />);
+    expect(screen.getByText(/more than 1 hour before/)).toBeInTheDocument();
+  });
+});
+
+describe("LoadingShell", () => {
+  it("tells the visitor the server may be waking up", () => {
+    render(<LoadingShell />);
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Waking up the server...",
+    );
+  });
+
+  it("renders the detail variant too", () => {
+    render(<LoadingShell variant="detail" />);
+    expect(screen.getByRole("status")).toBeInTheDocument();
   });
 });

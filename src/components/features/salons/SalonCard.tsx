@@ -10,9 +10,9 @@ export function SalonCard({ salon }: { salon: Salon }) {
         href={`/salons/${salon.id}`}
         className="group block overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/10 outline-none transition-shadow hover:shadow-md focus-visible:ring-3 focus-visible:ring-ring"
       >
-        <SalonImage src={salon.image_url} name={salon.name} />
+        <SalonImage src={salon.image_url} alt="" />
         <div className="flex min-h-11 flex-col gap-1 p-4">
-          <h2 className="text-lg font-bold group-hover:underline">
+          <h2 className="text-lg font-bold group-hover:underline group-focus-visible:underline">
             {salon.name}
           </h2>
           <p className="flex items-start gap-1.5 text-sm text-muted-foreground">

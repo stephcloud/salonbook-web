@@ -22,7 +22,7 @@ export function SalonHeader({
     <header className="overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/10 md:grid md:grid-cols-2">
       <SalonImage
         src={salon.image_url}
-        name={salon.name}
+        alt={`Photo of ${salon.name}`}
         className="md:aspect-auto md:h-full md:min-h-64"
       />
       <div className="flex flex-col gap-3 p-4 md:p-6">
@@ -31,7 +31,7 @@ export function SalonHeader({
           <MapPin aria-hidden="true" className="mt-1 size-4 shrink-0" />
           {salon.address}
         </p>
-        <p className="flex items-center gap-2">
+        <p className="flex flex-wrap items-center gap-2 break-words">
           <Phone aria-hidden="true" className="size-4 shrink-0" />
           <a
             href={`tel:${salon.phone.replace(/\s+/g, "")}`}
@@ -52,7 +52,7 @@ export function SalonHeader({
             </dd>
           </div>
         </dl>
-        <div className="flex flex-wrap gap-3 pt-1">
+        <div className="flex flex-wrap items-start gap-3 pt-1">
           <Link
             href={`/book/${salon.id}`}
             className={buttonVariants({ size: "lg" })}
