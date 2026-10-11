@@ -52,3 +52,8 @@ const dayFormatter = new Intl.DateTimeFormat("en-CA", {
 export function lagosToday(now: Date = new Date()): string {
   return dayFormatter.format(now);
 }
+
+/** "Sat, 7 Mar 2026" for a plain "2026-03-07" calendar day (noon, so no zone can shift it). */
+export function formatLagosDay(day: string): string {
+  return formatLagosDate(`${day}T12:00:00+01:00`);
+}

@@ -51,13 +51,34 @@ describe("classifyBookingError", () => {
     });
   });
 
-  it("falls back to a network message for non-API errors and the server message otherwise", () => {
+  it("treats an unfamiliar 409 message as a taken slot (the limit is told apart only by its text)", () => {
+    expect(classifyBookingError(new ApiError(409, "Conflict")).kind).toBe(
+      "slot-taken",
+    );
+  });
+
+  it("stays quiet on a 401 because apiFetch is already redirecting to login", () => {
+    expect(
+      classifyBookingError(new ApiError(401, "Please sign in again.")),
+    ).toEqual({ kind: "signed-out", message: "Redirecting you to sign in..." });
+  });
+
+  it("falls back to a network message for non-API errors", () => {
     expect(classifyBookingError(new TypeError("fetch failed")).kind).toBe(
       "other",
     );
-    expect(classifyBookingError(new ApiError(500, "boom"))).toEqual({
+  });
+
+  it("shows other client errors as sent but hides raw server error text", () => {
+    expect(classifyBookingError(new ApiError(404, "not found"))).toEqual({
       kind: "other",
-      message: "boom",
+      message: "not found",
+    });
+    expect(
+      classifyBookingError(new ApiError(500, "Traceback (most recent call)")),
+    ).toEqual({
+      kind: "other",
+      message: "We could not create your booking. Please try again.",
     });
   });
 });
