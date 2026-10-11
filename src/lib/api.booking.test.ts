@@ -4,6 +4,8 @@ import {
   createBooking,
   getBooking,
   getSlots,
+  listBookings,
+  cancelBooking,
   payBooking,
 } from "@/lib/api";
 
@@ -162,5 +164,67 @@ describe("payBooking", () => {
       status: 409,
       message: "This booking can no longer be paid for.",
     });
+  });
+});
+
+describe("listBookings", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("asks for up to 100 bookings through the proxy by default", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse([]));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await listBookings();
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe("/api/proxy/bookings?limit=100&offset=0");
+    expect(init.method).toBe("GET");
+  });
+
+  it("passes a limit and an offset", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse([]));
+    vi.stubGlobal("fetch", fetchMock);
+    await listBookings(20, 40);
+    expect(String(fetchMock.mock.calls[0][0])).toBe(
+      "/api/proxy/bookings?limit=20&offset=40",
+    );
+  });
+});
+
+describe("cancelBooking", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("POSTs to the cancel endpoint with no body", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(jsonResponse({ id: BOOKING, refund_due: true }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await cancelBooking(BOOKING);
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe(`/api/proxy/bookings/${BOOKING}/cancel`);
+    expect(init.method).toBe("POST");
+    expect(init.body).toBeUndefined();
+    expect(result).toMatchObject({ refund_due: true });
+  });
+
+  it("encodes the id so it cannot change the path", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({}));
+    vi.stubGlobal("fetch", fetchMock);
+    await cancelBooking("a/../b");
+    expect(String(fetchMock.mock.calls[0][0])).toBe(
+      "/api/proxy/bookings/a%2F..%2Fb/cancel",
+    );
+  });
+
+  it("surfaces the API's status and message as an ApiError", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(jsonResponse({ detail: "forbidden" }, 403)),
+    );
+    const error = await cancelBooking(BOOKING).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error).toMatchObject({ status: 403, message: "forbidden" });
   });
 });

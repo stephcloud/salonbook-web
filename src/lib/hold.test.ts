@@ -116,6 +116,26 @@ describe("isHoldExpired", () => {
     ).toBe(false);
   });
 
+  it("is false for a cancelled booking whose deposit is due back, whoever cancelled it (it was paid, not an expired hold)", () => {
+    expect(
+      isHoldExpired(
+        { ...base, status: "cancelled", cancelled_at: null, refund_due: true },
+        CREATED_MS + MINUTE,
+      ),
+    ).toBe(false);
+  });
+
+  it("is still true for a cancelled booking with no cancelled_at and no refund due", () => {
+    for (const refund_due of [false, null]) {
+      expect(
+        isHoldExpired(
+          { ...base, status: "cancelled", cancelled_at: null, refund_due },
+          CREATED_MS + MINUTE,
+        ),
+      ).toBe(true);
+    }
+  });
+
   it.each(["confirmed", "completed", "no_show"])(
     "is false for a %s booking",
     (status) => {

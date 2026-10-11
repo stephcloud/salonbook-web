@@ -205,3 +205,61 @@ export function payBooking(id: string): Promise<Payment> {
     method: "POST",
   });
 }
+
+/**
+ * The signed-in client's bookings (browser). The API sorts them by start time,
+ * latest first, with no filters and no total, so the page filters and sorts
+ * them itself.
+ */
+export function listBookings(
+  limit = 100,
+  offset = 0,
+): Promise<BookingListItem[]> {
+  const query = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  });
+  return apiFetch<BookingListItem[]>(`bookings?${query.toString()}`);
+}
+
+/**
+ * Cancels a booking. `refund_due` in the answer says whether the deposit comes
+ * back. Cancelling again answers 200 with the same cancelled booking.
+ */
+export function cancelBooking(id: string): Promise<Booking> {
+  return apiFetch<Booking>(`bookings/${encodeURIComponent(id)}/cancel`, {
+    method: "POST",
+  });
+}
+
+/**
+ * A measurement taking longer than this is too uncertain to use: the server
+ * read its clock somewhere in the round trip, so the midpoint can be wrong by
+ * half of it (1 second at this limit).
+ */
+const MAX_CLOCK_ROUND_TRIP_MS = 2000;
+
+/**
+ * Measures how far this device's clock is from our server's, as "server time
+ * minus device time" in milliseconds, or null when it cannot be measured (no
+ * network, or the round trip was too slow to trust). The server read its clock
+ * about halfway through the round trip.
+ */
+export async function fetchClockSkew(): Promise<number | null> {
+  try {
+    const sentAt = Date.now();
+    const response = await fetch("/api/time", { cache: "no-store" });
+    const receivedAt = Date.now();
+    if (!response.ok) return null;
+    if (receivedAt - sentAt > MAX_CLOCK_ROUND_TRIP_MS) return null;
+    const body: unknown = await response.json();
+    const now =
+      body && typeof body === "object"
+        ? (body as { now?: unknown }).now
+        : undefined;
+    if (typeof now !== "number" || !Number.isFinite(now)) return null;
+    return now - (sentAt + receivedAt) / 2;
+  } catch {
+    return null;
+  }
+}

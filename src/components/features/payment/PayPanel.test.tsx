@@ -4,10 +4,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const getBooking = vi.fn();
 const payBooking = vi.fn();
+const fetchClockSkew = vi.fn();
 vi.mock("@/lib/api", async (importActual) => ({
   ...(await importActual<typeof import("@/lib/api")>()),
   getBooking: (...args: unknown[]) => getBooking(...args),
   payBooking: (...args: unknown[]) => payBooking(...args),
+  fetchClockSkew: () => fetchClockSkew(),
 }));
 
 const leaveTo = vi.fn();
@@ -116,6 +118,8 @@ describe("PayPanel", () => {
     vi.useFakeTimers();
     getBooking.mockReset();
     payBooking.mockReset();
+    fetchClockSkew.mockReset();
+    fetchClockSkew.mockResolvedValue(null);
     leaveTo.mockReset();
     window.sessionStorage.clear();
   });
@@ -513,6 +517,60 @@ describe("PayPanel", () => {
     it("does not re-read for an ordinary pageshow", async () => {
       renderPanel();
       await restorePage(false);
+      expect(getBooking).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("a paid booking that was cancelled", () => {
+    it("is Cancelled, not an expired hold, when refund_due is true even though cancelled_at is empty", () => {
+      renderPanel(
+        booking({
+          status: "cancelled",
+          cancelled_at: null,
+          refund_due: true,
+          payment_status: "paid",
+        }),
+        { minutesIn: 3 },
+      );
+      expect(
+        screen.getByRole("heading", { name: "This booking was cancelled" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("heading", { name: "This hold expired" }),
+      ).toBeNull();
+    });
+  });
+
+  describe("a page restored from the browser cache", () => {
+    it("re-reads the booking when the fresh clock measurement shows the page is old", async () => {
+      // The page was rendered 10 minutes before it is shown; the device clock is right.
+      const renderedAt = CREATED_MS + 2 * MINUTE;
+      vi.setSystemTime(renderedAt + 10 * MINUTE);
+      fetchClockSkew.mockResolvedValue(0);
+      getBooking.mockResolvedValue(
+        booking({ status: "confirmed", payment_status: "paid" }),
+      );
+      const client = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      });
+      render(
+        <QueryClientProvider client={client}>
+          <PayPanel initialBooking={booking()} serverNow={renderedAt} />
+        </QueryClientProvider>,
+      );
+
+      await settle();
+
+      expect(getBooking).toHaveBeenCalledWith(ID);
+      expect(
+        screen.getByRole("heading", { name: "Your booking is confirmed" }),
+      ).toBeInTheDocument();
+    });
+
+    it("does not re-read a page that was just rendered", async () => {
+      fetchClockSkew.mockResolvedValue(300);
+      renderPanel(booking(), { minutesIn: 5 });
+      await settle();
       expect(getBooking).not.toHaveBeenCalled();
     });
   });

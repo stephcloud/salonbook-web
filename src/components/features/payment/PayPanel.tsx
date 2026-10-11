@@ -67,7 +67,11 @@ export function PayPanel({ initialBooking, serverNow }: PayPanelProps) {
     staleTime: Infinity,
   });
 
-  const left = useCountdown(booking.created_at, serverNow);
+  // If this page is an old one restored from the browser's cache, re-read the
+  // booking: it may have been paid or cancelled since.
+  const left = useCountdown(booking.created_at, serverNow, () => {
+    void refetch();
+  });
   const outcome = bookingOutcome(booking);
   const holdOver = left <= 0;
 
@@ -172,7 +176,12 @@ export function PayPanel({ initialBooking, serverNow }: PayPanelProps) {
     // The API's word wins. Checked against the live API: an unpaid hold that
     // runs out becomes "cancelled" with no cancelled_at, while a cancel by the
     // client sets cancelled_at.
-    view = booking.cancelled_at === null ? "expired" : "cancelled";
+    // A booking whose deposit is due back was paid, so it is never an
+    // expired hold, whoever cancelled it.
+    view =
+      booking.cancelled_at === null && booking.refund_due !== true
+        ? "expired"
+        : "cancelled";
   } else if (holdOver) {
     view =
       recheck === "waiting"
