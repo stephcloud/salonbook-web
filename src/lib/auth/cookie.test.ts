@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { clearedCookieOptions, tokenCookieOptions } from "./cookie";
+import {
+  ROLE_COOKIE,
+  clearedCookieOptions,
+  parseRole,
+  tokenCookieOptions,
+} from "./cookie";
 
 afterEach(() => vi.unstubAllEnvs());
 
@@ -23,5 +28,28 @@ describe("token cookie options", () => {
 
   it("clears with maxAge 0", () => {
     expect(clearedCookieOptions().maxAge).toBe(0);
+  });
+});
+
+describe("parseRole", () => {
+  it("names the cookie sb_role", () => {
+    expect(ROLE_COOKIE).toBe("sb_role");
+  });
+
+  it("accepts the two known roles", () => {
+    expect(parseRole("owner")).toBe("owner");
+    expect(parseRole("client")).toBe("client");
+  });
+
+  it.each([
+    [undefined],
+    [null],
+    [""],
+    ["admin"],
+    ["Owner"],
+    [" owner"],
+    ["owner,client"],
+  ])("treats %j as unknown", (value) => {
+    expect(parseRole(value)).toBeNull();
   });
 });

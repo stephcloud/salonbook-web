@@ -1,5 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { TOKEN_COOKIE, clearedCookieOptions } from "@/lib/auth/cookie";
+import {
+  ROLE_COOKIE,
+  TOKEN_COOKIE,
+  clearedCookieOptions,
+} from "@/lib/auth/cookie";
 import { buildForwardHeaders } from "@/lib/proxy/headers";
 import { buildTargetUrl } from "@/lib/proxy/target";
 import {
@@ -60,6 +64,7 @@ async function forward(request: NextRequest, { params }: RouteContext) {
       { status: 401 },
     );
     response.cookies.set(TOKEN_COOKIE, "", clearedCookieOptions());
+    response.cookies.set(ROLE_COOKIE, "", clearedCookieOptions());
     return response;
   }
 

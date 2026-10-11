@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import { TOKEN_COOKIE, tokenCookieOptions } from "@/lib/auth/cookie";
+import {
+  ROLE_COOKIE,
+  TOKEN_COOKIE,
+  parseRole,
+  tokenCookieOptions,
+} from "@/lib/auth/cookie";
 import type { components } from "@/lib/api-types";
 import {
   apiBaseUrl,
@@ -117,5 +122,8 @@ export async function POST(request: Request) {
 
   const response = NextResponse.json({ user });
   response.cookies.set(TOKEN_COOKIE, token.access_token, tokenCookieOptions());
+  // Display-only (header link); permissions are always checked by the API.
+  const role = parseRole(user.role);
+  if (role) response.cookies.set(ROLE_COOKIE, role, tokenCookieOptions());
   return response;
 }

@@ -22,3 +22,20 @@ export function tokenCookieOptions(): TokenCookieOptions {
 export function clearedCookieOptions(): TokenCookieOptions {
   return { ...tokenCookieOptions(), maxAge: 0 };
 }
+
+/**
+ * Display-only: which header link to show. NOT a permission. Anyone can edit
+ * this cookie, so every protected page still asks the API who the user is
+ * (`requireUser`) and the API enforces roles itself. It lives as long as the
+ * token and is cleared with it.
+ */
+export const ROLE_COOKIE = "sb_role";
+
+export type DisplayRole = "owner" | "client";
+
+/** Only the two known roles count; anything else (missing, edited) is unknown. */
+export function parseRole(
+  value: string | undefined | null,
+): DisplayRole | null {
+  return value === "owner" || value === "client" ? value : null;
+}
