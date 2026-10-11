@@ -6,11 +6,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const listBookings = vi.fn();
 const cancelBooking = vi.fn();
 const getBooking = vi.fn();
+const fetchClockSkew = vi.fn();
 vi.mock("@/lib/api", async (importActual) => ({
   ...(await importActual<typeof import("@/lib/api")>()),
   listBookings: (...args: unknown[]) => listBookings(...args),
   cancelBooking: (...args: unknown[]) => cancelBooking(...args),
   getBooking: (...args: unknown[]) => getBooking(...args),
+  fetchClockSkew: () => fetchClockSkew(),
 }));
 
 import { ApiError, type BookingListItem } from "@/lib/api";
@@ -30,12 +32,27 @@ function renderPage(initial: BookingListItem[]) {
   );
 }
 
-const upcomingPanel = () => screen.getByRole("tabpanel");
+const panel = () => screen.getByRole("tabpanel");
+const headings = () =>
+  within(panel())
+    .getAllByRole("heading", { level: 2 })
+    .map((h) => h.textContent);
+
+function cancelResponse(id: string, refundDue: boolean | null) {
+  return {
+    id,
+    status: "cancelled",
+    refund_due: refundDue,
+    cancelled_at: CANCELLED_AT,
+  };
+}
 
 describe("MyBookings", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     listBookings.mockResolvedValue([]);
+    getBooking.mockResolvedValue({ payment_status: null });
+    fetchClockSkew.mockResolvedValue(null);
   });
 
   describe("tabs", () => {
@@ -50,10 +67,12 @@ describe("MyBookings", () => {
       }),
       makeBooking("held", "pending", {
         createdAgoMs: 2 * MINUTE,
+        startsInMs: 5 * HOUR,
         serviceName: "Held service",
       }),
       makeBooking("expired", "pending", {
         createdAgoMs: 30 * MINUTE,
+        startsInMs: 20 * HOUR,
         serviceName: "Expired service",
       }),
       makeBooking("cancelled", "cancelled", {
@@ -80,45 +99,28 @@ describe("MyBookings", () => {
       );
     });
 
-    it("lists Upcoming soonest first: bookings still active, including an unpaid hold that is running", () => {
+    it("lists Upcoming soonest first: Soon (in 3 h), Held (in 5 h), Far (in 72 h)", () => {
       renderPage(list);
-      const names = within(upcomingPanel())
-        .getAllByRole("heading", { level: 2 })
-        .map((h) => h.textContent);
-      expect(names).toEqual(
-        ["Held service", "Soon service", "Far service"].sort(
-          (a, b) => order(a) - order(b),
-        ),
-      );
-      function order(name: string) {
-        return ["Soon service", "Held service", "Far service"].indexOf(name);
-      }
+      expect(headings()).toEqual([
+        "Soon service",
+        "Held service",
+        "Far service",
+      ]);
     });
 
-    it("puts cancelled, expired and finished bookings under Past, most recent first", async () => {
+    it("puts cancelled, expired and finished bookings under Past, latest start first: Cancelled (+24 h), Expired (+20 h), Done (-48 h)", async () => {
       const user = userEvent.setup();
       renderPage(list);
       await user.click(screen.getByRole("tab", { name: "Past (3)" }));
 
-      const names = within(upcomingPanel())
-        .getAllByRole("heading", { level: 2 })
-        .map((h) => h.textContent);
-      expect(names).toEqual(
-        ["Cancelled service", "Expired service", "Done service"].sort(
-          (a, b) =>
-            ["Expired service", "Cancelled service", "Done service"].indexOf(
-              a,
-            ) -
-            ["Expired service", "Cancelled service", "Done service"].indexOf(b),
-        ),
-      );
-      expect(within(upcomingPanel()).getByText("Expired")).toBeInTheDocument();
-      expect(
-        within(upcomingPanel()).getByText("Cancelled"),
-      ).toBeInTheDocument();
-      expect(
-        within(upcomingPanel()).getByText("Completed"),
-      ).toBeInTheDocument();
+      expect(headings()).toEqual([
+        "Cancelled service",
+        "Expired service",
+        "Done service",
+      ]);
+      expect(within(panel()).getByText("Expired")).toBeInTheDocument();
+      expect(within(panel()).getByText("Cancelled")).toBeInTheDocument();
+      expect(within(panel()).getByText("Completed")).toBeInTheDocument();
     });
 
     it("does not offer Pay or Cancel on anything under Past", async () => {
@@ -126,10 +128,10 @@ describe("MyBookings", () => {
       renderPage(list);
       await user.click(screen.getByRole("tab", { name: "Past (3)" }));
       expect(
-        within(upcomingPanel()).queryByRole("link", { name: /Pay now/ }),
+        within(panel()).queryByRole("link", { name: /Pay now/ }),
       ).toBeNull();
       expect(
-        within(upcomingPanel()).queryByRole("button", { name: /^Cancel / }),
+        within(panel()).queryByRole("button", { name: /^Cancel booking/ }),
       ).toBeNull();
     });
 
@@ -168,18 +170,30 @@ describe("MyBookings", () => {
         screen.getByText("Showing your 100 latest bookings."),
       ).toBeInTheDocument();
     });
+
+    it("gives the tabs a 44px height, readable inactive text, a filled active tab and a visible focus ring", () => {
+      renderPage(list);
+      const active = screen.getByRole("tab", { name: "Upcoming (3)" });
+      const inactive = screen.getByRole("tab", { name: "Past (3)" });
+      for (const tab of [active, inactive]) {
+        expect(tab.className).toContain("min-h-11");
+        expect(tab.className).toContain("h-auto");
+        expect(tab.className).toContain("text-muted-foreground");
+        expect(tab.className).toContain("focus-visible:ring-ring");
+        expect(tab.className).not.toContain("focus-visible:ring-ring/50");
+        expect(tab.className).toContain("data-active:bg-primary");
+        expect(tab.className).toContain("data-active:text-primary-foreground");
+      }
+    });
   });
 
   describe("cancelling", () => {
     const confirmed = () =>
       makeBooking("c1", "confirmed", { startsInMs: 72 * HOUR });
+    const CANCEL_NAME = "Cancel booking for Box braids at Pink Studio";
 
     async function openDialog(user: ReturnType<typeof userEvent.setup>) {
-      await user.click(
-        screen.getByRole("button", {
-          name: "Cancel Box braids at Pink Studio",
-        }),
-      );
+      await user.click(screen.getByRole("button", { name: CANCEL_NAME }));
       return screen.getByRole("alertdialog", { name: "Cancel this booking?" });
     }
 
@@ -195,13 +209,52 @@ describe("MyBookings", () => {
       expect(cancelBooking).not.toHaveBeenCalled();
     });
 
-    it("cancels once, tells the client the refund outcome from refund_due, and moves the booking to Past", async () => {
+    it("shows the cancelled booking under Past straight away, before the API list comes back", async () => {
+      cancelBooking.mockResolvedValue(cancelResponse("c1", true));
+      // The refresh never answers: only the update from the cancel can move it.
+      listBookings.mockReturnValue(new Promise(() => {}));
+      const user = userEvent.setup();
+      renderPage([confirmed()]);
+
+      const dialog = await openDialog(user);
+      await user.click(
+        within(dialog).getByRole("button", { name: "Cancel booking" }),
+      );
+
+      expect(
+        await screen.findByRole("tab", { name: "Upcoming (0)" }),
+      ).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: "Past (1)" })).toBeInTheDocument();
+      await user.click(screen.getByRole("tab", { name: "Past (1)" }));
+      expect(within(panel()).getByText("Cancelled")).toBeInTheDocument();
+      expect(
+        within(panel()).getByText("Your deposit will be refunded."),
+      ).toBeInTheDocument();
+    });
+
+    it("does not call a booking Expired when the cancel answer has no cancelled_at", async () => {
       cancelBooking.mockResolvedValue({
         id: "c1",
         status: "cancelled",
         refund_due: true,
-        cancelled_at: CANCELLED_AT,
+        cancelled_at: null,
       });
+      listBookings.mockReturnValue(new Promise(() => {}));
+      const user = userEvent.setup();
+      renderPage([confirmed()]);
+
+      const dialog = await openDialog(user);
+      await user.click(
+        within(dialog).getByRole("button", { name: "Cancel booking" }),
+      );
+
+      await user.click(await screen.findByRole("tab", { name: "Past (1)" }));
+      expect(within(panel()).getByText("Cancelled")).toBeInTheDocument();
+      expect(within(panel()).queryByText("Expired")).toBeNull();
+    });
+
+    it("cancels once, tells the client the refund outcome from refund_due, and reads the refund status", async () => {
+      cancelBooking.mockResolvedValue(cancelResponse("c1", true));
       listBookings.mockResolvedValue([
         makeBooking("c1", "cancelled", {
           startsInMs: 72 * HOUR,
@@ -220,37 +273,25 @@ describe("MyBookings", () => {
 
       expect(
         await screen.findByText(
-          /is cancelled\. Your deposit will be refunded\./,
+          "Box braids at Pink Studio has been cancelled. Your deposit will be refunded. You can find it under Past.",
         ),
       ).toBeInTheDocument();
       expect(cancelBooking).toHaveBeenCalledTimes(1);
       expect(cancelBooking).toHaveBeenCalledWith("c1");
       expect(screen.queryByRole("alertdialog")).toBeNull();
 
-      // The list is refreshed from the API and the booking is now under Past.
       await waitFor(() => expect(listBookings).toHaveBeenCalled());
-      expect(
-        screen.getByRole("tab", { name: "Upcoming (0)" }),
-      ).toBeInTheDocument();
       await user.click(screen.getByRole("tab", { name: "Past (1)" }));
       expect(
-        within(upcomingPanel()).getByText("Cancelled"),
+        await within(panel()).findByText("Refund pending"),
       ).toBeInTheDocument();
       expect(
-        await within(upcomingPanel()).findByText("Refund pending"),
-      ).toBeInTheDocument();
-      expect(
-        within(upcomingPanel()).getByText("Your refund is being processed."),
+        within(panel()).getByText("Your refund is being processed."),
       ).toBeInTheDocument();
     });
 
-    it("says there is no refund, naming the window, when the API says refund_due is false for a paid booking", async () => {
-      cancelBooking.mockResolvedValue({
-        id: "c1",
-        status: "cancelled",
-        refund_due: false,
-        cancelled_at: CANCELLED_AT,
-      });
+    it("says there is no refund when the API says refund_due is false for a paid booking", async () => {
+      cancelBooking.mockResolvedValue(cancelResponse("c1", false));
       listBookings.mockResolvedValue([
         makeBooking("c1", "cancelled", {
           startsInMs: 72 * HOUR,
@@ -266,18 +307,14 @@ describe("MyBookings", () => {
       );
       expect(
         await screen.findByText(
-          /No refund, cancelled inside the 24-hour window\./,
+          /No refund: it was cancelled within 24 hours of the start time\./,
         ),
       ).toBeInTheDocument();
     });
 
     it("says nothing was charged when an unpaid booking is cancelled", async () => {
-      cancelBooking.mockResolvedValue({
-        id: "p1",
-        status: "cancelled",
-        refund_due: false,
-        cancelled_at: CANCELLED_AT,
-      });
+      cancelBooking.mockResolvedValue(cancelResponse("p1", false));
+      getBooking.mockResolvedValue({ payment_status: null });
       listBookings.mockResolvedValue([
         makeBooking("p1", "cancelled", {
           refundDue: false,
@@ -286,15 +323,67 @@ describe("MyBookings", () => {
       ]);
       const user = userEvent.setup();
       renderPage([makeBooking("p1", "pending", { createdAgoMs: MINUTE })]);
-      await user.click(
-        screen.getByRole("button", {
-          name: "Cancel Box braids at Pink Studio",
-        }),
-      );
+      await user.click(screen.getByRole("button", { name: CANCEL_NAME }));
       await user.click(screen.getByRole("button", { name: "Cancel booking" }));
       expect(
         await screen.findByText(/Nothing was charged\./),
       ).toBeInTheDocument();
+    });
+
+    it("does not repeat itself when the API gave no refund answer", async () => {
+      cancelBooking.mockResolvedValue(cancelResponse("c1", null));
+      listBookings.mockReturnValue(new Promise(() => {}));
+      const user = userEvent.setup();
+      renderPage([confirmed()]);
+      const dialog = await openDialog(user);
+      await user.click(
+        within(dialog).getByRole("button", { name: "Cancel booking" }),
+      );
+      expect(
+        await screen.findByText(
+          "Box braids at Pink Studio has been cancelled. You can find it under Past.",
+        ),
+      ).toBeInTheDocument();
+    });
+
+    it("refreshes the list only once when a booking with a running hold is cancelled", async () => {
+      cancelBooking.mockResolvedValue(cancelResponse("p1", false));
+      getBooking.mockResolvedValue({ payment_status: null });
+      listBookings.mockResolvedValue([
+        makeBooking("p1", "cancelled", {
+          refundDue: false,
+          cancelledAt: CANCELLED_AT,
+        }),
+      ]);
+      const user = userEvent.setup();
+      renderPage([makeBooking("p1", "pending", { createdAgoMs: MINUTE })]);
+      await user.click(screen.getByRole("button", { name: CANCEL_NAME }));
+      await user.click(screen.getByRole("button", { name: "Cancel booking" }));
+      await screen.findByText(/Nothing was charged\./);
+      await waitFor(() => expect(listBookings).toHaveBeenCalled());
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 30));
+      });
+
+      expect(listBookings).toHaveBeenCalledTimes(1);
+    });
+
+    it("moves focus to the result and lets it be dismissed", async () => {
+      cancelBooking.mockResolvedValue(cancelResponse("c1", true));
+      listBookings.mockReturnValue(new Promise(() => {}));
+      const user = userEvent.setup();
+      renderPage([confirmed()]);
+      const dialog = await openDialog(user);
+      await user.click(
+        within(dialog).getByRole("button", { name: "Cancel booking" }),
+      );
+
+      const message = await screen.findByText(/has been cancelled/);
+      const box = message.parentElement as HTMLElement;
+      await waitFor(() => expect(box).toHaveFocus());
+
+      await user.click(screen.getByRole("button", { name: "Dismiss message" }));
+      expect(screen.queryByText(/has been cancelled/)).toBeNull();
     });
 
     it("keeps the booking and shows the reason when the API refuses, then refreshes the list", async () => {
@@ -389,7 +478,9 @@ describe("MyBookings", () => {
       expect(
         screen.getByText("Your deposit was refunded."),
       ).toBeInTheDocument();
-      expect(screen.getByText("No refund due.")).toBeInTheDocument();
+      expect(
+        screen.getByText("No refund is due on this booking."),
+      ).toBeInTheDocument();
       expect(screen.getByText("Expired")).toBeInTheDocument();
     });
 
@@ -407,31 +498,106 @@ describe("MyBookings", () => {
   });
 
   describe("refreshing", () => {
-    it("keeps the list and offers Retry when a refresh fails", async () => {
-      cancelBooking.mockResolvedValue({
-        id: "c1",
-        status: "cancelled",
-        refund_due: true,
-        cancelled_at: CANCELLED_AT,
-      });
+    it("keeps the list and offers Retry, saying it may be out of date, when a refresh fails", async () => {
+      cancelBooking.mockResolvedValue(cancelResponse("c1", true));
       listBookings.mockRejectedValueOnce(new TypeError("fetch failed"));
       listBookings.mockResolvedValue([]);
       const user = userEvent.setup();
       renderPage([makeBooking("c1", "confirmed", { startsInMs: 72 * HOUR })]);
       await user.click(
         screen.getByRole("button", {
-          name: "Cancel Box braids at Pink Studio",
+          name: "Cancel booking for Box braids at Pink Studio",
         }),
       );
       await user.click(screen.getByRole("button", { name: "Cancel booking" }));
 
-      const alert = await screen.findByRole("alert");
-      expect(alert).toHaveTextContent("We could not refresh your bookings.");
+      const alert = await screen.findByText(
+        "We could not refresh your bookings.",
+      );
+      expect(
+        screen.getByText("The list below may be out of date."),
+      ).toBeInTheDocument();
       // The cancelled booking is still shown from the API's answer.
       expect(screen.getByRole("tab", { name: "Past (1)" })).toBeInTheDocument();
 
-      await user.click(within(alert).getByRole("button", { name: "Retry" }));
+      await user.click(
+        within(alert.parentElement as HTMLElement).getByRole("button", {
+          name: "Retry",
+        }),
+      );
       await waitFor(() => expect(listBookings).toHaveBeenCalledTimes(2));
+    });
+
+    it("disables Retry and says 'Retrying...' while it reads the list again", async () => {
+      cancelBooking.mockResolvedValue(cancelResponse("c1", true));
+      listBookings.mockRejectedValueOnce(new TypeError("fetch failed"));
+      listBookings.mockReturnValueOnce(new Promise(() => {}));
+      const user = userEvent.setup();
+      renderPage([makeBooking("c1", "confirmed", { startsInMs: 72 * HOUR })]);
+      await user.click(
+        screen.getByRole("button", {
+          name: "Cancel booking for Box braids at Pink Studio",
+        }),
+      );
+      await user.click(screen.getByRole("button", { name: "Cancel booking" }));
+      await screen.findByText("We could not refresh your bookings.");
+
+      await user.click(screen.getByRole("button", { name: "Retry" }));
+
+      const retrying = await screen.findByRole("button", {
+        name: "Retrying...",
+      });
+      expect(retrying).toBeDisabled();
+    });
+
+    it("reads the list again when the page is restored with the Back button", async () => {
+      renderPage([makeBooking("c1", "confirmed", { startsInMs: 72 * HOUR })]);
+      expect(listBookings).not.toHaveBeenCalled();
+
+      await act(async () => {
+        window.dispatchEvent(
+          Object.assign(new Event("pageshow"), { persisted: true }),
+        );
+      });
+
+      await waitFor(() => expect(listBookings).toHaveBeenCalledTimes(1));
+    });
+
+    it("does not read the list again for an ordinary pageshow", async () => {
+      renderPage([makeBooking("c1", "confirmed", { startsInMs: 72 * HOUR })]);
+      await act(async () => {
+        window.dispatchEvent(
+          Object.assign(new Event("pageshow"), { persisted: false }),
+        );
+      });
+      expect(listBookings).not.toHaveBeenCalled();
+    });
+
+    it("reads the list again when the page turns out to be an old one restored from the browser cache", async () => {
+      // The page was rendered at NOW (its stamp); the fresh measurement says
+      // the server clock is a minute ahead of what the stamp implies.
+      vi.spyOn(Date, "now").mockReturnValue(NOW);
+      fetchClockSkew.mockResolvedValue(60_000);
+      try {
+        renderPage([makeBooking("c1", "confirmed", { startsInMs: 72 * HOUR })]);
+        await waitFor(() => expect(listBookings).toHaveBeenCalledTimes(1));
+      } finally {
+        vi.restoreAllMocks();
+      }
+    });
+
+    it("does not read the list again for a page that was just rendered", async () => {
+      vi.spyOn(Date, "now").mockReturnValue(NOW);
+      fetchClockSkew.mockResolvedValue(500);
+      try {
+        renderPage([makeBooking("c1", "confirmed", { startsInMs: 72 * HOUR })]);
+        await act(async () => {
+          await new Promise((resolve) => setTimeout(resolve, 30));
+        });
+        expect(listBookings).not.toHaveBeenCalled();
+      } finally {
+        vi.restoreAllMocks();
+      }
     });
   });
 });
@@ -442,6 +608,8 @@ describe("MyBookings clock", () => {
     vi.clearAllMocks();
     vi.setSystemTime(NOW);
     listBookings.mockResolvedValue([]);
+    getBooking.mockResolvedValue({ payment_status: null });
+    fetchClockSkew.mockResolvedValue(null);
   });
   afterEach(() => vi.useRealTimers());
 
@@ -453,11 +621,21 @@ describe("MyBookings clock", () => {
     });
   }
 
-  it("counts the hold down every second", async () => {
-    renderPage([makeBooking("h1", "pending", { createdAgoMs: 2 * MINUTE })]);
+  it("counts the hold down every second, to the exact second", async () => {
+    renderPage([
+      makeBooking("h1", "pending", {
+        createdAgoMs: 2 * MINUTE,
+        startsInMs: 5 * HOUR,
+      }),
+    ]);
     expect(screen.getByText("Time left to pay: 13:00")).toBeInTheDocument();
+
+    // 5 seconds plus the 1 ms the test helper adds to flush: 12:54.999 shows as 12:55.
     await advance(5000);
-    expect(screen.getByText(/Time left to pay: 12:5[4-5]/)).toBeInTheDocument();
+    expect(screen.getByText("Time left to pay: 12:55")).toBeInTheDocument();
+
+    await advance(1000);
+    expect(screen.getByText("Time left to pay: 12:54")).toBeInTheDocument();
   });
 
   it("moves an unpaid booking to Past as Expired when its 15 minutes end, and asks the API once", async () => {
@@ -465,9 +643,15 @@ describe("MyBookings clock", () => {
       makeBooking("h1", "cancelled", {
         createdAgoMs: 16 * MINUTE,
         cancelledAt: null,
+        startsInMs: 5 * HOUR,
       }),
     ]);
-    renderPage([makeBooking("h1", "pending", { createdAgoMs: 14 * MINUTE })]);
+    renderPage([
+      makeBooking("h1", "pending", {
+        createdAgoMs: 14 * MINUTE,
+        startsInMs: 5 * HOUR,
+      }),
+    ]);
     expect(
       screen.getByRole("tab", { name: "Upcoming (1)" }),
     ).toBeInTheDocument();
@@ -481,5 +665,20 @@ describe("MyBookings clock", () => {
     expect(screen.getByRole("tab", { name: "Past (1)" })).toBeInTheDocument();
     expect(listBookings).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole("link", { name: /Pay now/ })).toBeNull();
+  });
+
+  it("does not offer Pay on an unpaid booking whose appointment time has already passed", async () => {
+    renderPage([
+      makeBooking("h1", "pending", {
+        createdAgoMs: 2 * MINUTE,
+        startsInMs: -MINUTE,
+      }),
+    ]);
+    expect(screen.queryByRole("link", { name: /Pay now/ })).toBeNull();
+    expect(
+      screen.getByText(
+        "This appointment time has passed, so it can no longer be paid.",
+      ),
+    ).toBeInTheDocument();
   });
 });

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 let pathname = "/";
@@ -69,9 +69,9 @@ describe("SiteHeader", () => {
     expect(screen.queryByRole("link", { name: "Register" })).toBeNull();
   });
 
-  it("marks the page you are on, including pages under it", async () => {
+  it('marks the exact page with aria-current="page"', async () => {
     has.mockReturnValue(true);
-    pathname = "/bookings/abc/pay";
+    pathname = "/bookings";
     render(await SiteHeader());
     expect(screen.getByRole("link", { name: "My bookings" })).toHaveAttribute(
       "aria-current",
@@ -80,6 +80,23 @@ describe("SiteHeader", () => {
     expect(screen.getByRole("link", { name: "Salons" })).not.toHaveAttribute(
       "aria-current",
     );
+  });
+
+  it('marks a page inside a section with aria-current="true", not "page"', async () => {
+    has.mockReturnValue(true);
+    pathname = "/bookings/abc/pay";
+    render(await SiteHeader());
+    expect(screen.getByRole("link", { name: "My bookings" })).toHaveAttribute(
+      "aria-current",
+      "true",
+    );
+  });
+
+  it("lists the links in a list inside the navigation", async () => {
+    has.mockReturnValue(true);
+    render(await SiteHeader());
+    const nav = screen.getByRole("navigation", { name: "Main" });
+    expect(within(nav).getAllByRole("listitem")).toHaveLength(3);
   });
 
   it("does not mark a link whose path only starts the same way", async () => {

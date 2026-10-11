@@ -53,6 +53,30 @@ describe("signed-in booking reads", () => {
     });
   });
 
+  it("stamps the server clock when the API's answer arrives, not after the body has been read", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    const ARRIVES = Date.parse("2026-10-11T10:00:00Z");
+    vi.setSystemTime(ARRIVES - 400);
+    const fetchMock = vi.fn().mockImplementation(async () => {
+      vi.setSystemTime(ARRIVES);
+      return {
+        ok: true,
+        status: 200,
+        // Reading the body takes a while (a slow connection).
+        json: async () => {
+          vi.setSystemTime(ARRIVES + 5000);
+          return { id: ID };
+        },
+      };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await getMyBooking(ID);
+
+    expect(result.serverNow).toBe(ARRIVES);
+    expect(result.booking).toEqual({ id: ID });
+  });
+
   it("throws a 401 ApiError without calling the API when there is no cookie", async () => {
     cookieGet.mockReturnValue(undefined);
     const fetchMock = vi.fn();

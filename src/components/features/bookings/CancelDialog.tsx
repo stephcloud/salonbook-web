@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type RefObject } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { LoaderCircle } from "lucide-react";
 import {
@@ -13,11 +13,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { cancelBooking, type Booking, type BookingListItem } from "@/lib/api";
+import {
+  cancelBooking,
+  getBooking,
+  type Booking,
+  type BookingListItem,
+} from "@/lib/api";
 import { classifyCancelError, type CancelFailure } from "@/lib/cancel-errors";
 import { cancelOutcome, type CancelOutcome } from "@/lib/cancel-outcome";
 import { refundRuleText } from "@/lib/refund";
 import { formatLagosDateTime } from "@/lib/time";
+
+/** How long a sign-in redirect may take before the dialog lets go. */
+const SIGN_IN_REDIRECT_MS = 10_000;
 
 export type CancelResult = {
   /** The booking as it was before cancelling. */
@@ -42,6 +50,23 @@ type BodyProps = Omit<CancelDialogProps, "booking" | "onClose"> & {
   busyRef: RefObject<boolean>;
 };
 
+const PAID_STATUSES = new Set(["paid", "refund_pending", "refunded"]);
+
+/**
+ * Whether a deposit was paid for a booking the list showed as unpaid. The list
+ * can be a little old (the payment may have gone through in another tab or a
+ * late webhook), and the cancel answer alone cannot tell "paid but inside the
+ * window" from "never paid", so look. null means it could not be checked.
+ */
+async function readWasPaid(id: string): Promise<boolean | null> {
+  try {
+    const detail = await getBooking(id);
+    return PAID_STATUSES.has(detail.payment_status ?? "");
+  } catch {
+    return null;
+  }
+}
+
 function CancelDialogBody({
   booking,
   busyRef,
@@ -51,15 +76,33 @@ function CancelDialogBody({
   // One request at a time. The ref closes the gap before React re-renders, so
   // two quick clicks cannot cancel twice.
   const sending = useRef(false);
-  const [failure, setFailure] = useState<CancelFailure | null>(null);
+  const [failure, setFailure] = useState<Exclude<
+    CancelFailure,
+    { kind: "signed-out" }
+  > | null>(null);
   const [signedOut, setSignedOut] = useState(false);
+  const releaseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (releaseTimer.current) clearTimeout(releaseTimer.current);
+    },
+    [],
+  );
 
   const mutation = useMutation({
-    mutationFn: () => cancelBooking(booking.id),
-    onSuccess: (cancelled) => {
+    mutationFn: async () => {
+      const cancelled = await cancelBooking(booking.id);
+      const wasPaid =
+        booking.status === "confirmed" || cancelled.refund_due === true
+          ? true
+          : await readWasPaid(booking.id);
+      return { cancelled, wasPaid };
+    },
+    onSuccess: ({ cancelled, wasPaid }) => {
       busyRef.current = false;
       const outcome = cancelOutcome({
-        wasPaid: booking.status === "confirmed",
+        wasPaid,
         refundDue: cancelled.refund_due,
         cancellationHours: booking.salon.cancellation_hours,
       });
@@ -68,8 +111,14 @@ function CancelDialogBody({
     onError: (error) => {
       const result = classifyCancelError(error);
       if (result.kind === "signed-out") {
-        // apiFetch is already sending the client to /login.
+        // apiFetch is already sending the client to /login. If the redirect
+        // never happens, let go after a while so the dialog is not stuck.
         setSignedOut(true);
+        releaseTimer.current = setTimeout(() => {
+          sending.current = false;
+          busyRef.current = false;
+          setSignedOut(false);
+        }, SIGN_IN_REDIRECT_MS);
         return;
       }
       sending.current = false;
@@ -89,10 +138,13 @@ function CancelDialogBody({
 
   const busy = mutation.isPending || signedOut;
   const paid = booking.status === "confirmed";
+  // The booking is gone or cannot be cancelled: another try would fail the
+  // same way, so the only thing left to do is close.
+  const stale = failure?.kind === "not-found" || failure?.kind === "refused";
 
   return (
-    <AlertDialogContent>
-      <AlertDialogHeader>
+    <AlertDialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl data-[size=default]:max-w-[calc(100%-2rem)] data-[size=default]:sm:max-w-sm">
+      <AlertDialogHeader className="place-items-start text-left">
         <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
         <AlertDialogDescription render={<div />}>
           <p>
@@ -107,44 +159,56 @@ function CancelDialogBody({
         </AlertDialogDescription>
       </AlertDialogHeader>
 
-      {failure ? (
-        <p role="alert" className="text-sm font-semibold text-destructive">
-          {failure.kind === "signed-out" ? "" : failure.message}
-        </p>
-      ) : null}
+      {/* Always present, so an error is announced when its text arrives. */}
+      <p
+        role="alert"
+        className={
+          failure ? "text-sm font-semibold text-destructive" : "sr-only"
+        }
+      >
+        {failure?.message ?? ""}
+      </p>
       <p role="status" className="sr-only">
         {signedOut ? "Redirecting you to sign in." : ""}
         {mutation.isPending ? "Cancelling your booking." : ""}
       </p>
 
       <AlertDialogFooter>
-        <AlertDialogCancel
-          size="lg"
-          disabled={busy}
-          className="w-full sm:w-auto"
-        >
-          Keep booking
-        </AlertDialogCancel>
-        <AlertDialogAction
-          variant="destructive"
-          size="lg"
-          className="w-full disabled:cursor-wait disabled:opacity-100 sm:w-auto"
-          onClick={confirm}
-          disabled={busy}
-          aria-busy={busy}
-        >
-          {busy ? (
-            <LoaderCircle
-              aria-hidden="true"
-              className="motion-safe:animate-spin"
-            />
-          ) : null}
-          {signedOut
-            ? "Redirecting you to sign in..."
-            : mutation.isPending
-              ? "Cancelling..."
-              : "Cancel booking"}
-        </AlertDialogAction>
+        {stale ? (
+          <AlertDialogCancel size="lg" className="w-full sm:w-auto">
+            Close
+          </AlertDialogCancel>
+        ) : (
+          <>
+            <AlertDialogCancel
+              size="lg"
+              disabled={busy}
+              className="w-full sm:w-auto"
+            >
+              Keep booking
+            </AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              size="lg"
+              className="w-full disabled:cursor-wait disabled:opacity-100 sm:w-auto"
+              onClick={confirm}
+              disabled={busy}
+              aria-busy={busy}
+            >
+              {busy ? (
+                <LoaderCircle
+                  aria-hidden="true"
+                  className="motion-safe:animate-spin"
+                />
+              ) : null}
+              {signedOut
+                ? "Redirecting you to sign in..."
+                : mutation.isPending
+                  ? "Cancelling..."
+                  : "Cancel booking"}
+            </AlertDialogAction>
+          </>
+        )}
       </AlertDialogFooter>
     </AlertDialogContent>
   );

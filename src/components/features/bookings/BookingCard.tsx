@@ -35,9 +35,15 @@ export function BookingCard({
   const expired = isHoldExpired(booking, now);
   const held = booking.status === "pending" && !expired;
   const notStarted = parseApiTime(booking.starts_at) > now;
+  // Paying for an appointment time that has already passed makes no sense.
+  const payable = held && notStarted;
+  const missedWhileHeld = held && !notStarted;
   const canCancel = (held || booking.status === "confirmed") && notStarted;
   const depositPaid =
     booking.status === "confirmed" || booking.status === "completed";
+  // A cancelled or expired booking was never going to be charged more, so a
+  // "Deposit" line would only read like an amount owed.
+  const showDeposit = held || depositPaid;
   const refundNote =
     booking.status === "cancelled" && !expired
       ? cancelledListNote(booking.refund_due, paymentStatus)
@@ -48,7 +54,9 @@ export function BookingCard({
   return (
     <li className="flex flex-col gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
       <div className="flex items-start justify-between gap-3">
-        <h2 className="text-lg font-bold">{service.name}</h2>
+        <h2 className="min-w-0 text-lg font-bold break-words">
+          {service.name}
+        </h2>
         <BookingStatusBadge
           status={booking.status}
           expired={expired}
@@ -64,16 +72,23 @@ export function BookingCard({
 
       <div className="flex flex-col gap-0.5 text-sm">
         <p className="font-semibold">{formatServicePrice(service)}</p>
-        <p className="text-muted-foreground">
-          {depositPaid ? "Deposit paid" : "Deposit"}{" "}
-          {formatNaira(salon.deposit_amount)}
-        </p>
+        {showDeposit ? (
+          <p className="text-muted-foreground">
+            {depositPaid ? "Deposit paid" : "Deposit due"}{" "}
+            {formatNaira(salon.deposit_amount)}
+          </p>
+        ) : null}
       </div>
 
-      {held ? (
+      {payable ? (
         <p className="text-sm font-medium">
           Time left to pay:{" "}
           {formatCountdown(remainingMs(booking.created_at, now))}
+        </p>
+      ) : null}
+      {missedWhileHeld ? (
+        <p className="text-sm text-muted-foreground">
+          This appointment time has passed, so it can no longer be paid.
         </p>
       ) : null}
       {refundNote ? (
@@ -85,9 +100,9 @@ export function BookingCard({
         </p>
       ) : null}
 
-      {held || canCancel || expired ? (
+      {payable || canCancel || expired ? (
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-          {held ? (
+          {payable ? (
             <Link
               href={`/bookings/${booking.id}/pay`}
               aria-label={`Pay now for ${label}`}
@@ -101,7 +116,7 @@ export function BookingCard({
               variant="outline"
               size="lg"
               className="w-full sm:w-auto"
-              aria-label={`Cancel ${label}`}
+              aria-label={`Cancel booking for ${label}`}
               onClick={() => onCancel(booking)}
             >
               Cancel booking

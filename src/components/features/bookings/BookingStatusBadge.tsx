@@ -33,7 +33,7 @@ export function BookingStatusBadge({
     ? { text: "Expired", variant: "cancelled" as const }
     : LABELS[status];
   return (
-    <span className="inline-flex flex-wrap items-center gap-1.5">
+    <span className="inline-flex shrink-0 flex-wrap items-center justify-end gap-1.5">
       <Badge variant={variant}>{text}</Badge>
       {refund ? <Badge variant="refunded">{refund}</Badge> : null}
     </span>

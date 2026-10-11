@@ -39,7 +39,7 @@ describe("BookingCard details", () => {
     expect(screen.getByText("Price on consultation")).toBeInTheDocument();
   });
 
-  it("says the deposit is paid once confirmed or completed, and just 'Deposit' before that", () => {
+  it("says the deposit is paid once confirmed or completed, and due while the hold is running", () => {
     const { unmount } = render(
       <ul>
         <BookingCard
@@ -53,8 +53,25 @@ describe("BookingCard details", () => {
     unmount();
 
     renderCard(makeBooking("b2", "pending", { createdAgoMs: MINUTE }));
-    expect(screen.getByText("Deposit ₦5,000")).toBeInTheDocument();
+    expect(screen.getByText("Deposit due ₦5,000")).toBeInTheDocument();
     expect(screen.queryByText(/Deposit paid/)).toBeNull();
+  });
+
+  it.each([
+    ["cancelled", { cancelledAt: "2026-10-11T10:00:00.000Z" }],
+    ["cancelled", { cancelledAt: null }],
+    ["no_show", { startsInMs: -5 * HOUR }],
+  ] as const)(
+    "does not show a deposit line for a %s booking, where it would read like an amount owed",
+    (status, options) => {
+      renderCard(makeBooking("b1", status, options));
+      expect(screen.queryByText(/Deposit/)).toBeNull();
+    },
+  );
+
+  it("does not show a deposit line for an expired hold", () => {
+    renderCard(makeBooking("b1", "pending", { createdAgoMs: 20 * MINUTE }));
+    expect(screen.queryByText(/Deposit/)).toBeNull();
   });
 });
 
@@ -137,7 +154,9 @@ describe("BookingCard cancel button", () => {
     const booking = makeBooking("b1", "confirmed");
     const { onCancel } = renderCard(booking);
     await userEvent.click(
-      screen.getByRole("button", { name: "Cancel Box braids at Pink Studio" }),
+      screen.getByRole("button", {
+        name: "Cancel booking for Box braids at Pink Studio",
+      }),
     );
     expect(onCancel).toHaveBeenCalledWith(booking);
   });
@@ -220,11 +239,13 @@ describe("BookingCard refund text for a cancelled booking", () => {
     expect(screen.getByText("Your deposit was refunded.")).toBeInTheDocument();
   });
 
-  it("says 'No refund due.' for refund_due false", () => {
+  it("says 'No refund is due on this booking.' for refund_due false", () => {
     renderCard(
       makeBooking("b1", "cancelled", { refundDue: false, cancelledAt }),
     );
-    expect(screen.getByText("No refund due.")).toBeInTheDocument();
+    expect(
+      screen.getByText("No refund is due on this booking."),
+    ).toBeInTheDocument();
   });
 
   it("says nothing about refunds for an expired hold", () => {
@@ -232,5 +253,67 @@ describe("BookingCard refund text for a cancelled booking", () => {
       makeBooking("b1", "cancelled", { refundDue: null, cancelledAt: null }),
     );
     expect(screen.queryByText(/refund/i)).toBeNull();
+  });
+});
+
+describe("BookingCard Pay button and the start time", () => {
+  it("does not offer Pay once the appointment time has passed, even though the hold is still running, and says why", () => {
+    // Created 2 minutes ago for a slot that started 1 minute ago.
+    renderCard(
+      makeBooking("b1", "pending", {
+        createdAgoMs: 2 * MINUTE,
+        startsInMs: -MINUTE,
+      }),
+    );
+    expect(screen.queryByRole("link", { name: /Pay now/ })).toBeNull();
+    expect(screen.queryByText(/Time left to pay/)).toBeNull();
+    expect(
+      screen.getByText(
+        "This appointment time has passed, so it can no longer be paid.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("still offers Pay for a slot that has not started", () => {
+    renderCard(
+      makeBooking("b1", "pending", {
+        createdAgoMs: MINUTE,
+        startsInMs: 10 * MINUTE,
+      }),
+    );
+    expect(screen.getByRole("link", { name: /Pay now/ })).toBeInTheDocument();
+  });
+});
+
+describe("BookingCard buttons have names that start with their visible text", () => {
+  it("Cancel, Pay and Book again each begin with what is shown on the button", () => {
+    renderCard(makeBooking("b1", "pending", { createdAgoMs: MINUTE }));
+    expect(screen.getByRole("link", { name: /^Pay now/ })).toHaveTextContent(
+      "Pay now",
+    );
+    expect(
+      screen.getByRole("button", { name: /^Cancel booking/ }),
+    ).toHaveTextContent("Cancel booking");
+  });
+
+  it("Book again begins with its visible text", () => {
+    renderCard(makeBooking("b1", "pending", { createdAgoMs: 20 * MINUTE }));
+    expect(screen.getByRole("link", { name: /^Book again/ })).toHaveTextContent(
+      "Book again",
+    );
+  });
+});
+
+describe("BookingCard expired versus paid-and-cancelled", () => {
+  it("shows a paid booking cancelled with no cancelled_at as Cancelled with its refund note, not as an expired hold", () => {
+    renderCard(
+      makeBooking("b1", "cancelled", { cancelledAt: null, refundDue: true }),
+    );
+    expect(screen.getByText("Cancelled")).toBeInTheDocument();
+    expect(screen.queryByText("Expired")).toBeNull();
+    expect(screen.queryByRole("link", { name: /Book again/ })).toBeNull();
+    expect(
+      screen.getByText("Your deposit will be refunded."),
+    ).toBeInTheDocument();
   });
 });
