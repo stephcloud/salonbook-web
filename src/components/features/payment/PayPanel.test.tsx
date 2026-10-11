@@ -302,12 +302,93 @@ describe("PayPanel", () => {
     });
   });
 
+  describe("the screens", () => {
+    it("says 'checking' instead of 'expired' until the re-read at zero answers, and shows paid if it was", async () => {
+      let answer: (value: BookingDetail) => void = () => {};
+      getBooking.mockReturnValue(
+        new Promise<BookingDetail>((resolve) => {
+          answer = resolve;
+        }),
+      );
+      renderPanel(booking(), { minutesIn: 14 });
+
+      await advance(MINUTE + 1000);
+      expect(
+        screen.getByRole("heading", { name: "Checking your booking..." }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("heading", { name: "This hold expired" }),
+      ).toBeNull();
+
+      answer(booking({ status: "confirmed", payment_status: "paid" }));
+      await settle();
+      expect(
+        screen.getByRole("heading", { name: "Your booking is confirmed" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("heading", { name: "This hold expired" }),
+      ).toBeNull();
+    });
+
+    it("shows 'expired' once the re-read says the booking is still not paid", async () => {
+      getBooking.mockResolvedValue(booking());
+      renderPanel(booking(), { minutesIn: 14 });
+      await advance(MINUTE + 1000);
+      expect(
+        screen.getByRole("heading", { name: "This hold expired" }),
+      ).toBeInTheDocument();
+    });
+
+    it("moves focus to the new screen's heading and announces it, but not on the first paint", async () => {
+      getBooking.mockResolvedValue(booking());
+      renderPanel(booking(), { minutesIn: 13 });
+      expect(
+        screen.getByRole("heading", { name: "Pay your deposit" }),
+      ).not.toHaveFocus();
+      expect(
+        screen
+          .getAllByRole("status")
+          .map((el) => el.textContent)
+          .join(""),
+      ).toBe("");
+
+      await advance(2 * MINUTE + 1000);
+
+      expect(
+        screen.getByRole("heading", { name: "This hold expired" }),
+      ).toHaveFocus();
+      expect(
+        screen
+          .getAllByRole("status")
+          .map((el) => el.textContent)
+          .join(""),
+      ).toContain("This hold expired");
+    });
+
+    it("labels the deposit 'due' before paying and 'paid' once confirmed", () => {
+      const { unmount } = renderPanel();
+      expect(screen.getByText("Deposit due")).toBeInTheDocument();
+      unmount();
+      renderPanel(booking({ status: "confirmed", payment_status: "paid" }));
+      expect(screen.getByText("Deposit paid")).toBeInTheDocument();
+    });
+
+    it("keeps the countdown labelled by its own caption", () => {
+      renderPanel();
+      expect(screen.getByRole("timer")).toHaveAccessibleName(
+        "Time left to pay",
+      );
+    });
+  });
+
   describe("the Pay button", () => {
     it("starts the payment, saves the booking id, then goes to Paystack", async () => {
       payBooking.mockResolvedValue(payment());
-      // The id must already be saved at the moment we leave.
+      // What was saved at the moment we left. (An assertion thrown inside the
+      // mock would be swallowed by the mutation, so record it and check after.)
+      let savedWhenLeaving: string | null = "not called";
       leaveTo.mockImplementation(() => {
-        expect(window.sessionStorage.getItem(STORAGE_KEY)).toBe(ID);
+        savedWhenLeaving = window.sessionStorage.getItem(STORAGE_KEY);
       });
       renderPanel();
 
@@ -315,6 +396,8 @@ describe("PayPanel", () => {
 
       expect(payBooking).toHaveBeenCalledWith(ID);
       expect(leaveTo).toHaveBeenCalledWith(CHECKOUT);
+      expect(savedWhenLeaving).toBe(ID);
+      expect(screen.queryByRole("alert")).toBeNull();
       expect(
         screen.getByRole("button", { name: "Taking you to Paystack..." }),
       ).toBeDisabled();
@@ -447,6 +530,56 @@ describe("PayPanel", () => {
         "Could not reach the server",
       );
       expect(screen.getByRole("button", { name: "Pay deposit" })).toBeEnabled();
+    });
+
+    it("still goes to Paystack when sessionStorage is blocked (the callback then points to My bookings)", async () => {
+      payBooking.mockResolvedValue(payment());
+      vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+        throw new DOMException("blocked", "SecurityError");
+      });
+      renderPanel();
+
+      await click("Pay deposit");
+
+      expect(leaveTo).toHaveBeenCalledWith(CHECKOUT);
+      expect(screen.queryByRole("alert")).toBeNull();
+      vi.restoreAllMocks();
+    });
+
+    it("becomes usable again when the page is restored with the Back button", async () => {
+      payBooking.mockResolvedValue(payment());
+      renderPanel();
+      await click("Pay deposit");
+      expect(
+        screen.getByRole("button", { name: "Taking you to Paystack..." }),
+      ).toBeDisabled();
+
+      // A page restored from the back/forward cache fires pageshow with persisted.
+      await act(async () => {
+        window.dispatchEvent(
+          Object.assign(new Event("pageshow"), { persisted: true }),
+        );
+      });
+
+      expect(screen.getByRole("button", { name: "Pay deposit" })).toBeEnabled();
+      await click("Pay deposit");
+      expect(payBooking).toHaveBeenCalledTimes(2);
+    });
+
+    it("ignores an ordinary pageshow (not restored from the cache)", async () => {
+      payBooking.mockResolvedValue(payment());
+      renderPanel();
+      await click("Pay deposit");
+
+      await act(async () => {
+        window.dispatchEvent(
+          Object.assign(new Event("pageshow"), { persisted: false }),
+        );
+      });
+
+      expect(
+        screen.getByRole("button", { name: "Taking you to Paystack..." }),
+      ).toBeDisabled();
     });
   });
 });
