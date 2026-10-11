@@ -381,6 +381,142 @@ describe("PayPanel", () => {
     });
   });
 
+  describe("when the re-read at zero does not come back", () => {
+    it.each([
+      ["a network error", () => new TypeError("fetch failed")],
+      ["a server error", () => new ApiError(502, "bad gateway")],
+    ])(
+      "does not say 'expired' after %s: the client may have paid",
+      async (_name, makeError) => {
+        getBooking.mockRejectedValue(makeError());
+        renderPanel(booking(), { minutesIn: 14 });
+
+        await advance(MINUTE + 1000);
+
+        expect(
+          screen.getByRole("heading", {
+            name: "We could not check your booking",
+          }),
+        ).toBeInTheDocument();
+        expect(
+          screen.queryByRole("heading", { name: "This hold expired" }),
+        ).toBeNull();
+        expect(
+          screen.getByRole("link", { name: "My bookings" }),
+        ).toHaveAttribute("href", "/bookings");
+        expect(
+          screen.queryByRole("button", { name: "Pay deposit" }),
+        ).toBeNull();
+      },
+    );
+
+    it("lets the client try the check again, and shows paid if it was", async () => {
+      getBooking
+        .mockRejectedValueOnce(new TypeError("fetch failed"))
+        .mockResolvedValue(
+          booking({ status: "confirmed", payment_status: "paid" }),
+        );
+      renderPanel(booking(), { minutesIn: 14 });
+      await advance(MINUTE + 1000);
+
+      await click("Try again");
+
+      expect(getBooking).toHaveBeenCalledTimes(2);
+      expect(
+        screen.getByRole("heading", { name: "Your booking is confirmed" }),
+      ).toBeInTheDocument();
+    });
+
+    it("says 'expired' once a retry confirms the booking was not paid", async () => {
+      getBooking
+        .mockRejectedValueOnce(new TypeError("fetch failed"))
+        .mockResolvedValue(booking());
+      renderPanel(booking(), { minutesIn: 14 });
+      await advance(MINUTE + 1000);
+
+      await click("Try again");
+
+      expect(
+        screen.getByRole("heading", { name: "This hold expired" }),
+      ).toBeInTheDocument();
+    });
+
+    it("shows 'checking' again while the retry is running", async () => {
+      getBooking
+        .mockRejectedValueOnce(new TypeError("fetch failed"))
+        .mockReturnValue(new Promise(() => {}));
+      renderPanel(booking(), { minutesIn: 14 });
+      await advance(MINUTE + 1000);
+
+      await click("Try again");
+
+      expect(
+        screen.getByRole("heading", { name: "Checking your booking..." }),
+      ).toBeInTheDocument();
+    });
+
+    it("stays quiet on a 401 while the login redirect happens (no 'expired', no alert)", async () => {
+      getBooking.mockRejectedValue(new ApiError(401, "Please sign in again."));
+      renderPanel(booking(), { minutesIn: 14 });
+
+      await advance(MINUTE + 1000);
+
+      expect(
+        screen.getByRole("heading", { name: "Redirecting you to sign in" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("heading", { name: "This hold expired" }),
+      ).toBeNull();
+      expect(screen.queryByRole("alert")).toBeNull();
+    });
+  });
+
+  describe("when the page is restored with the Back button", () => {
+    function restorePage(persisted: boolean) {
+      return act(async () => {
+        window.dispatchEvent(
+          Object.assign(new Event("pageshow"), { persisted }),
+        );
+        await vi.advanceTimersByTimeAsync(1);
+        await vi.advanceTimersByTimeAsync(0);
+      });
+    }
+
+    it("re-reads the booking and shows the confirmation if the client paid before going back", async () => {
+      getBooking.mockResolvedValue(
+        booking({ status: "confirmed", payment_status: "paid" }),
+      );
+      renderPanel();
+      expect(screen.getByRole("button", { name: "Pay deposit" })).toBeEnabled();
+
+      await restorePage(true);
+
+      expect(getBooking).toHaveBeenCalledWith(ID);
+      expect(
+        screen.getByRole("heading", { name: "Your booking is confirmed" }),
+      ).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Pay deposit" })).toBeNull();
+    });
+
+    it("keeps the pay screen, usable, when the re-read fails", async () => {
+      getBooking.mockRejectedValue(new TypeError("fetch failed"));
+      payBooking.mockResolvedValue(payment());
+      renderPanel();
+      await click("Pay deposit");
+
+      await restorePage(true);
+
+      expect(screen.getByRole("button", { name: "Pay deposit" })).toBeEnabled();
+      expect(screen.queryByRole("alert")).toBeNull();
+    });
+
+    it("does not re-read for an ordinary pageshow", async () => {
+      renderPanel();
+      await restorePage(false);
+      expect(getBooking).not.toHaveBeenCalled();
+    });
+  });
+
   describe("the Pay button", () => {
     it("starts the payment, saves the booking id, then goes to Paystack", async () => {
       payBooking.mockResolvedValue(payment());

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { CircleAlert, LoaderCircle } from "lucide-react";
@@ -14,7 +14,12 @@ import { Panel } from "@/components/features/payment/Panel";
 import { useCountdown } from "@/hooks/useCountdown";
 import { useSlowPending } from "@/hooks/useSlowPending";
 import { useViewChange } from "@/hooks/useViewChange";
-import { getBooking, payBooking, type BookingDetail } from "@/lib/api";
+import {
+  ApiError,
+  getBooking,
+  payBooking,
+  type BookingDetail,
+} from "@/lib/api";
 import { bookingOutcome } from "@/lib/booking-outcome";
 import { formatCountdown, HOLD_MINUTES } from "@/lib/hold";
 import { leaveTo } from "@/lib/navigate";
@@ -30,11 +35,20 @@ type PayPanelProps = {
   serverNow: number;
 };
 
-type View = "pay" | "checking" | "paid" | "expired" | "cancelled";
+type View =
+  | "pay"
+  | "checking"
+  | "unsure"
+  | "signed-out"
+  | "paid"
+  | "expired"
+  | "cancelled";
 
 const TITLES: Record<View, string> = {
   pay: "Pay your deposit",
   checking: "Checking your booking...",
+  unsure: "We could not check your booking",
+  "signed-out": "Redirecting you to sign in",
   paid: "Your booking is confirmed",
   expired: "This hold expired",
   cancelled: "This booking was cancelled",
@@ -59,15 +73,31 @@ export function PayPanel({ initialBooking, serverNow }: PayPanelProps) {
 
   // When the countdown reaches zero, ask the API once instead of trusting
   // this device's clock: the booking may have been cancelled, or paid at the
-  // last second. Until it answers, say "checking" rather than "expired".
+  // last second. Until it answers, say "checking" rather than "expired", and
+  // if the answer never comes (network, server) do not guess "expired": the
+  // client may have paid.
   const rechecked = useRef(false);
-  const [recheckDone, setRecheckDone] = useState(false);
+  const [recheck, setRecheck] = useState<
+    "waiting" | "done" | "failed" | "signed-out"
+  >("waiting");
+  const recheckBooking = useCallback(() => {
+    void refetch().then((result) => {
+      if (!result.isError) setRecheck("done");
+      else if (
+        result.error instanceof ApiError &&
+        result.error.status === 401
+      ) {
+        // apiFetch is already sending the client to /login.
+        setRecheck("signed-out");
+      } else setRecheck("failed");
+    });
+  }, [refetch]);
   useEffect(() => {
     if (holdOver && !rechecked.current) {
       rechecked.current = true;
-      void refetch().finally(() => setRecheckDone(true));
+      recheckBooking();
     }
-  }, [holdOver, refetch]);
+  }, [holdOver, recheckBooking]);
 
   // One request at a time. The ref closes the gap before React re-renders, so
   // two quick clicks cannot start two payments.
@@ -77,17 +107,19 @@ export function PayPanel({ initialBooking, serverNow }: PayPanelProps) {
   const [problem, setProblem] = useState<string | null>(null);
 
   // Coming back from Paystack with the Back button restores this page as it
-  // was, with the button still "busy": make it usable again.
+  // was, with the button still "busy": make it usable again, and re-read the
+  // booking in case the client paid before pressing Back.
   useEffect(() => {
     const onPageShow = (event: PageTransitionEvent) => {
       if (event.persisted) {
         sending.current = false;
         setRedirecting(false);
+        void refetch();
       }
     };
     window.addEventListener("pageshow", onPageShow);
     return () => window.removeEventListener("pageshow", onPageShow);
-  }, []);
+  }, [refetch]);
 
   const pay = useMutation({
     mutationFn: () => payBooking(id),
@@ -142,7 +174,14 @@ export function PayPanel({ initialBooking, serverNow }: PayPanelProps) {
     // client sets cancelled_at.
     view = booking.cancelled_at === null ? "expired" : "cancelled";
   } else if (holdOver) {
-    view = recheckDone ? "expired" : "checking";
+    view =
+      recheck === "waiting"
+        ? "checking"
+        : recheck === "failed"
+          ? "unsure"
+          : recheck === "signed-out"
+            ? "signed-out"
+            : "expired";
   } else view = "pay";
 
   const title = TITLES[view];
@@ -174,6 +213,37 @@ export function PayPanel({ initialBooking, serverNow }: PayPanelProps) {
       <p className="text-muted-foreground">
         The time to pay is up. We are checking whether your payment came
         through.
+      </p>
+    );
+  } else if (view === "unsure") {
+    body = (
+      <>
+        <p className="text-muted-foreground">
+          The time to pay is up and we could not check whether your payment came
+          through. If you paid, your payment is safe. Try again, or open My
+          bookings in a minute.
+        </p>
+        <ActionRow>
+          <Button
+            size="lg"
+            className="w-full sm:w-auto"
+            onClick={() => {
+              setRecheck("waiting");
+              recheckBooking();
+            }}
+          >
+            Try again
+          </Button>
+          <Link href="/bookings" className={actionClass("outline")}>
+            My bookings
+          </Link>
+        </ActionRow>
+      </>
+    );
+  } else if (view === "signed-out") {
+    body = (
+      <p className="text-muted-foreground">
+        Your session ended. Sign in again and we will check your booking.
       </p>
     );
   } else if (view === "expired" || view === "cancelled") {
