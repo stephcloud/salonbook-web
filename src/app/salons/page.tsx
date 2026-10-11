@@ -1,5 +1,6 @@
 import { SalonList } from "@/components/features/salons/SalonList";
-import { SALONS_PAGE_SIZE, getSalons } from "@/lib/api";
+import { SALONS_PAGE_SIZE } from "@/lib/api";
+import { getSalons } from "@/lib/api-server";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -13,6 +14,7 @@ export default async function SalonsPage({
 }) {
   const { page: rawPage } = await searchParams;
   const parsed = Number.parseInt(rawPage ?? "1", 10);
+  // The API allows offsets up to 10000, which is page 500 at 20 per page.
   const page =
     Number.isFinite(parsed) && parsed > 0 ? Math.min(parsed, 500) : 1;
   const salons = await getSalons(page);

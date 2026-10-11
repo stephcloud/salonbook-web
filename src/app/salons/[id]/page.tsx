@@ -7,8 +7,8 @@ import {
   getSalon,
   getSalonServices,
   getSalonStylists,
-  isNotFound,
-} from "@/lib/api";
+  isMissingResource,
+} from "@/lib/api-server";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -16,20 +16,28 @@ export const maxDuration = 300;
 type PageProps = { params: Promise<{ id: string }> };
 
 async function loadSalon(id: string) {
-  try {
-    const [salon, services, stylists] = await Promise.all([
-      getSalon(id),
-      getSalonServices(id),
-      getSalonStylists(id),
-    ]);
-    return { salon, services, stylists };
-  } catch (error) {
-    if (isNotFound(error)) notFound();
+  // Only the salon's own 404/422 means "not found". Failures of the lists
+  // show the retry screen instead.
+  const salon = await getSalon(id).catch((error: unknown) => {
+    if (isMissingResource(error)) notFound();
     throw error;
-  }
+  });
+  const [services, stylists] = await Promise.all([
+    getSalonServices(id),
+    getSalonStylists(id),
+  ]);
+  return { salon, services, stylists };
 }
 
-export const metadata = { title: "Salon · SalonBook" };
+export async function generateMetadata({ params }: PageProps) {
+  const { id } = await params;
+  try {
+    const salon = await getSalon(id);
+    return { title: `${salon.name} · SalonBook` };
+  } catch {
+    return { title: "Salon · SalonBook" };
+  }
+}
 
 export default async function SalonDetailPage({ params }: PageProps) {
   const { id } = await params;
