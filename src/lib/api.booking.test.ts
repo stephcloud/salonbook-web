@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ApiError, createBooking, getSlots } from "@/lib/api";
+import {
+  ApiError,
+  createBooking,
+  getBooking,
+  getSlots,
+  payBooking,
+} from "@/lib/api";
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -91,6 +97,70 @@ describe("createBooking", () => {
     expect(error).toMatchObject({
       status: 409,
       message: "That time slot is no longer available.",
+    });
+  });
+});
+
+const BOOKING = "69994867-62d8-480e-b4a6-6f8de65f75c4";
+
+describe("getBooking", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("GETs one booking through the proxy", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ id: BOOKING }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await getBooking(BOOKING);
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe(`/api/proxy/bookings/${BOOKING}`);
+    expect(init.method).toBe("GET");
+  });
+
+  it("encodes the id so it cannot change the path", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({}));
+    vi.stubGlobal("fetch", fetchMock);
+    await getBooking("a/../b");
+    expect(String(fetchMock.mock.calls[0][0])).toBe(
+      "/api/proxy/bookings/a%2F..%2Fb",
+    );
+  });
+});
+
+describe("payBooking", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("POSTs to the pay endpoint with no body", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(jsonResponse({ authorization_url: "https://x" }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await payBooking(BOOKING);
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe(`/api/proxy/bookings/${BOOKING}/pay`);
+    expect(init.method).toBe("POST");
+    expect(init.body).toBeUndefined();
+  });
+
+  it("surfaces the 409 for a booking that can no longer be paid", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          jsonResponse(
+            { detail: "This booking can no longer be paid for." },
+            409,
+          ),
+        ),
+    );
+    const error = await payBooking(BOOKING).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error).toMatchObject({
+      status: 409,
+      message: "This booking can no longer be paid for.",
     });
   });
 });

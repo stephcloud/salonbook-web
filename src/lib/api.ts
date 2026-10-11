@@ -185,3 +185,23 @@ export function getSlots(
 export function createBooking(input: BookingInput): Promise<Booking> {
   return apiFetch<Booking>("bookings", { method: "POST", body: input });
 }
+
+export type BookingDetail =
+  components["schemas"]["ClientBookingDetailResponse"];
+export type BookingListItem = components["schemas"]["ClientBookingResponse"];
+export type Payment = components["schemas"]["PaymentResponse"];
+
+/** One of the signed-in client's bookings, with salon, service and payment info (browser). */
+export function getBooking(id: string): Promise<BookingDetail> {
+  return apiFetch<BookingDetail>(`bookings/${encodeURIComponent(id)}`);
+}
+
+/**
+ * Starts (or re-reads) the deposit payment. The API answers again with the
+ * same payment and Paystack link if called twice for the same booking.
+ */
+export function payBooking(id: string): Promise<Payment> {
+  return apiFetch<Payment>(`bookings/${encodeURIComponent(id)}/pay`, {
+    method: "POST",
+  });
+}
