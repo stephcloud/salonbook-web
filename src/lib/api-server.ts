@@ -6,6 +6,8 @@ import {
   ApiError,
   SALONS_PAGE_SIZE,
   messageFrom,
+  type BookingDetail,
+  type BookingListItem,
   type Salon,
   type Service,
   type Stylist,
@@ -116,4 +118,64 @@ export function getSalonStylists(id: string): Promise<Stylist[]> {
   return publicGet<Stylist[]>(
     `/salons/${encodeURIComponent(id)}/stylists?limit=${MAX_LIST_LIMIT}`,
   );
+}
+
+const UPSTREAM_DOWN_MESSAGE =
+  "The server is not responding right now. It may be waking up, please try again in a moment.";
+
+/** GET with the signed-in user's token from the cookie. Throws ApiError on failure. */
+async function authedGet<T>(path: string): Promise<T> {
+  const token = (await cookies()).get(TOKEN_COOKIE)?.value;
+  const base = apiBaseUrl();
+  if (!token) throw new ApiError(401, "Please sign in again.");
+  if (!base) throw new Error("API_URL is not set");
+
+  const result = await fetchUpstream(`${base}${path}`, {
+    method: "GET",
+    headers: new Headers({
+      accept: "application/json",
+      authorization: `Bearer ${token}`,
+    }),
+  });
+  if (!result.ok) {
+    throw new ApiError(
+      result.reason === "timeout" ? 504 : 502,
+      UPSTREAM_DOWN_MESSAGE,
+    );
+  }
+  const { response } = result;
+  if (!response.ok) {
+    const body: unknown = await response.json().catch(() => null);
+    throw new ApiError(
+      response.status,
+      messageFrom(body, "Something went wrong. Please try again."),
+    );
+  }
+  return (await response.json()) as T;
+}
+
+/**
+ * One of the client's bookings for a server render, with the server's clock
+ * so the browser can correct a wrong device clock when counting down the hold.
+ * Throws ApiError: 403 (not yours), 404, 422 (bad id), 401 (signed out).
+ */
+export async function getMyBooking(
+  id: string,
+): Promise<{ booking: BookingDetail; serverNow: number }> {
+  const booking = await authedGet<BookingDetail>(
+    `/bookings/${encodeURIComponent(id)}`,
+  );
+  return { booking, serverNow: Date.now() };
+}
+
+/**
+ * The client's bookings, newest first as the API returns them (up to 100),
+ * with the server's clock for working out which holds are still running.
+ */
+export async function getMyBookings(): Promise<{
+  bookings: BookingListItem[];
+  serverNow: number;
+}> {
+  const bookings = await authedGet<BookingListItem[]>("/bookings?limit=100");
+  return { bookings, serverNow: Date.now() };
 }

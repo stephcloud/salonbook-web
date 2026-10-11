@@ -5,11 +5,7 @@ import type { Salon } from "@/lib/api";
 import { buttonVariants } from "@/components/ui/button";
 import { SalonImage } from "@/components/features/salons/SalonImage";
 import { formatNaira } from "@/lib/money";
-
-function cancellationText(hours: number): string {
-  const unit = hours === 1 ? "hour" : "hours";
-  return `Refund only if you cancel more than ${hours} ${unit} before your appointment.`;
-}
+import { refundRuleText } from "@/lib/refund";
 
 export function SalonHeader({
   salon,
@@ -48,7 +44,7 @@ export function SalonHeader({
           <div>
             <dt className="sr-only">Cancellation</dt>
             <dd className="text-muted-foreground">
-              {cancellationText(salon.cancellation_hours)}
+              {refundRuleText(salon.cancellation_hours)}
             </dd>
           </div>
         </dl>

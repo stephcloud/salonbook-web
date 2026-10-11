@@ -40,3 +40,20 @@ export function formatLagosTime(input: string | Date): string {
 export function formatLagosDateTime(input: string | Date): string {
   return `${formatLagosDate(input)}, ${formatLagosTime(input)}`;
 }
+
+const dayFormatter = new Intl.DateTimeFormat("en-CA", {
+  timeZone: TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+/** Today's date in Africa/Lagos as "2026-03-07", for date inputs and the slots query. */
+export function lagosToday(now: Date = new Date()): string {
+  return dayFormatter.format(now);
+}
+
+/** "Sat, 7 Mar 2026" for a plain "2026-03-07" calendar day (noon, so no zone can shift it). */
+export function formatLagosDay(day: string): string {
+  return formatLagosDate(`${day}T12:00:00+01:00`);
+}
