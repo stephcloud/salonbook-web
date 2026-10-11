@@ -231,3 +231,31 @@ export function cancelBooking(id: string): Promise<Booking> {
     method: "POST",
   });
 }
+
+/** A measurement taking longer than this is too uncertain to use. */
+const MAX_CLOCK_ROUND_TRIP_MS = 5000;
+
+/**
+ * Measures how far this device's clock is from our server's, as "server time
+ * minus device time" in milliseconds, or null when it cannot be measured (no
+ * network, or the round trip was too slow to trust). The server read its clock
+ * about halfway through the round trip.
+ */
+export async function fetchClockSkew(): Promise<number | null> {
+  try {
+    const sentAt = Date.now();
+    const response = await fetch("/api/time", { cache: "no-store" });
+    const receivedAt = Date.now();
+    if (!response.ok) return null;
+    if (receivedAt - sentAt > MAX_CLOCK_ROUND_TRIP_MS) return null;
+    const body: unknown = await response.json();
+    const now =
+      body && typeof body === "object"
+        ? (body as { now?: unknown }).now
+        : undefined;
+    if (typeof now !== "number" || !Number.isFinite(now)) return null;
+    return now - (sentAt + receivedAt) / 2;
+  } catch {
+    return null;
+  }
+}

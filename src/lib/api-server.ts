@@ -123,8 +123,15 @@ export function getSalonStylists(id: string): Promise<Stylist[]> {
 const UPSTREAM_DOWN_MESSAGE =
   "The server is not responding right now. It may be waking up, please try again in a moment.";
 
-/** GET with the signed-in user's token from the cookie. Throws ApiError on failure. */
-async function authedGet<T>(path: string): Promise<T> {
+/**
+ * GET with the signed-in user's token from the cookie. Throws ApiError on
+ * failure. `receivedAt` is our clock the moment the API's answer arrived (before
+ * the body is read), the closest we can get to the API's own clock for working
+ * out how much of a booking's hold is left.
+ */
+async function authedGet<T>(
+  path: string,
+): Promise<{ data: T; receivedAt: number }> {
   const token = (await cookies()).get(TOKEN_COOKIE)?.value;
   const base = apiBaseUrl();
   if (!token) throw new ApiError(401, "Please sign in again.");
@@ -143,6 +150,7 @@ async function authedGet<T>(path: string): Promise<T> {
       UPSTREAM_DOWN_MESSAGE,
     );
   }
+  const receivedAt = Date.now();
   const { response } = result;
   if (!response.ok) {
     const body: unknown = await response.json().catch(() => null);
@@ -151,7 +159,7 @@ async function authedGet<T>(path: string): Promise<T> {
       messageFrom(body, "Something went wrong. Please try again."),
     );
   }
-  return (await response.json()) as T;
+  return { data: (await response.json()) as T, receivedAt };
 }
 
 /**
@@ -162,20 +170,22 @@ async function authedGet<T>(path: string): Promise<T> {
 export async function getMyBooking(
   id: string,
 ): Promise<{ booking: BookingDetail; serverNow: number }> {
-  const booking = await authedGet<BookingDetail>(
+  const { data, receivedAt } = await authedGet<BookingDetail>(
     `/bookings/${encodeURIComponent(id)}`,
   );
-  return { booking, serverNow: Date.now() };
+  return { booking: data, serverNow: receivedAt };
 }
 
 /**
- * The client's bookings, newest first as the API returns them (up to 100),
- * with the server's clock for working out which holds are still running.
+ * The client's bookings, latest start first as the API returns them (up to
+ * 100), with the server's clock for working out which holds are still running.
  */
 export async function getMyBookings(): Promise<{
   bookings: BookingListItem[];
   serverNow: number;
 }> {
-  const bookings = await authedGet<BookingListItem[]>("/bookings?limit=100");
-  return { bookings, serverNow: Date.now() };
+  const { data, receivedAt } = await authedGet<BookingListItem[]>(
+    "/bookings?limit=100",
+  );
+  return { bookings: data, serverNow: receivedAt };
 }
