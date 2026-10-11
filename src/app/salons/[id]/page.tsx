@@ -1,37 +1,14 @@
-import { notFound } from "next/navigation";
 import { CopySalonLinkButton } from "@/components/features/salons/CopySalonLinkButton";
 import { SalonHeader } from "@/components/features/salons/SalonHeader";
 import { ServiceList } from "@/components/features/salons/ServiceList";
 import { StylistList } from "@/components/features/salons/StylistList";
-import { getSalon, getSalonServices, getSalonStylists } from "@/lib/api-server";
-import { isMissingResource } from "@/lib/api";
+import { getSalon } from "@/lib/api-server";
+import { loadSalonBundle } from "@/lib/salon-bundle";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 type PageProps = { params: Promise<{ id: string }> };
-
-async function loadSalon(id: string) {
-  // Start the lists right away so a cold backend is not hit twice in a row.
-  // The no-op catch only marks them handled, in case the salon check throws
-  // first; awaiting them below still rejects with the original error.
-  const servicesRequest = getSalonServices(id);
-  const stylistsRequest = getSalonStylists(id);
-  servicesRequest.catch(() => {});
-  stylistsRequest.catch(() => {});
-
-  // Only the salon's own 404/422 means "not found". Failures of the lists
-  // show the retry screen instead.
-  const salon = await getSalon(id).catch((error: unknown) => {
-    if (isMissingResource(error)) notFound();
-    throw error;
-  });
-  const [services, stylists] = await Promise.all([
-    servicesRequest,
-    stylistsRequest,
-  ]);
-  return { salon, services, stylists };
-}
 
 export async function generateMetadata({ params }: PageProps) {
   const { id } = await params;
@@ -45,7 +22,7 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function SalonDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const { salon, services, stylists } = await loadSalon(id);
+  const { salon, services, stylists } = await loadSalonBundle(id);
 
   return (
     <main
