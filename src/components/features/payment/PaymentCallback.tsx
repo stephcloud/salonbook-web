@@ -68,7 +68,8 @@ export function PaymentCallback() {
   const view = !ready ? "loading" : phase;
   const title = TITLES[view];
   // Move focus to the new result and announce it, but not on the first paint.
-  const changed = useViewChange(view);
+  // "loading" is only the stand-in shown until storage is read after hydration.
+  const changed = useViewChange(view, "loading");
 
   let body = null;
   if (view === "loading") {
