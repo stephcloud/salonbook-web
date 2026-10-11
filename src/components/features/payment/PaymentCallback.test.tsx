@@ -324,12 +324,18 @@ describe("PaymentCallback", () => {
   });
 
   describe("outcomes", () => {
-    it("tells the client how to try again when the payment failed", async () => {
+    it("tells the client how to try again once the payment has stayed failed", async () => {
       window.sessionStorage.setItem(STORAGE_KEY, ID);
       getBooking.mockResolvedValue(booking({ payment_status: "failed" }));
 
       renderCallback();
       await settle();
+      // Not yet: a retry may still be about to succeed.
+      expect(
+        screen.getByRole("heading", { name: "Confirming your payment" }),
+      ).toBeInTheDocument();
+
+      await advance(12_000);
 
       expect(
         screen.getByRole("heading", {
@@ -341,6 +347,28 @@ describe("PaymentCallback", () => {
         `/bookings/${ID}/pay`,
       );
       expect(window.sessionStorage.getItem(STORAGE_KEY)).toBeNull();
+    });
+
+    it("shows success, not failure, when an earlier failed read is followed by paid", async () => {
+      window.sessionStorage.setItem(STORAGE_KEY, ID);
+      getBooking
+        .mockResolvedValueOnce(booking({ payment_status: "failed" }))
+        .mockResolvedValue(confirmed());
+
+      renderCallback();
+      await settle();
+      await advance(2500);
+
+      expect(
+        screen.queryByRole("heading", {
+          name: "Your payment did not go through",
+        }),
+      ).toBeNull();
+      expect(
+        screen.getByRole("heading", {
+          name: "Payment received. Your booking is confirmed.",
+        }),
+      ).toBeInTheDocument();
     });
 
     it("says the booking is closed when it was cancelled or the hold ended", async () => {
