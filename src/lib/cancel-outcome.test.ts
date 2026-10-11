@@ -12,20 +12,28 @@ describe("cancelOutcome (straight after cancelling)", () => {
     ).toEqual({ kind: "refund", message: "Your deposit will be refunded." });
   });
 
-  it("says there is no refund, naming the window, for a paid booking when refund_due is false", () => {
+  it("follows the API refund_due even if the list had the booking as unpaid or unknown", () => {
+    for (const wasPaid of [false, null]) {
+      expect(
+        cancelOutcome({ wasPaid, refundDue: true, cancellationHours: 24 }).kind,
+      ).toBe("refund");
+    }
+  });
+
+  it("says there is no refund, plainly and with the salon's own hours, for a paid booking when refund_due is false", () => {
     expect(
       cancelOutcome({ wasPaid: true, refundDue: false, cancellationHours: 24 }),
     ).toEqual({
       kind: "no-refund",
-      message: "No refund, cancelled inside the 24-hour window.",
+      message: "No refund: it was cancelled within 24 hours of the start time.",
     });
     expect(
       cancelOutcome({ wasPaid: true, refundDue: false, cancellationHours: 48 })
         .message,
-    ).toContain("48-hour");
+    ).toContain("within 48 hours");
   });
 
-  it("says nothing was charged when an unpaid booking is cancelled", () => {
+  it("says nothing was charged only when it is known that no deposit was paid", () => {
     expect(
       cancelOutcome({
         wasPaid: false,
@@ -35,17 +43,16 @@ describe("cancelOutcome (straight after cancelling)", () => {
     ).toEqual({ kind: "nothing-charged", message: "Nothing was charged." });
   });
 
-  it("makes no refund claim when refund_due is null", () => {
+  it("makes no claim about money when it could not be checked whether a deposit was paid", () => {
     expect(
-      cancelOutcome({ wasPaid: true, refundDue: null, cancellationHours: 24 }),
-    ).toEqual({ kind: "unknown", message: "Your booking is cancelled." });
+      cancelOutcome({ wasPaid: null, refundDue: false, cancellationHours: 24 }),
+    ).toEqual({ kind: "unknown", message: "" });
   });
 
-  it("follows the API refund_due, not the other inputs, when it says true", () => {
+  it("makes no claim about money when refund_due is null", () => {
     expect(
-      cancelOutcome({ wasPaid: false, refundDue: true, cancellationHours: 0 })
-        .kind,
-    ).toBe("refund");
+      cancelOutcome({ wasPaid: true, refundDue: null, cancellationHours: 24 }),
+    ).toEqual({ kind: "unknown", message: "" });
   });
 });
 
@@ -63,8 +70,8 @@ describe("cancelledListNote (an already cancelled booking in the list)", () => {
     );
   });
 
-  it("only says 'no refund due' when refund_due is false (it cannot tell unpaid from paid)", () => {
-    expect(cancelledListNote(false)).toBe("No refund due.");
+  it("only says that no refund is due when refund_due is false (the list cannot tell unpaid from paid)", () => {
+    expect(cancelledListNote(false)).toBe("No refund is due on this booking.");
   });
 
   it("says nothing for an expired hold (refund_due null)", () => {
