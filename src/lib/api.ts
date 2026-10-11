@@ -2,7 +2,9 @@
 // (see also api-server.ts for the signed-in user); in the browser everything
 // goes through /api/proxy/* and /api/auth/* on our own domain.
 
+import type { components } from "@/lib/api-types";
 import { safeNextPath } from "@/lib/auth/safe-next";
+import { apiBaseUrl, fetchUpstream } from "@/lib/proxy/upstream";
 
 const ATTEMPT_TIMEOUT_MS = 30_000;
 
@@ -145,4 +147,71 @@ export async function getHealth(): Promise<HealthResult> {
 
   const first = await checkOnce(origin);
   return first.ok ? first : checkOnce(origin);
+}
+
+export type Salon = components["schemas"]["SalonResponse"];
+export type Service = components["schemas"]["ServiceResponse"];
+export type Stylist = components["schemas"]["PublicStylistResponse"];
+
+export const SALONS_PAGE_SIZE = 20;
+const MAX_LIST_LIMIT = 100;
+
+/**
+ * Server-side GET for the public endpoints (no token). fetchUpstream retries
+ * once, which covers the free tier waking up. Throws ApiError on failure.
+ */
+async function publicGet<T>(path: string): Promise<T> {
+  const base = apiBaseUrl();
+  if (!base) throw new Error("API_URL is not set");
+
+  const result = await fetchUpstream(`${base}${path}`, {
+    method: "GET",
+    headers: new Headers({ accept: "application/json" }),
+  });
+  if (!result.ok) {
+    throw new ApiError(
+      result.reason === "timeout" ? 504 : 502,
+      "The server is not responding right now. It may be waking up, please try again in a moment.",
+    );
+  }
+
+  const { response } = result;
+  if (!response.ok) {
+    const body: unknown = await response.json().catch(() => null);
+    throw new ApiError(
+      response.status,
+      messageFrom(body, "Something went wrong. Please try again."),
+    );
+  }
+  return (await response.json()) as T;
+}
+
+/** Not found, or an id that is not a valid UUID (the API answers 404 or 422). */
+export function isNotFound(error: unknown): boolean {
+  return (
+    error instanceof ApiError && (error.status === 404 || error.status === 422)
+  );
+}
+
+export function getSalons(page = 1): Promise<Salon[]> {
+  const offset = (Math.max(1, page) - 1) * SALONS_PAGE_SIZE;
+  return publicGet<Salon[]>(
+    `/salons?limit=${SALONS_PAGE_SIZE}&offset=${offset}`,
+  );
+}
+
+export function getSalon(id: string): Promise<Salon> {
+  return publicGet<Salon>(`/salons/${encodeURIComponent(id)}`);
+}
+
+export function getSalonServices(id: string): Promise<Service[]> {
+  return publicGet<Service[]>(
+    `/salons/${encodeURIComponent(id)}/services?limit=${MAX_LIST_LIMIT}`,
+  );
+}
+
+export function getSalonStylists(id: string): Promise<Stylist[]> {
+  return publicGet<Stylist[]>(
+    `/salons/${encodeURIComponent(id)}/stylists?limit=${MAX_LIST_LIMIT}`,
+  );
 }
