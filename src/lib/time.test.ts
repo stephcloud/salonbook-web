@@ -3,6 +3,7 @@ import {
   formatLagosDate,
   formatLagosDateTime,
   formatLagosTime,
+  lagosToday,
 } from "@/lib/time";
 
 describe("Africa/Lagos formatting", () => {
@@ -37,5 +38,16 @@ describe("Africa/Lagos formatting", () => {
 
   it("throws on an invalid date", () => {
     expect(() => formatLagosDate("not a date")).toThrow(RangeError);
+  });
+});
+
+describe("lagosToday", () => {
+  it("returns the Lagos calendar day as YYYY-MM-DD", () => {
+    expect(lagosToday(new Date("2026-03-07T10:00:00Z"))).toBe("2026-03-07");
+  });
+
+  it("rolls over to the next day at 23:00 UTC (midnight in Lagos)", () => {
+    expect(lagosToday(new Date("2026-03-07T22:59:00Z"))).toBe("2026-03-07");
+    expect(lagosToday(new Date("2026-03-07T23:00:00Z"))).toBe("2026-03-08");
   });
 });

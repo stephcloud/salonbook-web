@@ -164,3 +164,24 @@ export type Service = components["schemas"]["ServiceResponse"];
 export type Stylist = components["schemas"]["PublicStylistResponse"];
 
 export const SALONS_PAGE_SIZE = 20;
+
+export type Booking = components["schemas"]["BookingResponse"];
+export type SlotsResponse = components["schemas"]["SlotsResponse"];
+export type BookingInput = components["schemas"]["BookingCreate"];
+
+/** Free start times for one stylist, service and day (browser, needs sign-in). */
+export function getSlots(
+  stylistId: string,
+  serviceId: string,
+  date: string,
+): Promise<SlotsResponse> {
+  const query = new URLSearchParams({ service_id: serviceId, date });
+  return apiFetch<SlotsResponse>(
+    `stylists/${encodeURIComponent(stylistId)}/slots?${query.toString()}`,
+  );
+}
+
+/** Creates a pending booking. `starts_at` is a slot string exactly as the API gave it. */
+export function createBooking(input: BookingInput): Promise<Booking> {
+  return apiFetch<Booking>("bookings", { method: "POST", body: input });
+}
