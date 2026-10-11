@@ -100,7 +100,7 @@ describe("PayBookingPage", () => {
       expect(
         screen.getByRole("heading", { name: "We could not find this booking" }),
       ).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: "My Bookings" })).toHaveAttribute(
+      expect(screen.getByRole("link", { name: "My bookings" })).toHaveAttribute(
         "href",
         "/bookings",
       );

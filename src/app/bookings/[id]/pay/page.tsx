@@ -39,14 +39,14 @@ export default async function PayBookingPage({
               </h1>
               <p role="status" className="text-muted-foreground">
                 It may belong to another account, or the link may be wrong. Open
-                My Bookings to see yours.
+                My bookings to see yours.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link
                   href="/bookings"
                   className={buttonVariants({ size: "lg" })}
                 >
-                  My Bookings
+                  My bookings
                 </Link>
                 <Link
                   href="/salons"

@@ -109,18 +109,37 @@ describe("BookingList", () => {
         now={CREATED_MS + 5 * MINUTE}
       />,
     );
-    const links = screen.getAllByRole("link", { name: "Pay now" });
+    const links = screen.getAllByRole("link", { name: /^Pay now/ });
     expect(links).toHaveLength(1);
     expect(links[0]).toHaveAttribute("href", "/bookings/held/pay");
   });
 
-  it("does not offer Pay now once the 15 minutes are over", () => {
+  it("does not offer Pay now once the 15 minutes are over, and says Expired with a way to book again", () => {
     render(
       <BookingList bookings={[item("late")]} now={CREATED_MS + 15 * MINUTE} />,
     );
-    expect(screen.queryByRole("link", { name: "Pay now" })).toBeNull();
+    expect(screen.queryByRole("link", { name: /Pay now/ })).toBeNull();
     expect(
       screen.getByText("The hold ended before the deposit was paid."),
     ).toBeInTheDocument();
+    expect(screen.getByText("Expired")).toBeInTheDocument();
+    expect(screen.queryByText("Awaiting payment")).toBeNull();
+    expect(
+      screen.getByRole("link", { name: "Book again at Pink Studio" }),
+    ).toHaveAttribute("href", "/book/salon-1");
+  });
+
+  it("gives each Pay now link a name that says which booking it is for", () => {
+    render(
+      <BookingList
+        bookings={[item("one"), item("two")]}
+        now={CREATED_MS + MINUTE}
+      />,
+    );
+    expect(
+      screen.getAllByRole("link", {
+        name: "Pay now for Box braids at Pink Studio",
+      }),
+    ).toHaveLength(2);
   });
 });

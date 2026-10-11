@@ -16,12 +16,17 @@ const LABELS: Record<
 export function BookingStatusBadge({
   status,
   cancelledAt = null,
+  holdEnded = false,
 }: {
   status: BookingListItem["status"];
   /** An unpaid hold that ran out is "cancelled" with no cancelled_at; show it as expired. */
   cancelledAt?: string | null;
+  /** A pending booking whose 15 minutes are up, before the API has caught up. */
+  holdEnded?: boolean;
 }) {
-  const expired = status === "cancelled" && cancelledAt === null;
+  const expired =
+    (status === "cancelled" && cancelledAt === null) ||
+    (status === "pending" && holdEnded);
   const { text, variant } = expired
     ? { text: "Expired", variant: "cancelled" as const }
     : LABELS[status];

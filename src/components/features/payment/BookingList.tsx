@@ -45,6 +45,7 @@ export function BookingList({ bookings, now }: BookingListProps) {
               <BookingStatusBadge
                 status={booking.status}
                 cancelledAt={booking.cancelled_at}
+                holdEnded={holdEnded}
               />
             </div>
             <div className="flex flex-col gap-0.5 text-sm">
@@ -57,15 +58,25 @@ export function BookingList({ bookings, now }: BookingListProps) {
             {canPay ? (
               <Link
                 href={`/bookings/${booking.id}/pay`}
+                aria-label={`Pay now for ${booking.service.name} at ${booking.salon.name}`}
                 className={buttonVariants({ size: "lg" })}
               >
                 Pay now
               </Link>
             ) : null}
             {holdEnded ? (
-              <p className="text-sm text-muted-foreground">
-                The hold ended before the deposit was paid.
-              </p>
+              <div className="flex flex-col items-start gap-2">
+                <p className="text-sm text-muted-foreground">
+                  The hold ended before the deposit was paid.
+                </p>
+                <Link
+                  href={`/book/${booking.salon.id}`}
+                  aria-label={`Book again at ${booking.salon.name}`}
+                  className={buttonVariants({ variant: "outline", size: "lg" })}
+                >
+                  Book again
+                </Link>
+              </div>
             ) : null}
           </li>
         );

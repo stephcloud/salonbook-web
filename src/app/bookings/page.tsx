@@ -37,9 +37,7 @@ export default async function BookingsPage() {
     <main id="main-content" className={MAIN_CLASS}>
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold">My bookings</h1>
-        <p className="text-muted-foreground">
-          Your appointments and their payment status.
-        </p>
+        <p className="text-muted-foreground">Your appointments.</p>
       </header>
       <BookingList bookings={data.bookings} now={data.serverNow} />
     </main>
