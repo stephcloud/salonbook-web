@@ -205,3 +205,29 @@ export function payBooking(id: string): Promise<Payment> {
     method: "POST",
   });
 }
+
+/**
+ * The signed-in client's bookings (browser). The API sorts them by start time,
+ * latest first, with no filters and no total, so the page filters and sorts
+ * them itself.
+ */
+export function listBookings(
+  limit = 100,
+  offset = 0,
+): Promise<BookingListItem[]> {
+  const query = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  });
+  return apiFetch<BookingListItem[]>(`bookings?${query.toString()}`);
+}
+
+/**
+ * Cancels a booking. `refund_due` in the answer says whether the deposit comes
+ * back. Cancelling again answers 200 with the same cancelled booking.
+ */
+export function cancelBooking(id: string): Promise<Booking> {
+  return apiFetch<Booking>(`bookings/${encodeURIComponent(id)}/cancel`, {
+    method: "POST",
+  });
+}
