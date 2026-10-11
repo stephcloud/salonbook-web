@@ -1,14 +1,12 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { BookingSummary } from "@/components/features/payment/BookingSummary";
 import { usePaymentConfirmation } from "@/hooks/usePaymentConfirmation";
-import {
-  clearPendingBookingId,
-  readPendingBookingId,
-} from "@/lib/payment-storage";
+import { useSavedBookingId } from "@/hooks/useSavedBookingId";
+import { clearPendingBookingId } from "@/lib/payment-storage";
 
 function Panel({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -30,12 +28,7 @@ function LinkRow({ children }: { children: ReactNode }) {
  */
 export function PaymentCallback() {
   // undefined = storage not read yet (it only exists in the browser).
-  const [bookingId, setBookingId] = useState<string | null | undefined>(
-    undefined,
-  );
-  useEffect(() => {
-    setBookingId(readPendingBookingId());
-  }, []);
+  const bookingId = useSavedBookingId();
 
   const { phase, booking, trouble, checkAgain } = usePaymentConfirmation(
     bookingId ?? null,

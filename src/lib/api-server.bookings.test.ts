@@ -93,7 +93,9 @@ describe("signed-in booking reads", () => {
   it("lists up to 100 bookings", async () => {
     const fetchMock = vi.fn().mockImplementation(async () => jsonResponse([]));
     vi.stubGlobal("fetch", fetchMock);
-    await expect(getMyBookings()).resolves.toEqual([]);
+    const result = await getMyBookings();
+    expect(result.bookings).toEqual([]);
+    expect(typeof result.serverNow).toBe("number");
     expect(String(fetchMock.mock.calls[0][0])).toBe(
       `${API_URL}/bookings?limit=100`,
     );

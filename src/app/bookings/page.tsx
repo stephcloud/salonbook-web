@@ -23,9 +23,9 @@ export default async function BookingsPage() {
     );
   }
 
-  let bookings: Awaited<ReturnType<typeof getMyBookings>>;
+  let data: Awaited<ReturnType<typeof getMyBookings>>;
   try {
-    bookings = await getMyBookings();
+    data = await getMyBookings();
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) {
       redirect(loginRedirectUrl("/bookings"));
@@ -41,7 +41,7 @@ export default async function BookingsPage() {
           Your appointments and their payment status.
         </p>
       </header>
-      <BookingList bookings={bookings} now={Date.now()} />
+      <BookingList bookings={data.bookings} now={data.serverNow} />
     </main>
   );
 }

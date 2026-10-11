@@ -168,7 +168,14 @@ export async function getMyBooking(
   return { booking, serverNow: Date.now() };
 }
 
-/** The client's bookings, newest first as the API returns them (up to 100). */
-export function getMyBookings(): Promise<BookingListItem[]> {
-  return authedGet<BookingListItem[]>("/bookings?limit=100");
+/**
+ * The client's bookings, newest first as the API returns them (up to 100),
+ * with the server's clock for working out which holds are still running.
+ */
+export async function getMyBookings(): Promise<{
+  bookings: BookingListItem[];
+  serverNow: number;
+}> {
+  const bookings = await authedGet<BookingListItem[]>("/bookings?limit=100");
+  return { bookings, serverNow: Date.now() };
 }

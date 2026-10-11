@@ -23,7 +23,7 @@ describe("BookingsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     requireUser.mockResolvedValue({ id: "c1", role: "client" });
-    getMyBookings.mockResolvedValue([]);
+    getMyBookings.mockResolvedValue({ bookings: [], serverNow: Date.now() });
   });
 
   it("requires sign-in and returns to /bookings", async () => {
