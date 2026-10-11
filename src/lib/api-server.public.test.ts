@@ -5,13 +5,12 @@ vi.mock("server-only", () => ({}));
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: vi.fn() }) }));
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 
-import { ApiError } from "@/lib/api";
+import { ApiError, isMissingResource } from "@/lib/api";
 import {
   getSalon,
   getSalonServices,
   getSalonStylists,
   getSalons,
-  isMissingResource,
 } from "./api-server";
 
 const API_URL = "https://api.example.test/api/v1";
@@ -57,6 +56,17 @@ describe("public salon calls", () => {
     expect(calledUrls(fetchMock)).toEqual([
       `${API_URL}/salons/abc/services?limit=100`,
       `${API_URL}/salons/abc/stylists?limit=100`,
+    ]);
+  });
+
+  it("URL-encodes the salon id so it cannot change the path", async () => {
+    const fetchMock = vi.fn().mockImplementation(async () => jsonResponse({}));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await getSalon("a b/../c?x=1");
+
+    expect(calledUrls(fetchMock)).toEqual([
+      `${API_URL}/salons/a%20b%2F..%2Fc%3Fx%3D1`,
     ]);
   });
 

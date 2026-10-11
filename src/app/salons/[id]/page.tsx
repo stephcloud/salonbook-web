@@ -3,12 +3,8 @@ import { CopySalonLinkButton } from "@/components/features/salons/CopySalonLinkB
 import { SalonHeader } from "@/components/features/salons/SalonHeader";
 import { ServiceList } from "@/components/features/salons/ServiceList";
 import { StylistList } from "@/components/features/salons/StylistList";
-import {
-  getSalon,
-  getSalonServices,
-  getSalonStylists,
-  isMissingResource,
-} from "@/lib/api-server";
+import { getSalon, getSalonServices, getSalonStylists } from "@/lib/api-server";
+import { isMissingResource } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -16,6 +12,14 @@ export const maxDuration = 300;
 type PageProps = { params: Promise<{ id: string }> };
 
 async function loadSalon(id: string) {
+  // Start the lists right away so a cold backend is not hit twice in a row.
+  // The no-op catch only marks them handled, in case the salon check throws
+  // first; awaiting them below still rejects with the original error.
+  const servicesRequest = getSalonServices(id);
+  const stylistsRequest = getSalonStylists(id);
+  servicesRequest.catch(() => {});
+  stylistsRequest.catch(() => {});
+
   // Only the salon's own 404/422 means "not found". Failures of the lists
   // show the retry screen instead.
   const salon = await getSalon(id).catch((error: unknown) => {
@@ -23,8 +27,8 @@ async function loadSalon(id: string) {
     throw error;
   });
   const [services, stylists] = await Promise.all([
-    getSalonServices(id),
-    getSalonStylists(id),
+    servicesRequest,
+    stylistsRequest,
   ]);
   return { salon, services, stylists };
 }

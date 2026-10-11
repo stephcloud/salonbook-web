@@ -94,17 +94,6 @@ async function publicGet<T>(path: string): Promise<T> {
   return (await response.json()) as T;
 }
 
-/**
- * The salon id in the path is missing or not a valid UUID (the API answers 404
- * or 422). This is the one place a 422 means "not found" rather than field
- * errors: these pages have no form, and the id comes from the URL.
- */
-export function isMissingResource(error: unknown): boolean {
-  return (
-    error instanceof ApiError && (error.status === 404 || error.status === 422)
-  );
-}
-
 export function getSalons(page = 1): Promise<Salon[]> {
   const offset = (Math.max(1, page) - 1) * SALONS_PAGE_SIZE;
   return publicGet<Salon[]>(

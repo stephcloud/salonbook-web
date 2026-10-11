@@ -148,6 +148,17 @@ export async function getHealth(): Promise<HealthResult> {
   return first.ok ? first : checkOnce(origin);
 }
 
+/**
+ * The salon id in the path is missing or not a valid UUID (the API answers 404
+ * or 422). This is the one place a 422 means "not found" rather than field
+ * errors: these pages have no form, and the id comes from the URL.
+ */
+export function isMissingResource(error: unknown): boolean {
+  return (
+    error instanceof ApiError && (error.status === 404 || error.status === 422)
+  );
+}
+
 export type Salon = components["schemas"]["SalonResponse"];
 export type Service = components["schemas"]["ServiceResponse"];
 export type Stylist = components["schemas"]["PublicStylistResponse"];
