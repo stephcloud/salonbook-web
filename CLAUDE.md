@@ -89,6 +89,7 @@ src/
 ## Code rules
 - Default to Server Components; add `"use client"` only when needed (state, effects, browser APIs, event handlers).
 - All backend calls go through `lib/api.ts`; never scatter `fetch` with hardcoded URLs.
+- Server-side public reads (salons, services, stylists) live in `src/lib/api-server.ts` (it is `server-only`). `lib/api.ts` remains the single place for browser and shared calls, types and helpers.
 - Pages that fetch from the API must be dynamic (for example export const dynamic = "force-dynamic"), never prerendered at build time. The build must not call the API.
 - Every page that fetches data handles loading, error (with retry) and empty states.
 - 401: clear the cookie and go to `/login?next=`. 403: show a role message. 409 on booking: slot taken, refresh slots. 422: show the server's field errors.

@@ -2,6 +2,14 @@ import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import {
+  ApiError,
+  SALONS_PAGE_SIZE,
+  messageFrom,
+  type Salon,
+  type Service,
+  type Stylist,
+} from "@/lib/api";
 import type { components } from "@/lib/api-types";
 import { TOKEN_COOKIE } from "@/lib/auth/cookie";
 import { safeNextPath } from "@/lib/auth/safe-next";
@@ -44,4 +52,68 @@ export async function requireUser(next: string): Promise<CurrentUser> {
   const user = await getCurrentUser();
   if (!user) redirect(loginRedirectUrl(next));
   return user;
+}
+
+// Lists are capped at the API maximum; a salon will not come close in the MVP.
+const MAX_LIST_LIMIT = 100;
+const WAKING_STATUSES = new Set([502, 503, 504]);
+
+/**
+ * GET for the public endpoints (no token). fetchUpstream retries network
+ * failures and timeouts once; a 502/503/504 answer (the free tier waking up)
+ * is retried once here. Throws ApiError on failure.
+ */
+async function publicGet<T>(path: string): Promise<T> {
+  const base = apiBaseUrl();
+  if (!base) throw new Error("API_URL is not set");
+
+  const init = {
+    method: "GET",
+    headers: new Headers({ accept: "application/json" }),
+  };
+  let result = await fetchUpstream(`${base}${path}`, init);
+  if (result.ok && WAKING_STATUSES.has(result.response.status)) {
+    result = await fetchUpstream(`${base}${path}`, init);
+  }
+
+  if (!result.ok) {
+    throw new ApiError(
+      result.reason === "timeout" ? 504 : 502,
+      "The server is not responding right now. It may be waking up, please try again in a moment.",
+    );
+  }
+
+  const { response } = result;
+  if (!response.ok) {
+    const body: unknown = await response.json().catch(() => null);
+    throw new ApiError(
+      response.status,
+      messageFrom(body, "Something went wrong. Please try again."),
+    );
+  }
+  return (await response.json()) as T;
+}
+
+export function getSalons(page = 1): Promise<Salon[]> {
+  const offset = (Math.max(1, page) - 1) * SALONS_PAGE_SIZE;
+  return publicGet<Salon[]>(
+    `/salons?limit=${SALONS_PAGE_SIZE}&offset=${offset}`,
+  );
+}
+
+/** Cached per request so the page and its metadata share one call. */
+export const getSalon = cache((id: string): Promise<Salon> => {
+  return publicGet<Salon>(`/salons/${encodeURIComponent(id)}`);
+});
+
+export function getSalonServices(id: string): Promise<Service[]> {
+  return publicGet<Service[]>(
+    `/salons/${encodeURIComponent(id)}/services?limit=${MAX_LIST_LIMIT}`,
+  );
+}
+
+export function getSalonStylists(id: string): Promise<Stylist[]> {
+  return publicGet<Stylist[]>(
+    `/salons/${encodeURIComponent(id)}/stylists?limit=${MAX_LIST_LIMIT}`,
+  );
 }

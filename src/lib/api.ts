@@ -1,7 +1,8 @@
 // Single place for backend calls. On the server this talks to API_URL directly
-// (see also api-server.ts for the signed-in user); in the browser everything
+// (see api-server.ts for the signed-in user and the public salon reads); in the browser everything
 // goes through /api/proxy/* and /api/auth/* on our own domain.
 
+import type { components } from "@/lib/api-types";
 import { safeNextPath } from "@/lib/auth/safe-next";
 
 const ATTEMPT_TIMEOUT_MS = 30_000;
@@ -37,7 +38,7 @@ export function parseFieldErrors(detail: unknown): FieldErrors {
   return out;
 }
 
-function messageFrom(body: unknown, fallback: string): string {
+export function messageFrom(body: unknown, fallback: string): string {
   if (body && typeof body === "object") {
     const { error, detail } = body as { error?: unknown; detail?: unknown };
     if (typeof error === "string") return error;
@@ -146,3 +147,20 @@ export async function getHealth(): Promise<HealthResult> {
   const first = await checkOnce(origin);
   return first.ok ? first : checkOnce(origin);
 }
+
+/**
+ * The salon id in the path is missing or not a valid UUID (the API answers 404
+ * or 422). This is the one place a 422 means "not found" rather than field
+ * errors: these pages have no form, and the id comes from the URL.
+ */
+export function isMissingResource(error: unknown): boolean {
+  return (
+    error instanceof ApiError && (error.status === 404 || error.status === 422)
+  );
+}
+
+export type Salon = components["schemas"]["SalonResponse"];
+export type Service = components["schemas"]["ServiceResponse"];
+export type Stylist = components["schemas"]["PublicStylistResponse"];
+
+export const SALONS_PAGE_SIZE = 20;
