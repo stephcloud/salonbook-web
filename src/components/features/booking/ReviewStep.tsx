@@ -10,6 +10,7 @@ import { useSlowPending } from "@/hooks/useSlowPending";
 import {
   createBooking,
   type Salon,
+  type BookingInput,
   type Service,
   type Stylist,
 } from "@/lib/api";
@@ -49,7 +50,7 @@ export function ReviewStep({
   const sending = useRef(false);
 
   const mutation = useMutation({
-    mutationFn: createBooking,
+    mutationFn: (input: BookingInput) => createBooking(input),
     onSuccess: (booking) => {
       router.push(`/bookings/${booking.id}/pay`);
     },
