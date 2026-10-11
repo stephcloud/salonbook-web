@@ -128,8 +128,12 @@ export function PayPanel({ initialBooking, serverNow }: PayPanelProps) {
   }
 
   if (outcome === "ended" || holdOver) {
-    // The API's word wins; when it cancelled after the 15 minutes, say expired.
-    const expired = holdOver;
+    // The API's word wins. Checked against the live API: an unpaid hold that
+    // runs out becomes "cancelled" with no cancelled_at, while a cancel by the
+    // client sets cancelled_at. A pending booking whose clock ran out is
+    // expired while we wait for the API to catch up.
+    const expired =
+      outcome === "ended" ? booking.cancelled_at === null : holdOver;
     return (
       <Panel
         title={expired ? "This hold expired" : "This booking was cancelled"}

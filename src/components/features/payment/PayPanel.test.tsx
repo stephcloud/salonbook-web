@@ -243,6 +243,29 @@ describe("PayPanel", () => {
       ).toBeInTheDocument();
     });
 
+    it("calls an unpaid hold the API cancelled by itself expired, even if opened within 15 minutes", () => {
+      // Live API: expiry sets status "cancelled" and leaves cancelled_at empty.
+      renderPanel(booking({ status: "cancelled", cancelled_at: null }), {
+        minutesIn: 3,
+      });
+      expect(
+        screen.getByRole("heading", { name: "This hold expired" }),
+      ).toBeInTheDocument();
+    });
+
+    it("still says cancelled when the client cancelled and the page opens after 15 minutes", () => {
+      renderPanel(
+        booking({
+          status: "cancelled",
+          cancelled_at: "2026-10-11T09:03:00.000Z",
+        }),
+        { minutesIn: 20 },
+      );
+      expect(
+        screen.getByRole("heading", { name: "This booking was cancelled" }),
+      ).toBeInTheDocument();
+    });
+
     it("is expired straight away when opened after the hold ended", async () => {
       getBooking.mockResolvedValue(booking({ status: "cancelled" }));
       renderPanel(booking({ status: "cancelled" }), { minutesIn: 20 });
@@ -264,8 +287,14 @@ describe("PayPanel", () => {
       expect(screen.queryByRole("timer")).toBeNull();
     });
 
-    it("says a cancelled booking was cancelled", () => {
-      renderPanel(booking({ status: "cancelled" }), { minutesIn: 3 });
+    it("says a booking the client cancelled was cancelled", () => {
+      renderPanel(
+        booking({
+          status: "cancelled",
+          cancelled_at: "2026-10-11T09:03:00.000Z",
+        }),
+        { minutesIn: 3 },
+      );
       expect(
         screen.getByRole("heading", { name: "This booking was cancelled" }),
       ).toBeInTheDocument();
@@ -343,7 +372,12 @@ describe("PayPanel", () => {
       payBooking.mockRejectedValue(
         new ApiError(409, "This booking can no longer be paid for."),
       );
-      getBooking.mockResolvedValue(booking({ status: "cancelled" }));
+      getBooking.mockResolvedValue(
+        booking({
+          status: "cancelled",
+          cancelled_at: "2026-10-11T09:02:00.000Z",
+        }),
+      );
       renderPanel(booking(), { minutesIn: 3 });
 
       await click("Pay deposit");
