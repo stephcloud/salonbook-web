@@ -23,13 +23,11 @@ export default async function PayBookingPage({
       className="mx-auto flex w-full max-w-md flex-1 flex-col items-start justify-center gap-4 px-4 py-12"
     >
       <h1 className="text-2xl font-bold">Booking created</h1>
-      <p className="text-muted-foreground">
-        Your booking is held while you pay the deposit. Paying online is coming
-        in the next step.
+      <p role="status" className="font-semibold">
+        Payment is not available yet. Your deposit has not been paid, and an
+        unpaid booking is released after 15 minutes.
       </p>
-      <p className="text-sm">
-        Booking id: <span className="font-mono">{id}</span>
-      </p>
+      <p className="text-sm break-all">Booking id: {id}</p>
       <Link href="/salons" className={buttonVariants({ variant: "outline" })}>
         Back to salons
       </Link>

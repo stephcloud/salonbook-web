@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Stylist } from "@/lib/api";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ChoiceCard } from "@/components/features/booking/ChoiceCard";
+import { StepHeading } from "@/components/features/booking/StepHeading";
 import { EmptyState } from "@/components/features/salons/EmptyState";
 import { StylistAvatar } from "@/components/features/salons/StylistAvatar";
 
@@ -29,7 +30,7 @@ export function StylistStep({
   if (offering.length === 0) {
     return (
       <div className="flex flex-col gap-4">
-        <h2 className="text-xl font-bold">Choose a stylist</h2>
+        <StepHeading id="step-stylist-heading">Choose a stylist</StepHeading>
         <EmptyState title="No stylists offer this service yet">
           Pick another service, or check the salon page.
         </EmptyState>
@@ -50,8 +51,11 @@ export function StylistStep({
 
   return (
     <div className="flex flex-col gap-4">
-      <fieldset className="flex flex-col gap-3">
-        <legend className="mb-3 text-xl font-bold">Choose a stylist</legend>
+      <StepHeading id="step-stylist-heading">Choose a stylist</StepHeading>
+      <fieldset
+        aria-labelledby="step-stylist-heading"
+        className="flex flex-col gap-3"
+      >
         {offering.map((stylist) => (
           <ChoiceCard
             key={stylist.id}
@@ -65,11 +69,23 @@ export function StylistStep({
           </ChoiceCard>
         ))}
       </fieldset>
+      {selectedId === null ? (
+        <p id="stylist-continue-hint" className="text-sm text-muted-foreground">
+          Choose a stylist to continue.
+        </p>
+      ) : null}
       <div className="flex flex-wrap gap-3">
         <Button variant="outline" size="lg" onClick={onBack}>
           Back
         </Button>
-        <Button size="lg" disabled={selectedId === null} onClick={onContinue}>
+        <Button
+          size="lg"
+          disabled={selectedId === null}
+          aria-describedby={
+            selectedId === null ? "stylist-continue-hint" : undefined
+          }
+          onClick={onContinue}
+        >
           Continue
         </Button>
       </div>

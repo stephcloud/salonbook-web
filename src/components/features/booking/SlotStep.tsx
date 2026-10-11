@@ -1,12 +1,13 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { StepHeading } from "@/components/features/booking/StepHeading";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSlowPending } from "@/hooks/useSlowPending";
 import { ApiError, getSlots } from "@/lib/api";
-import { formatLagosDate, formatLagosTime, lagosToday } from "@/lib/time";
+import { formatLagosDay, formatLagosTime, lagosToday } from "@/lib/time";
 
 type SlotStepProps = {
   stylistId: string;
@@ -50,9 +51,28 @@ export function SlotStep({
   });
   const waking = useSlowPending(query.isFetching);
 
+  const slots = query.data?.slots ?? [];
+  // A slot only counts as chosen while the list on screen still contains it
+  // (the list can refresh after Back or a retry).
+  const selected = slot !== null && slots.includes(slot) ? slot : null;
+  const loading = dateIsValid && !query.isError && query.data === undefined;
+  const showDateError = date !== "" && !dateIsValid;
+
+  // One small, always-present live region: it announces the outcome without
+  // reading out the whole list of times.
+  const announcement = !dateIsValid
+    ? ""
+    : loading
+      ? "Loading free times."
+      : query.isError
+        ? ""
+        : slots.length === 0
+          ? "No free times on this day."
+          : `${slots.length} free times found.`;
+
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-xl font-bold">Pick a date and time</h2>
+      <StepHeading id="step-slot-heading">Pick a date and time</StepHeading>
 
       {notice ? (
         <p
@@ -70,16 +90,26 @@ export function SlotStep({
           type="date"
           min={today}
           value={date}
+          aria-invalid={showDateError || undefined}
+          aria-describedby={showDateError ? "booking-date-error" : undefined}
           onChange={(event) => onDateChange(event.target.value)}
         />
-        {date && !dateIsValid ? (
-          <p role="alert" className="text-sm text-destructive">
+        {showDateError ? (
+          <p
+            id="booking-date-error"
+            role="alert"
+            className="text-sm text-destructive"
+          >
             Pick today or a later day.
           </p>
         ) : null}
       </div>
 
-      <div aria-live="polite" className="flex flex-col gap-3">
+      <p role="status" className="sr-only">
+        {announcement}
+      </p>
+
+      <div className="flex flex-col gap-3">
         {!dateIsValid ? (
           <p className="text-muted-foreground">
             Pick a date to see the free times.
@@ -95,8 +125,8 @@ export function SlotStep({
               Retry
             </Button>
           </div>
-        ) : query.isPending || (query.isFetching && !query.data) ? (
-          <div role="status">
+        ) : loading ? (
+          <div>
             <p>Loading free times...</p>
             {waking ? (
               <p className="text-sm text-muted-foreground">
@@ -104,19 +134,20 @@ export function SlotStep({
               </p>
             ) : null}
           </div>
-        ) : query.data.slots.length === 0 ? (
+        ) : slots.length === 0 ? (
           <p>No free times on this day. Try another date.</p>
         ) : (
           <fieldset className="flex flex-col gap-3">
             <legend className="mb-1 font-semibold">
-              Free times on {formatLagosDate(`${date}T12:00:00+01:00`)}
+              Free times on {formatLagosDay(date)}
             </legend>
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-              {query.data.slots.map((value) => (
+            <div className="grid grid-cols-2 gap-2 min-[400px]:grid-cols-3 sm:grid-cols-4">
+              {slots.map((value) => (
                 <Button
                   key={value}
-                  variant={value === slot ? "default" : "outline"}
-                  aria-pressed={value === slot}
+                  variant={value === selected ? "default" : "outline"}
+                  aria-pressed={value === selected}
+                  className="px-2"
                   onClick={() => onSlotChange(value)}
                 >
                   {formatLagosTime(value)}
@@ -127,11 +158,26 @@ export function SlotStep({
         )}
       </div>
 
+      {slots.length > 0 && selected === null ? (
+        <p id="slot-continue-hint" className="text-sm text-muted-foreground">
+          Choose a time to continue.
+        </p>
+      ) : null}
+
       <div className="flex flex-wrap gap-3">
         <Button variant="outline" size="lg" onClick={onBack}>
           Back
         </Button>
-        <Button size="lg" disabled={slot === null} onClick={onContinue}>
+        <Button
+          size="lg"
+          disabled={selected === null}
+          aria-describedby={
+            slots.length > 0 && selected === null
+              ? "slot-continue-hint"
+              : undefined
+          }
+          onClick={onContinue}
+        >
           Continue
         </Button>
       </div>

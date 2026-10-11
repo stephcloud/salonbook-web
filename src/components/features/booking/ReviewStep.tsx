@@ -6,11 +6,12 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ClientsOnlyNotice } from "@/components/features/booking/ClientsOnlyNotice";
+import { StepHeading } from "@/components/features/booking/StepHeading";
 import { useSlowPending } from "@/hooks/useSlowPending";
 import {
   createBooking,
-  type Salon,
   type BookingInput,
+  type Salon,
   type Service,
   type Stylist,
 } from "@/lib/api";
@@ -37,6 +38,21 @@ const FIELD_LABELS: Record<string, string> = {
   service_id: "Service",
 };
 
+function Row({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-0.5 sm:contents">
+      <dt className="text-sm text-muted-foreground">{label}</dt>
+      <dd>{children}</dd>
+    </div>
+  );
+}
+
 export function ReviewStep({
   salon,
   service,
@@ -55,8 +71,9 @@ export function ReviewStep({
       router.push(`/bookings/${booking.id}/pay`);
     },
     onError: (error) => {
-      sending.current = false;
       const failure = classifyBookingError(error);
+      // On a 401 apiFetch is already redirecting to /login: stay disabled.
+      if (failure.kind !== "signed-out") sending.current = false;
       if (failure.kind === "slot-taken") onSlotTaken(failure.message);
     },
   });
@@ -75,36 +92,52 @@ export function ReviewStep({
   const failure = mutation.isError
     ? classifyBookingError(mutation.error)
     : null;
-  if (failure?.kind === "clients-only") return <ClientsOnlyNotice />;
+  if (failure?.kind === "clients-only") {
+    return <ClientsOnlyNotice headingLevel={2} />;
+  }
 
-  const busy = mutation.isPending || mutation.isSuccess;
+  const busy =
+    mutation.isPending || mutation.isSuccess || failure?.kind === "signed-out";
+  const status = mutation.isSuccess
+    ? "Taking you to payment..."
+    : failure?.kind === "signed-out"
+      ? failure.message
+      : waking
+        ? "Waking up the server... this can take up to a minute."
+        : mutation.isPending
+          ? "Creating your booking..."
+          : "";
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-xl font-bold">Review your booking</h2>
+      <StepHeading id="step-review-heading">Review your booking</StepHeading>
 
-      <dl className="grid gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/10 sm:grid-cols-[auto_1fr] sm:gap-x-6">
-        <dt className="text-sm text-muted-foreground">Salon</dt>
-        <dd>
+      <dl className="grid gap-4 rounded-2xl bg-card p-4 ring-1 ring-foreground/10 sm:grid-cols-[auto_1fr] sm:gap-x-6 sm:gap-y-3">
+        <Row label="Salon">
           <span className="font-semibold">{salon.name}</span>
           <br />
           <span className="text-sm text-muted-foreground">{salon.address}</span>
-        </dd>
-        <dt className="text-sm text-muted-foreground">Service</dt>
-        <dd>
+        </Row>
+        <Row label="Service">
           <span className="font-semibold">{service.name}</span>{" "}
           <span className="text-sm text-muted-foreground">
             ({formatDuration(service.duration_minutes)})
           </span>
-        </dd>
-        <dt className="text-sm text-muted-foreground">Stylist</dt>
-        <dd className="font-semibold">{stylist.name}</dd>
-        <dt className="text-sm text-muted-foreground">When</dt>
-        <dd className="font-semibold">{formatLagosDateTime(slot)}</dd>
-        <dt className="text-sm text-muted-foreground">Price</dt>
-        <dd className="font-semibold">{formatServicePrice(service)}</dd>
-        <dt className="text-sm text-muted-foreground">Deposit to pay now</dt>
-        <dd className="font-semibold">{formatNaira(salon.deposit_amount)}</dd>
+        </Row>
+        <Row label="Stylist">
+          <span className="font-semibold">{stylist.name}</span>
+        </Row>
+        <Row label="When">
+          <span className="font-semibold">{formatLagosDateTime(slot)}</span>
+        </Row>
+        <Row label="Price">
+          <span className="font-semibold">{formatServicePrice(service)}</span>
+        </Row>
+        <Row label="Deposit to pay now">
+          <span className="font-semibold">
+            {formatNaira(salon.deposit_amount)}
+          </span>
+        </Row>
       </dl>
 
       <p className="text-sm text-muted-foreground">
@@ -112,7 +145,7 @@ export function ReviewStep({
         minutes while you pay the deposit.
       </p>
 
-      {failure ? (
+      {failure && failure.kind !== "signed-out" ? (
         <div
           role="alert"
           className="flex flex-col items-start gap-2 rounded-2xl bg-card p-4 ring-1 ring-destructive/40"
@@ -120,6 +153,10 @@ export function ReviewStep({
           {failure.kind === "pending-limit" ? (
             <>
               <p className="font-semibold">{failure.message}</p>
+              <p className="text-sm">
+                Pay or cancel one of your pending bookings, or wait for an
+                unpaid one to expire, then try again.
+              </p>
               <Link
                 href="/bookings"
                 className={buttonVariants({ variant: "outline" })}
@@ -137,7 +174,9 @@ export function ReviewStep({
                   {Object.entries(failure.fieldErrors).map(
                     ([field, message]) => (
                       <li key={field}>
-                        {FIELD_LABELS[field] ?? field}: {message}
+                        {FIELD_LABELS[field]
+                          ? `${FIELD_LABELS[field]}: ${message}`
+                          : message}
                       </li>
                     ),
                   )}
@@ -152,12 +191,9 @@ export function ReviewStep({
         </div>
       ) : null}
 
-      <div role="status" className="text-sm text-muted-foreground">
-        {mutation.isPending ? "Creating your booking..." : null}
-        {waking
-          ? " Waking up the server... this can take up to a minute."
-          : null}
-      </div>
+      <p role="status" className="min-h-5 text-sm text-muted-foreground">
+        {status}
+      </p>
 
       <div className="flex flex-wrap gap-3">
         <Button variant="outline" size="lg" onClick={onBack} disabled={busy}>

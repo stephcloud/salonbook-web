@@ -2,6 +2,7 @@ import { Clock } from "lucide-react";
 import type { Service } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { ChoiceCard } from "@/components/features/booking/ChoiceCard";
+import { StepHeading } from "@/components/features/booking/StepHeading";
 import { EmptyState } from "@/components/features/salons/EmptyState";
 import { formatNaira } from "@/lib/money";
 import { formatDuration, formatServicePrice } from "@/lib/price";
@@ -31,8 +32,11 @@ export function ServiceStep({
 
   return (
     <div className="flex flex-col gap-4">
-      <fieldset className="flex flex-col gap-3">
-        <legend className="mb-3 text-xl font-bold">Choose a service</legend>
+      <StepHeading id="step-service-heading">Choose a service</StepHeading>
+      <fieldset
+        aria-labelledby="step-service-heading"
+        className="flex flex-col gap-3"
+      >
         {services.map((service) => (
           <ChoiceCard
             key={service.id}
@@ -57,8 +61,20 @@ export function ServiceStep({
           </ChoiceCard>
         ))}
       </fieldset>
+      {selectedId === null ? (
+        <p id="service-continue-hint" className="text-sm text-muted-foreground">
+          Choose a service to continue.
+        </p>
+      ) : null}
       <div>
-        <Button size="lg" disabled={selectedId === null} onClick={onContinue}>
+        <Button
+          size="lg"
+          disabled={selectedId === null}
+          aria-describedby={
+            selectedId === null ? "service-continue-hint" : undefined
+          }
+          onClick={onContinue}
+        >
           Continue
         </Button>
       </div>

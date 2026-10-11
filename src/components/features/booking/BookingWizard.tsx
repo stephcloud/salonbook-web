@@ -40,7 +40,8 @@ export function BookingWizard({
   const [slot, setSlot] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  // Move focus to the new step so keyboard and screen-reader users follow along.
+  // Move focus to the new step's heading so keyboard and screen-reader users
+  // hear which step they are on.
   const panelRef = useRef<HTMLDivElement>(null);
   const firstRender = useRef(true);
   useEffect(() => {
@@ -48,7 +49,7 @@ export function BookingWizard({
       firstRender.current = false;
       return;
     }
-    panelRef.current?.focus();
+    panelRef.current?.querySelector<HTMLElement>("h1, h2")?.focus();
   }, [step]);
 
   const service = services.find((s) => s.id === serviceId) ?? null;
@@ -60,6 +61,7 @@ export function BookingWizard({
   }
 
   function chooseService(id: string) {
+    if (id === serviceId) return;
     setServiceId(id);
     setStylistId(null);
     setSlot(null);
@@ -79,7 +81,7 @@ export function BookingWizard({
   return (
     <div className="flex flex-col gap-6">
       <StepIndicator current={step} />
-      <div ref={panelRef} tabIndex={-1} className="outline-none">
+      <div ref={panelRef}>
         {step === "service" ? (
           <ServiceStep
             services={services}
@@ -97,6 +99,7 @@ export function BookingWizard({
             salonId={salon.id}
             selectedId={stylistId}
             onSelect={(id) => {
+              if (id === stylistId) return;
               setStylistId(id);
               setSlot(null);
             }}
@@ -115,8 +118,12 @@ export function BookingWizard({
             onDateChange={(value) => {
               setDate(value);
               setSlot(null);
+              setNotice(null);
             }}
-            onSlotChange={setSlot}
+            onSlotChange={(value) => {
+              setSlot(value);
+              setNotice(null);
+            }}
             onContinue={() => goTo("review")}
             onBack={() => goTo("stylist")}
           />

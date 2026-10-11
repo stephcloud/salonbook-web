@@ -29,7 +29,7 @@ describe("PayBookingPage placeholder", () => {
     expect(
       screen.getByRole("heading", { name: "Booking created" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("abc-123")).toBeInTheDocument();
+    expect(screen.getByText(/Booking id: abc-123/)).toBeInTheDocument();
     expect(screen.getByRole("main")).toHaveAttribute("id", "main-content");
   });
 });
