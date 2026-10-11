@@ -37,7 +37,7 @@ describe("PaymentCallbackPage", () => {
     expect(screen.getByRole("main")).toHaveAttribute("id", "main-content");
     expect(
       await screen.findByRole("heading", {
-        name: "We could not find a payment to check",
+        name: "Nothing to confirm here",
       }),
     ).toBeInTheDocument();
     expect(getBooking).not.toHaveBeenCalled();

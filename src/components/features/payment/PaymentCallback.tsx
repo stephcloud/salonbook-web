@@ -1,25 +1,41 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
+import {
+  ActionRow,
+  actionClass,
+} from "@/components/features/payment/ActionRow";
 import { BookingSummary } from "@/components/features/payment/BookingSummary";
+import { Panel } from "@/components/features/payment/Panel";
 import { usePaymentConfirmation } from "@/hooks/usePaymentConfirmation";
 import { useSavedBookingId } from "@/hooks/useSavedBookingId";
+import { useViewChange } from "@/hooks/useViewChange";
 import { clearPendingBookingId } from "@/lib/payment-storage";
 
-function Panel({ title, children }: { title: string; children: ReactNode }) {
+function PhoneLink({ phone }: { phone: string }) {
   return (
-    <div className="flex flex-col items-start gap-4">
-      <h1 className="text-2xl font-bold">{title}</h1>
-      {children}
-    </div>
+    <a
+      href={`tel:${phone.replace(/\s+/g, "")}`}
+      className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4"
+    >
+      {phone}
+    </a>
   );
 }
 
-function LinkRow({ children }: { children: ReactNode }) {
-  return <div className="flex flex-wrap gap-3">{children}</div>;
-}
+const TITLES = {
+  loading: "Loading...",
+  "no-booking": "Nothing to confirm here",
+  confirming: "Confirming your payment",
+  paid: "Payment received. Your booking is confirmed.",
+  failed: "Your payment did not go through",
+  ended: "This booking is no longer open",
+  "not-found": "This booking is not on your account",
+  slow: "Your payment is still being processed",
+  "signed-out": "Redirecting you to sign in",
+} as const;
 
 /**
  * Where Paystack sends the client back to. It never reads the URL: the
@@ -29,14 +45,14 @@ function LinkRow({ children }: { children: ReactNode }) {
 export function PaymentCallback() {
   // undefined = storage not read yet (it only exists in the browser).
   const bookingId = useSavedBookingId();
+  const ready = bookingId !== undefined;
 
   const { phase, booking, trouble, checkAgain } = usePaymentConfirmation(
     bookingId ?? null,
   );
-  const ready = bookingId !== undefined;
 
-  // Clear the saved id once the outcome is known. After the time limit it
-  // stays, so a refresh can pick the check up again.
+  // Clear the saved id once the outcome is known. After the time limit (or a
+  // sign-in redirect) it stays, so the check can pick up again.
   useEffect(() => {
     if (
       ready &&
@@ -49,142 +65,148 @@ export function PaymentCallback() {
     }
   }, [ready, phase]);
 
-  if (ready && phase === "no-booking") {
-    return (
-      <Panel title="We could not find a payment to check">
+  const view = !ready ? "loading" : phase;
+  const title = TITLES[view];
+  // Move focus to the new result and announce it, but not on the first paint.
+  const changed = useViewChange(view);
+
+  let body = null;
+  if (view === "loading") {
+    body = <p className="text-muted-foreground">One moment.</p>;
+  } else if (view === "no-booking") {
+    body = (
+      <>
         <p className="text-muted-foreground">
-          This page confirms a payment right after you pay. Open My Bookings to
-          see the latest status of your bookings.
+          This page confirms a payment right after you pay. If you just paid,
+          your payment is safe. Open My bookings in a minute to see your
+          booking.
         </p>
-        <LinkRow>
-          <Link href="/bookings" className={buttonVariants({ size: "lg" })}>
-            My Bookings
+        <ActionRow>
+          <Link href="/bookings" className={actionClass()}>
+            My bookings
           </Link>
-          <Link
-            href="/salons"
-            className={buttonVariants({ variant: "outline", size: "lg" })}
-          >
+          <Link href="/salons" className={actionClass("outline")}>
             Browse salons
           </Link>
-        </LinkRow>
-      </Panel>
+        </ActionRow>
+      </>
     );
-  }
-
-  if (ready && phase === "paid" && booking) {
-    return (
-      <Panel title="Payment received. Your booking is confirmed.">
-        <p role="status" className="text-muted-foreground">
+  } else if (view === "paid" && booking) {
+    body = (
+      <>
+        <p className="text-muted-foreground">
           Your deposit has been paid and your appointment is booked.
         </p>
         <div className="w-full">
-          <BookingSummary booking={booking} />
+          <BookingSummary booking={booking} depositLabel="Deposit paid" />
         </div>
-        <LinkRow>
-          <Link href="/bookings" className={buttonVariants({ size: "lg" })}>
+        <ActionRow>
+          <Link href="/bookings" className={actionClass()}>
             View my bookings
           </Link>
-        </LinkRow>
-      </Panel>
+        </ActionRow>
+      </>
     );
-  }
-
-  if (ready && phase === "failed" && booking) {
-    return (
-      <Panel title="Your payment did not go through">
-        <p role="status" className="text-muted-foreground">
-          The deposit was not taken. You can try again while your booking is
-          still held.
+  } else if (view === "failed" && booking) {
+    body = (
+      <>
+        <p className="text-muted-foreground">
+          We did not receive your deposit. You can try again while your booking
+          is still held.
         </p>
-        <LinkRow>
-          <Link
-            href={`/bookings/${booking.id}/pay`}
-            className={buttonVariants({ size: "lg" })}
-          >
+        <ActionRow>
+          <Link href={`/bookings/${booking.id}/pay`} className={actionClass()}>
             Try again
           </Link>
-          <Link
-            href="/bookings"
-            className={buttonVariants({ variant: "outline", size: "lg" })}
-          >
-            My Bookings
+          <Link href="/bookings" className={actionClass("outline")}>
+            My bookings
           </Link>
-        </LinkRow>
-      </Panel>
+        </ActionRow>
+      </>
     );
-  }
-
-  if (ready && phase === "ended" && booking) {
-    return (
-      <Panel title="This booking is no longer open">
-        <p role="status" className="text-muted-foreground">
+  } else if (view === "ended" && booking) {
+    body = (
+      <>
+        <p className="text-muted-foreground">
           The hold ended or the booking was cancelled before the payment was
           confirmed. If you were charged, please contact {booking.salon.name} on{" "}
-          {booking.salon.phone}.
+          <PhoneLink phone={booking.salon.phone} />.
         </p>
-        <LinkRow>
-          <Link
-            href={`/book/${booking.salon.id}`}
-            className={buttonVariants({ size: "lg" })}
-          >
+        <ActionRow>
+          <Link href={`/book/${booking.salon.id}`} className={actionClass()}>
             Book again
           </Link>
-          <Link
-            href="/bookings"
-            className={buttonVariants({ variant: "outline", size: "lg" })}
-          >
-            My Bookings
+          <Link href="/bookings" className={actionClass("outline")}>
+            My bookings
           </Link>
-        </LinkRow>
-      </Panel>
+        </ActionRow>
+      </>
     );
-  }
-
-  if (ready && phase === "not-found") {
-    return (
-      <Panel title="We could not find this booking">
-        <p role="status" className="text-muted-foreground">
-          It may belong to another account. Open My Bookings to see yours.
-        </p>
-        <LinkRow>
-          <Link href="/bookings" className={buttonVariants({ size: "lg" })}>
-            My Bookings
+  } else if (view === "not-found") {
+    body = (
+      <>
+        <p className="text-muted-foreground">Open My bookings to see yours.</p>
+        <ActionRow>
+          <Link href="/bookings" className={actionClass()}>
+            My bookings
           </Link>
-        </LinkRow>
-      </Panel>
+        </ActionRow>
+      </>
     );
-  }
-
-  if (ready && phase === "slow") {
-    return (
-      <Panel title="Your payment is still being processed">
-        <p role="status" className="text-muted-foreground">
+  } else if (view === "slow") {
+    body = (
+      <>
+        <p className="text-muted-foreground">
           This is taking a little longer than usual. There is nothing more you
-          need to do. Check My Bookings in a minute to see the result.
+          need to do, and please do not pay again. Check My bookings in a minute
+          to see the result.
         </p>
-        <LinkRow>
-          <Link href="/bookings" className={buttonVariants({ size: "lg" })}>
-            My Bookings
+        <ActionRow>
+          <Link href="/bookings" className={actionClass()}>
+            My bookings
           </Link>
-          <Button variant="outline" size="lg" onClick={checkAgain}>
+          <Button
+            variant="outline"
+            size="lg"
+            className="w-full sm:w-auto"
+            onClick={checkAgain}
+          >
             Check again
           </Button>
-        </LinkRow>
-      </Panel>
+        </ActionRow>
+      </>
+    );
+  } else if (view === "signed-out") {
+    body = (
+      <p className="text-muted-foreground">
+        Your session ended. Sign in again and we will check your payment.
+      </p>
+    );
+  } else {
+    body = (
+      <>
+        <p className="text-muted-foreground">
+          Please wait while we confirm your payment. This usually takes a few
+          seconds. Please do not pay again.
+        </p>
+        {trouble ? (
+          <p role="status" className="text-sm text-muted-foreground">
+            We are having trouble reaching the server. We will keep trying.
+          </p>
+        ) : null}
+      </>
     );
   }
 
   return (
-    <Panel title="Confirming your payment">
-      <p role="status" className="text-muted-foreground">
-        Please wait while we confirm your payment. This usually takes a few
-        seconds.
+    <>
+      {/* Always present, so a new result is announced reliably. */}
+      <p role="status" className="sr-only">
+        {changed ? title : ""}
       </p>
-      {trouble ? (
-        <p className="text-sm text-muted-foreground">
-          We are having trouble reaching the server. We will keep trying.
-        </p>
-      ) : null}
-    </Panel>
+      <Panel key={view} title={title} focusOnMount={changed}>
+        {body}
+      </Panel>
+    </>
   );
 }

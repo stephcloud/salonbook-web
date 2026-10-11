@@ -14,7 +14,7 @@ export function SummaryRow({
   return (
     <div className="flex flex-col gap-0.5 sm:contents">
       <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd>{children}</dd>
+      <dd className="min-w-0 break-words">{children}</dd>
     </div>
   );
 }

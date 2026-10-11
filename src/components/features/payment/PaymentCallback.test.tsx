@@ -147,10 +147,10 @@ describe("PaymentCallback", () => {
 
       expect(
         screen.getByRole("heading", {
-          name: "We could not find a payment to check",
+          name: "Nothing to confirm here",
         }),
       ).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: "My Bookings" })).toHaveAttribute(
+      expect(screen.getByRole("link", { name: "My bookings" })).toHaveAttribute(
         "href",
         "/bookings",
       );
@@ -164,7 +164,7 @@ describe("PaymentCallback", () => {
 
       expect(
         screen.getByRole("heading", {
-          name: "We could not find a payment to check",
+          name: "Nothing to confirm here",
         }),
       ).toBeInTheDocument();
       expect(getBooking).not.toHaveBeenCalled();
@@ -200,9 +200,10 @@ describe("PaymentCallback", () => {
       expect(
         screen.getByRole("heading", { name: "Confirming your payment" }),
       ).toBeInTheDocument();
-      expect(screen.getByRole("status")).toHaveTextContent(
-        "Please wait while we confirm your payment",
-      );
+      expect(
+        screen.getByText(/Please wait while we confirm your payment/),
+      ).toBeInTheDocument();
+      expect(screen.getByText(/Please do not pay again/)).toBeInTheDocument();
     });
 
     it("stops polling as soon as the booking is confirmed, and clears the saved id", async () => {
@@ -252,7 +253,7 @@ describe("PaymentCallback", () => {
         }),
       ).toBeInTheDocument();
       expect(
-        screen.getByText(/Check My Bookings in a minute/),
+        screen.getByText(/Check My bookings in a minute/),
       ).toBeInTheDocument();
       expect(screen.queryByRole("alert")).toBeNull();
       expect(window.sessionStorage.getItem(STORAGE_KEY)).toBe(ID);
@@ -382,8 +383,12 @@ describe("PaymentCallback", () => {
         screen.getByRole("heading", { name: "This booking is no longer open" }),
       ).toBeInTheDocument();
       expect(
-        screen.getByText(/contact Pink Studio on 08012345678/),
+        screen.getByText(/please contact Pink Studio/),
       ).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "08012345678" })).toHaveAttribute(
+        "href",
+        "tel:08012345678",
+      );
       expect(screen.getByRole("link", { name: "Book again" })).toHaveAttribute(
         "href",
         "/book/salon-1",
@@ -403,12 +408,63 @@ describe("PaymentCallback", () => {
 
         expect(
           screen.getByRole("heading", {
-            name: "We could not find this booking",
+            name: "This booking is not on your account",
           }),
         ).toBeInTheDocument();
         expect(getBooking).toHaveBeenCalledTimes(1);
         expect(window.sessionStorage.getItem(STORAGE_KEY)).toBeNull();
       },
     );
+  });
+
+  describe("for people using a screen reader or keyboard", () => {
+    it("moves focus to the result heading and announces it when the result arrives", async () => {
+      window.sessionStorage.setItem(STORAGE_KEY, ID);
+      getBooking
+        .mockResolvedValueOnce(pending())
+        .mockResolvedValue(confirmed());
+
+      renderCallback();
+      await settle();
+      // First paint: nothing is announced and focus is not moved.
+      expect(screen.getByRole("status")).toHaveTextContent("");
+      expect(
+        screen.getByRole("heading", { name: "Confirming your payment" }),
+      ).not.toHaveFocus();
+
+      await advance(2500);
+
+      const heading = screen.getByRole("heading", {
+        name: "Payment received. Your booking is confirmed.",
+      });
+      expect(heading).toHaveFocus();
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "Payment received. Your booking is confirmed.",
+      );
+    });
+
+    it("labels the deposit as paid on the success screen", async () => {
+      window.sessionStorage.setItem(STORAGE_KEY, ID);
+      getBooking.mockResolvedValue(confirmed());
+      renderCallback();
+      await settle();
+      expect(screen.getByText("Deposit paid")).toBeInTheDocument();
+    });
+
+    it("says it is sending the client to sign in on a 401, and keeps the saved id", async () => {
+      window.sessionStorage.setItem(STORAGE_KEY, ID);
+      getBooking.mockRejectedValue(new ApiError(401, "Please sign in again."));
+
+      renderCallback();
+      await settle();
+      await advance(10_000);
+
+      expect(
+        screen.getByRole("heading", { name: "Redirecting you to sign in" }),
+      ).toBeInTheDocument();
+      expect(getBooking).toHaveBeenCalledTimes(1);
+      expect(window.sessionStorage.getItem(STORAGE_KEY)).toBe(ID);
+      expect(screen.queryByText(/having trouble/i)).toBeNull();
+    });
   });
 });

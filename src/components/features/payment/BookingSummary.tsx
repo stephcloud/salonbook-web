@@ -9,10 +9,15 @@ import { formatLagosDateTime } from "@/lib/time";
 
 type BookingSummaryProps = {
   booking: Pick<BookingDetail, "salon" | "service" | "stylist" | "starts_at">;
+  /** "Deposit due" before paying, "Deposit paid" once confirmed. */
+  depositLabel?: string;
 };
 
 /** Salon, service, stylist, time (Lagos), price or "Price on consultation", and the deposit. */
-export function BookingSummary({ booking }: BookingSummaryProps) {
+export function BookingSummary({
+  booking,
+  depositLabel = "Deposit",
+}: BookingSummaryProps) {
   const { salon, service, stylist, starts_at } = booking;
   return (
     <dl className={SUMMARY_LIST_CLASS}>
@@ -36,7 +41,7 @@ export function BookingSummary({ booking }: BookingSummaryProps) {
       <SummaryRow label="Price">
         <span className="font-semibold">{formatServicePrice(service)}</span>
       </SummaryRow>
-      <SummaryRow label="Deposit">
+      <SummaryRow label={depositLabel}>
         <span className="font-semibold">
           {formatNaira(salon.deposit_amount)}
         </span>
