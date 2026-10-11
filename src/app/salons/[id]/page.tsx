@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { CopySalonLinkButton } from "@/components/features/salons/CopySalonLinkButton";
 import { SalonHeader } from "@/components/features/salons/SalonHeader";
 import { ServiceList } from "@/components/features/salons/ServiceList";
 import { StylistList } from "@/components/features/salons/StylistList";
@@ -39,7 +40,10 @@ export default async function SalonDetailPage({ params }: PageProps) {
       id="main-content"
       className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-4 py-8"
     >
-      <SalonHeader salon={salon} />
+      <SalonHeader
+        salon={salon}
+        actions={<CopySalonLinkButton salonId={salon.id} />}
+      />
       <div className="grid gap-8 md:grid-cols-[3fr_2fr] md:items-start">
         <ServiceList
           services={services}
