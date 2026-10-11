@@ -3,5 +3,11 @@
 import { LoadError } from "@/components/features/salons/LoadError";
 
 export default function Error({ reset }: { reset: () => void }) {
-  return <LoadError title="We could not load your booking" reset={reset} />;
+  return (
+    <LoadError
+      title="We could not load your booking"
+      secondary={{ href: "/bookings", label: "My bookings" }}
+      reset={reset}
+    />
+  );
 }
