@@ -151,6 +151,41 @@ describe("usePaymentConfirmation", () => {
     });
   });
 
+  describe("at the time limit", () => {
+    it("says 'still processing', not 'failed', when the first failed read came just before the limit", async () => {
+      const start = Date.now();
+      getBooking.mockImplementation(async () =>
+        Date.now() - start >= POLL_LIMIT_MS - 5000 ? failed() : booking(),
+      );
+      const { result } = renderHook(() => usePaymentConfirmation(ID), {
+        wrapper,
+      });
+
+      await advance(POLL_LIMIT_MS + 1000);
+
+      expect(result.current.phase).toBe("slow");
+    });
+
+    it("starts the failed-grace clock again after checkAgain", async () => {
+      getBooking.mockResolvedValue(failed());
+      const { result } = renderHook(() => usePaymentConfirmation(ID), {
+        wrapper,
+      });
+
+      await advance(FAILED_GRACE_MS - 2000);
+      expect(result.current.phase).toBe("confirming");
+
+      act(() => result.current.checkAgain());
+      await advance(0);
+      // Without the reset the earlier failed reads would settle it right away.
+      await advance(FAILED_GRACE_MS - 2000);
+      expect(result.current.phase).toBe("confirming");
+
+      await advance(4000);
+      expect(result.current.phase).toBe("failed");
+    });
+  });
+
   describe("other results", () => {
     it("stops quietly on a 401 while the login redirect happens", async () => {
       getBooking.mockRejectedValue(new ApiError(401, "Please sign in again."));

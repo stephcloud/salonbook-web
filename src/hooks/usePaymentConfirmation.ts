@@ -121,7 +121,9 @@ export function usePaymentConfirmation(
   else if (gone) phase = "not-found";
   else if (signedOut) phase = "signed-out";
   else if (isSettled(reading) && outcome !== "pending") phase = outcome;
-  else if (timedOut) phase = outcome === "failed" ? "failed" : "slow";
+  // At the time limit a "failed" read that has not settled is not final:
+  // a retried payment may still be about to succeed. Say it is still processing.
+  else if (timedOut) phase = "slow";
   else phase = "confirming";
 
   return {
