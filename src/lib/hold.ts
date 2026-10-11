@@ -3,9 +3,21 @@ export const HOLD_MINUTES = 15;
 
 const HOLD_MS = HOLD_MINUTES * 60_000;
 
+const HAS_ZONE = /(?:Z|[+-]\d{2}:?\d{2})$/i;
+
+/**
+ * Reads an API timestamp as UTC. The API sends "...Z", but a timestamp with
+ * no zone or offset would otherwise be read in the device's local time and
+ * shift the countdown by the device's UTC offset, so it is treated as UTC.
+ */
+export function parseApiTime(value: string): number {
+  const text = value.trim();
+  return Date.parse(HAS_ZONE.test(text) ? text : `${text}Z`);
+}
+
 /** When the hold ends, in ms since the epoch: the booking's own `created_at` plus 15 minutes. */
 export function holdEndsAt(createdAt: string): number {
-  return Date.parse(createdAt) + HOLD_MS;
+  return parseApiTime(createdAt) + HOLD_MS;
 }
 
 /**

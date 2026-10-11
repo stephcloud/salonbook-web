@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatCountdown, holdEndsAt, remainingMs } from "./hold";
+import { formatCountdown, holdEndsAt, parseApiTime, remainingMs } from "./hold";
 
 const CREATED = "2026-10-11T09:28:55.605873Z";
 const CREATED_MS = Date.parse(CREATED);
@@ -8,6 +8,37 @@ const MINUTE = 60_000;
 describe("holdEndsAt", () => {
   it("is 15 minutes after the booking was created", () => {
     expect(holdEndsAt(CREATED)).toBe(CREATED_MS + 15 * MINUTE);
+  });
+});
+
+describe("parseApiTime", () => {
+  const UTC_MS = Date.parse("2026-10-11T09:28:55.605873Z");
+
+  it("reads Z and explicit offsets as given", () => {
+    expect(parseApiTime("2026-10-11T09:28:55.605873Z")).toBe(UTC_MS);
+    expect(parseApiTime("2026-10-11T10:28:55.605873+01:00")).toBe(UTC_MS);
+    expect(parseApiTime("2026-10-11T10:28:55.605873+0100")).toBe(UTC_MS);
+    expect(parseApiTime("2026-10-11T04:28:55.605873-05:00")).toBe(UTC_MS);
+  });
+
+  it("treats a timestamp with no zone as UTC, never as local time", () => {
+    expect(parseApiTime("2026-10-11T09:28:55.605873")).toBe(UTC_MS);
+    expect(parseApiTime("2026-10-11T09:28:55")).toBe(
+      Date.parse("2026-10-11T09:28:55Z"),
+    );
+  });
+
+  it("gives the same hold end for a missing Z, so the countdown cannot shift an hour", () => {
+    expect(holdEndsAt("2026-10-11T09:00:00")).toBe(
+      holdEndsAt("2026-10-11T09:00:00Z"),
+    );
+    expect(
+      remainingMs("2026-10-11T09:00:00", Date.parse("2026-10-11T09:05:00Z")),
+    ).toBe(10 * MINUTE);
+  });
+
+  it("is NaN for something that is not a time (remainingMs then treats it as expired)", () => {
+    expect(Number.isNaN(parseApiTime("not a date"))).toBe(true);
   });
 });
 
