@@ -481,6 +481,57 @@ describe("CancelDialog", () => {
       expect(
         screen.getByRole("button", { name: "Keep booking" }),
       ).toBeEnabled();
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "The sign-in page did not open. Please try again.",
+      );
     });
+  });
+});
+
+describe("CancelDialog when the payment lookup is slow", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.clearAllMocks();
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it("gives up on the lookup after 5 seconds so a sleeping server cannot lock the dialog, and makes no claim about money", async () => {
+    cancelBooking.mockResolvedValue(cancelled(false));
+    getBooking.mockReturnValue(new Promise(() => {}));
+    render(<Harness booking={item({ status: "pending" })} />);
+
+    fireEvent.click(confirmButton());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(4900);
+    });
+    // Still waiting: nothing reported yet and the dialog cannot be dismissed.
+    expect(onCancelled).not.toHaveBeenCalled();
+    expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(200);
+    });
+
+    expect(onCancelled).toHaveBeenCalledTimes(1);
+    expect((onCancelled.mock.calls[0][0] as CancelResult).outcome).toEqual({
+      kind: "unknown",
+      message: "",
+    });
+  });
+
+  it("does not wait at all when the lookup answers quickly", async () => {
+    cancelBooking.mockResolvedValue(cancelled(false));
+    getBooking.mockResolvedValue({ payment_status: "pending" });
+    render(<Harness booking={item({ status: "pending" })} />);
+
+    fireEvent.click(confirmButton());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(50);
+    });
+
+    expect(onCancelled).toHaveBeenCalledTimes(1);
+    expect((onCancelled.mock.calls[0][0] as CancelResult).outcome.kind).toBe(
+      "nothing-charged",
+    );
   });
 });

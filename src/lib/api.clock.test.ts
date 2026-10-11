@@ -58,6 +58,30 @@ describe("fetchClockSkew", () => {
     await expect(fetchClockSkew()).resolves.toBe(-60_000);
   });
 
+  it("trusts a round trip of exactly 2 seconds, so the midpoint is at most 1 second out", async () => {
+    vi.setSystemTime(START);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async () => {
+        vi.setSystemTime(START + 2000);
+        return jsonResponse({ now: START + 1000 });
+      }),
+    );
+    await expect(fetchClockSkew()).resolves.toBe(0);
+  });
+
+  it("gives up (null) on a round trip just over 2 seconds", async () => {
+    vi.setSystemTime(START);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async () => {
+        vi.setSystemTime(START + 2001);
+        return jsonResponse({ now: START + 1000 });
+      }),
+    );
+    await expect(fetchClockSkew()).resolves.toBeNull();
+  });
+
   it("gives up (null) when the round trip is too slow to trust", async () => {
     vi.setSystemTime(START);
     vi.stubGlobal(

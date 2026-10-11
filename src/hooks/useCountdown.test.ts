@@ -76,8 +76,9 @@ describe("useCountdown", () => {
     }
 
     it("keeps true time on a page restored from a cache, where the render stamp is old", async () => {
-      // The page was rendered 8 minutes ago (stamp), when 7 minutes were left.
-      // The device clock is right, so the hold really has 0 minutes... check 1 minute left.
+      // The page was rendered 7 minutes after the booking (the stamp), and is
+      // shown 14 minutes after it, so 1 minute of the hold is left. The device
+      // clock is right, so the measured skew is 0.
       const stamp = CREATED_MS + 7 * MINUTE;
       vi.setSystemTime(CREATED_MS + 14 * MINUTE);
       fetchClockSkew.mockResolvedValue(0);

@@ -83,6 +83,33 @@ describe("trackClockSkew", () => {
       expect(onStale).toHaveBeenCalledTimes(1);
     });
 
+    it("treats exactly 15 seconds as still fresh and one millisecond more as stale", async () => {
+      vi.setSystemTime(SERVER_NOW);
+      const renderSkew = SERVER_NOW - Date.now();
+
+      fetchClockSkew.mockResolvedValue(renderSkew + STALE_PAYLOAD_MS);
+      const atLimit = vi.fn();
+      const measuredAtLimit = vi.fn();
+      trackClockSkew(SERVER_NOW, {
+        apply: vi.fn(),
+        onMeasured: measuredAtLimit,
+        onStale: atLimit,
+      });
+      await vi.waitFor(() => expect(measuredAtLimit).toHaveBeenCalled());
+      expect(atLimit).not.toHaveBeenCalled();
+
+      fetchClockSkew.mockResolvedValue(renderSkew + STALE_PAYLOAD_MS + 1);
+      const overLimit = vi.fn();
+      const measuredOverLimit = vi.fn();
+      trackClockSkew(SERVER_NOW, {
+        apply: vi.fn(),
+        onMeasured: measuredOverLimit,
+        onStale: overLimit,
+      });
+      await vi.waitFor(() => expect(measuredOverLimit).toHaveBeenCalled());
+      expect(overLimit).toHaveBeenCalledTimes(1);
+    });
+
     it("does not call onStale for a wrong device clock alone (the stamp is still fresh)", async () => {
       // The device is 10 minutes ahead; the page was rendered just now. The
       // render skew and the measured skew are both about -10 minutes.

@@ -26,6 +26,8 @@ import { formatLagosDateTime } from "@/lib/time";
 
 /** How long a sign-in redirect may take before the dialog lets go. */
 const SIGN_IN_REDIRECT_MS = 10_000;
+/** How long to wait for the payment lookup after a cancel that already worked. */
+const PAYMENT_LOOKUP_TIMEOUT_MS = 5000;
 
 export type CancelResult = {
   /** The booking as it was before cancelling. */
@@ -59,11 +61,22 @@ const PAID_STATUSES = new Set(["paid", "refund_pending", "refunded"]);
  * window" from "never paid", so look. null means it could not be checked.
  */
 async function readWasPaid(id: string): Promise<boolean | null> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    const detail = await getBooking(id);
+    // The cancel has already worked. A slow lookup (a sleeping server can take
+    // a minute) must not keep the dialog locked, so give up after a few seconds.
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(
+        () => reject(new Error("lookup timed out")),
+        PAYMENT_LOOKUP_TIMEOUT_MS,
+      );
+    });
+    const detail = await Promise.race([getBooking(id), timeout]);
     return PAID_STATUSES.has(detail.payment_status ?? "");
   } catch {
     return null;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -118,6 +131,10 @@ function CancelDialogBody({
           sending.current = false;
           busyRef.current = false;
           setSignedOut(false);
+          setFailure({
+            kind: "other",
+            message: "The sign-in page did not open. Please try again.",
+          });
         }, SIGN_IN_REDIRECT_MS);
         return;
       }

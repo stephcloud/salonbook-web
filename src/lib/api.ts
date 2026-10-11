@@ -232,8 +232,12 @@ export function cancelBooking(id: string): Promise<Booking> {
   });
 }
 
-/** A measurement taking longer than this is too uncertain to use. */
-const MAX_CLOCK_ROUND_TRIP_MS = 5000;
+/**
+ * A measurement taking longer than this is too uncertain to use: the server
+ * read its clock somewhere in the round trip, so the midpoint can be wrong by
+ * half of it (1 second at this limit).
+ */
+const MAX_CLOCK_ROUND_TRIP_MS = 2000;
 
 /**
  * Measures how far this device's clock is from our server's, as "server time
