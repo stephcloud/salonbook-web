@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { formatCountdown, holdEndsAt, parseApiTime, remainingMs } from "./hold";
+import {
+  formatCountdown,
+  holdEndsAt,
+  isHoldExpired,
+  parseApiTime,
+  remainingMs,
+} from "./hold";
 
 const CREATED = "2026-10-11T09:28:55.605873Z";
 const CREATED_MS = Date.parse(CREATED);
@@ -78,4 +84,44 @@ describe("formatCountdown", () => {
   ])("formats %i ms as %s", (ms, expected) => {
     expect(formatCountdown(ms)).toBe(expected);
   });
+});
+
+describe("isHoldExpired", () => {
+  const base = { cancelled_at: null, created_at: CREATED };
+
+  it("is false for a pending booking inside its 15 minutes", () => {
+    expect(
+      isHoldExpired({ ...base, status: "pending" }, CREATED_MS + 14 * MINUTE),
+    ).toBe(false);
+  });
+
+  it("is true for a pending booking once the 15 minutes are up", () => {
+    expect(
+      isHoldExpired({ ...base, status: "pending" }, CREATED_MS + 15 * MINUTE),
+    ).toBe(true);
+  });
+
+  it("is true for a booking the API cancelled by itself (no cancelled_at)", () => {
+    expect(
+      isHoldExpired({ ...base, status: "cancelled" }, CREATED_MS + MINUTE),
+    ).toBe(true);
+  });
+
+  it("is false for a booking the client cancelled (cancelled_at set)", () => {
+    expect(
+      isHoldExpired(
+        { ...base, status: "cancelled", cancelled_at: "2026-10-11T09:03:00Z" },
+        CREATED_MS + 20 * MINUTE,
+      ),
+    ).toBe(false);
+  });
+
+  it.each(["confirmed", "completed", "no_show"])(
+    "is false for a %s booking",
+    (status) => {
+      expect(isHoldExpired({ ...base, status }, CREATED_MS + 60 * MINUTE)).toBe(
+        false,
+      );
+    },
+  );
 });

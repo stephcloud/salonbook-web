@@ -129,6 +129,40 @@ describe("BookingList", () => {
     ).toHaveAttribute("href", "/book/salon-1");
   });
 
+  it("treats a booking the API already swept to cancelled (no cancelled_at) like a pending one that ran out", () => {
+    render(
+      <BookingList
+        bookings={[item("swept", { status: "cancelled", cancelled_at: null })]}
+        now={CREATED_MS + 20 * MINUTE}
+      />,
+    );
+    expect(screen.getByText("Expired")).toBeInTheDocument();
+    expect(
+      screen.getByText("The hold ended before the deposit was paid."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Book again at Pink Studio" }),
+    ).toHaveAttribute("href", "/book/salon-1");
+    expect(screen.queryByRole("link", { name: /Pay now/ })).toBeNull();
+  });
+
+  it("does not call a booking the client cancelled expired, and offers no Book again", () => {
+    render(
+      <BookingList
+        bookings={[
+          item("mine", {
+            status: "cancelled",
+            cancelled_at: "2026-10-11T09:03:00.000Z",
+          }),
+        ]}
+        now={CREATED_MS + 20 * MINUTE}
+      />,
+    );
+    expect(screen.getByText("Cancelled")).toBeInTheDocument();
+    expect(screen.queryByText("Expired")).toBeNull();
+    expect(screen.queryByRole("link", { name: /Book again/ })).toBeNull();
+  });
+
   it("gives each Pay now link a name that says which booking it is for", () => {
     render(
       <BookingList

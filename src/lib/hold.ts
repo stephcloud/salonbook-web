@@ -35,6 +35,21 @@ export function remainingMs(
   return Math.max(0, end - (nowMs + skewMs));
 }
 
+/**
+ * True for an unpaid hold that has run out: still "pending" after the 15
+ * minutes, or already "cancelled" by the API with no `cancelled_at` (a cancel
+ * by the client sets it; checked against the live API).
+ */
+export function isHoldExpired(
+  booking: { status: string; cancelled_at: string | null; created_at: string },
+  nowMs: number,
+): boolean {
+  if (booking.status === "pending") {
+    return remainingMs(booking.created_at, nowMs) <= 0;
+  }
+  return booking.status === "cancelled" && booking.cancelled_at === null;
+}
+
 /** "14:59" style countdown; rounds up so it shows 0:01 until the very end. */
 export function formatCountdown(ms: number): string {
   const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
