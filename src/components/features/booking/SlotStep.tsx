@@ -1,12 +1,12 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { StepHeading } from "@/components/features/booking/StepHeading";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSlowPending } from "@/hooks/useSlowPending";
-import { ApiError, getSlots } from "@/lib/api";
+import { useSlots } from "@/hooks/useSlots";
+import { ApiError } from "@/lib/api";
 import { formatLagosDay, formatLagosTime, lagosToday } from "@/lib/time";
 
 type SlotStepProps = {
@@ -22,12 +22,24 @@ type SlotStepProps = {
   onBack: () => void;
 };
 
-export function slotsQueryKey(
-  stylistId: string,
-  serviceId: string,
-  date: string,
-) {
-  return ["slots", stylistId, serviceId, date] as const;
+const LOAD_ERROR_MESSAGE = "Could not load the free times. Please try again.";
+
+/** What to say when loading the times fails. A 401 means apiFetch is already redirecting to /login. */
+function loadErrorDetails(error: unknown): { message: string; retry: boolean } {
+  if (error instanceof ApiError) {
+    if (error.status === 401) {
+      return { message: "Redirecting you to sign in...", retry: false };
+    }
+    // Server errors can carry raw text; show our own wording instead.
+    if (error.status >= 500) {
+      return { message: LOAD_ERROR_MESSAGE, retry: true };
+    }
+    return { message: error.message || LOAD_ERROR_MESSAGE, retry: true };
+  }
+  return {
+    message: "Could not load the free times. Check your connection.",
+    retry: true,
+  };
 }
 
 export function SlotStep({
@@ -44,11 +56,7 @@ export function SlotStep({
   const today = lagosToday();
   const dateIsValid = /^\d{4}-\d{2}-\d{2}$/.test(date) && date >= today;
 
-  const query = useQuery({
-    queryKey: slotsQueryKey(stylistId, serviceId, date),
-    queryFn: () => getSlots(stylistId, serviceId, date),
-    enabled: dateIsValid,
-  });
+  const query = useSlots(stylistId, serviceId, date, dateIsValid);
   const waking = useSlowPending(query.isFetching);
 
   const slots = query.data?.slots ?? [];
@@ -57,6 +65,7 @@ export function SlotStep({
   const selected = slot !== null && slots.includes(slot) ? slot : null;
   const loading = dateIsValid && !query.isError && query.data === undefined;
   const showDateError = date !== "" && !dateIsValid;
+  const loadError = loadErrorDetails(query.error);
 
   // One small, always-present live region: it announces the outcome without
   // reading out the whole list of times.
@@ -115,16 +124,16 @@ export function SlotStep({
             Pick a date to see the free times.
           </p>
         ) : query.isError ? (
-          <div role="alert" className="flex flex-col items-start gap-3">
-            <p>
-              {query.error instanceof ApiError
-                ? query.error.message
-                : "Could not load the free times. Check your connection."}
-            </p>
-            <Button variant="outline" onClick={() => void query.refetch()}>
-              Retry
-            </Button>
-          </div>
+          loadError.retry ? (
+            <div role="alert" className="flex flex-col items-start gap-3">
+              <p>{loadError.message}</p>
+              <Button variant="outline" onClick={() => void query.refetch()}>
+                Retry
+              </Button>
+            </div>
+          ) : (
+            <p>{loadError.message}</p>
+          )
         ) : loading ? (
           <div>
             <p>Loading free times...</p>

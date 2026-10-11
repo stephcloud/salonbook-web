@@ -5,6 +5,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -224,18 +225,84 @@ describe("BookingWizard", () => {
       ).toBeInTheDocument();
     });
 
-    it("shows an error with a Retry that loads the times", async () => {
+    it("shows our own wording on a server error, with a Retry that loads the times", async () => {
       getSlots.mockRejectedValueOnce(new ApiError(500, "Boom"));
       const user = userEvent.setup();
       renderWizard(BRAIDS);
       await user.click(screen.getByRole("radio", { name: /Amara/ }));
       await user.click(screen.getByRole("button", { name: "Continue" }));
 
-      expect(await screen.findByText("Boom")).toBeInTheDocument();
+      expect(
+        await screen.findByText(
+          "Could not load the free times. Please try again.",
+        ),
+      ).toBeInTheDocument();
+      expect(screen.queryByText("Boom")).toBeNull();
       await user.click(screen.getByRole("button", { name: "Retry" }));
       expect(
         await screen.findByRole("button", { name: "9:00 AM" }),
       ).toBeInTheDocument();
+    });
+
+    it("shows the API's message for a client error", async () => {
+      getSlots.mockRejectedValueOnce(new ApiError(404, "not found"));
+      const user = userEvent.setup();
+      renderWizard(BRAIDS);
+      await user.click(screen.getByRole("radio", { name: /Amara/ }));
+      await user.click(screen.getByRole("button", { name: "Continue" }));
+      expect(await screen.findByText("not found")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
+    });
+
+    it("stays quiet on a 401 while the login redirect happens (no Retry)", async () => {
+      getSlots.mockRejectedValueOnce(
+        new ApiError(401, "Please sign in again."),
+      );
+      const user = userEvent.setup();
+      renderWizard(BRAIDS);
+      await user.click(screen.getByRole("radio", { name: /Amara/ }));
+      await user.click(screen.getByRole("button", { name: "Continue" }));
+
+      expect(
+        await screen.findByText("Redirecting you to sign in..."),
+      ).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Retry" })).toBeNull();
+      expect(screen.queryByText("Please sign in again.")).toBeNull();
+    });
+
+    it("disables Continue when a refreshed list no longer has the chosen time", async () => {
+      const client = new QueryClient({
+        defaultOptions: { queries: { retry: false, staleTime: 30_000 } },
+      });
+      const user = userEvent.setup();
+      render(
+        <QueryClientProvider client={client}>
+          <BookingWizard
+            salon={salon}
+            services={services}
+            stylists={stylists}
+            initialServiceId={BRAIDS}
+          />
+        </QueryClientProvider>,
+      );
+      await toSlotStep(user);
+      await user.click(screen.getByRole("button", { name: "9:00 AM" }));
+      expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled();
+
+      // The wizard still holds 9:00 AM, but the list on screen no longer has it.
+      getSlots.mockResolvedValue(slotsResponse([SLOT_930]));
+      await act(async () => {
+        await client.invalidateQueries({ queryKey: ["slots"] });
+      });
+
+      await waitFor(() =>
+        expect(screen.queryByRole("button", { name: "9:00 AM" })).toBeNull(),
+      );
+      expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
+      expect(screen.getByRole("button", { name: "9:30 AM" })).toHaveAttribute(
+        "aria-pressed",
+        "false",
+      );
     });
 
     it("rejects a date in the past without calling the API and marks the field invalid", async () => {
@@ -329,6 +396,9 @@ describe("BookingWizard", () => {
       await walkToReview(user);
 
       await user.click(screen.getByRole("button", { name: "Back" }));
+      expect(
+        screen.getByRole("heading", { name: "Pick a date and time" }),
+      ).toHaveFocus();
       expect(
         await screen.findByRole("button", { name: "9:00 AM" }),
       ).toHaveAttribute("aria-pressed", "true");
@@ -443,6 +513,9 @@ describe("BookingWizard", () => {
         ),
       ).toBeInTheDocument();
       expect(screen.getByText("Step 3 of 4")).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: "Pick a date and time" }),
+      ).toHaveFocus();
       // The taken time is gone from the list and nothing is selected.
       await waitFor(() =>
         expect(screen.queryByRole("button", { name: "9:00 AM" })).toBeNull(),

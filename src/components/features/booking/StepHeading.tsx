@@ -9,7 +9,11 @@ export function StepHeading({
   children: ReactNode;
 }) {
   return (
-    <h2 id={id} tabIndex={-1} className="text-xl font-bold outline-none">
+    <h2
+      id={id}
+      tabIndex={-1}
+      className="rounded text-xl font-bold outline-none focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2"
+    >
       {children}
     </h2>
   );

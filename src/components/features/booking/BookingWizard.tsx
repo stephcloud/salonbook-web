@@ -4,15 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ReviewStep } from "@/components/features/booking/ReviewStep";
 import { ServiceStep } from "@/components/features/booking/ServiceStep";
-import {
-  SlotStep,
-  slotsQueryKey,
-} from "@/components/features/booking/SlotStep";
+import { SlotStep } from "@/components/features/booking/SlotStep";
 import {
   StepIndicator,
   type WizardStep,
 } from "@/components/features/booking/StepIndicator";
 import { StylistStep } from "@/components/features/booking/StylistStep";
+import { slotsQueryKey } from "@/hooks/useSlots";
 import type { Salon, Service, Stylist } from "@/lib/api";
 import { lagosToday } from "@/lib/time";
 
