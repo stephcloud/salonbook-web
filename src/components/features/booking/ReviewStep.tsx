@@ -1,12 +1,16 @@
 "use client";
 
-import { useRef, type ReactNode } from "react";
+import { useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ClientsOnlyNotice } from "@/components/features/booking/ClientsOnlyNotice";
 import { StepHeading } from "@/components/features/booking/StepHeading";
+import {
+  SUMMARY_LIST_CLASS,
+  SummaryRow,
+} from "@/components/features/booking/SummaryRow";
 import { useSlowPending } from "@/hooks/useSlowPending";
 import {
   createBooking,
@@ -37,15 +41,6 @@ const FIELD_LABELS: Record<string, string> = {
   stylist_id: "Stylist",
   service_id: "Service",
 };
-
-function Row({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="flex flex-col gap-0.5 sm:contents">
-      <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd>{children}</dd>
-    </div>
-  );
-}
 
 export function ReviewStep({
   salon,
@@ -106,32 +101,32 @@ export function ReviewStep({
     <div className="flex flex-col gap-4">
       <StepHeading id="step-review-heading">Review your booking</StepHeading>
 
-      <dl className="grid gap-4 rounded-2xl bg-card p-4 ring-1 ring-foreground/10 sm:grid-cols-[auto_1fr] sm:gap-x-6 sm:gap-y-3">
-        <Row label="Salon">
+      <dl className={SUMMARY_LIST_CLASS}>
+        <SummaryRow label="Salon">
           <span className="font-semibold">{salon.name}</span>
           <br />
           <span className="text-sm text-muted-foreground">{salon.address}</span>
-        </Row>
-        <Row label="Service">
+        </SummaryRow>
+        <SummaryRow label="Service">
           <span className="font-semibold">{service.name}</span>{" "}
           <span className="text-sm text-muted-foreground">
             ({formatDuration(service.duration_minutes)})
           </span>
-        </Row>
-        <Row label="Stylist">
+        </SummaryRow>
+        <SummaryRow label="Stylist">
           <span className="font-semibold">{stylist.name}</span>
-        </Row>
-        <Row label="When">
+        </SummaryRow>
+        <SummaryRow label="When">
           <span className="font-semibold">{formatLagosDateTime(slot)}</span>
-        </Row>
-        <Row label="Price">
+        </SummaryRow>
+        <SummaryRow label="Price">
           <span className="font-semibold">{formatServicePrice(service)}</span>
-        </Row>
-        <Row label="Deposit to pay now">
+        </SummaryRow>
+        <SummaryRow label="Deposit to pay now">
           <span className="font-semibold">
             {formatNaira(salon.deposit_amount)}
           </span>
-        </Row>
+        </SummaryRow>
       </dl>
 
       <p className="text-sm text-muted-foreground">
