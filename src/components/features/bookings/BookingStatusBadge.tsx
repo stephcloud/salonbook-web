@@ -12,17 +12,30 @@ const LABELS: Record<
   no_show: { text: "No show", variant: "cancelled" },
 };
 
-/** Status chip: pending amber, confirmed green, cancelled grey (CLAUDE.md). */
-export function BookingStatusBadge({
-  status,
-  expired = false,
-}: {
+type BookingStatusBadgeProps = {
   status: BookingListItem["status"];
   /** An unpaid hold that ran out (see `isHoldExpired`); shown as "Expired". */
   expired?: boolean;
-}) {
+  /** The refund's progress for a cancelled, paid booking; shown as a blue badge. */
+  refund?: "Refund pending" | "Refunded" | null;
+};
+
+/**
+ * Status chips: pending amber, confirmed green, cancelled and expired grey,
+ * refunded blue (CLAUDE.md).
+ */
+export function BookingStatusBadge({
+  status,
+  expired = false,
+  refund = null,
+}: BookingStatusBadgeProps) {
   const { text, variant } = expired
     ? { text: "Expired", variant: "cancelled" as const }
     : LABELS[status];
-  return <Badge variant={variant}>{text}</Badge>;
+  return (
+    <span className="inline-flex flex-wrap items-center gap-1.5">
+      <Badge variant={variant}>{text}</Badge>
+      {refund ? <Badge variant="refunded">{refund}</Badge> : null}
+    </span>
+  );
 }

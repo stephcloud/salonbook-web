@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
-import { BookingStatusBadge } from "@/components/features/payment/BookingStatusBadge";
+import { BookingStatusBadge } from "@/components/features/bookings/BookingStatusBadge";
 import { EmptyState } from "@/components/features/salons/EmptyState";
 import type { BookingListItem } from "@/lib/api";
 import { isHoldExpired } from "@/lib/hold";
