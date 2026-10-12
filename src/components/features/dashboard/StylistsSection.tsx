@@ -133,8 +133,12 @@ export function StylistsSection({
                     )}
                   </div>
                 </div>
-                <Button variant="outline" onClick={() => setAssigning(stylist)}>
-                  Services<span className="sr-only"> for {stylist.name}</span>
+                <Button
+                  variant="outline"
+                  aria-label={`Services for ${stylist.name}`}
+                  onClick={() => setAssigning(stylist)}
+                >
+                  Services
                 </Button>
               </li>
             );

@@ -105,17 +105,19 @@ export function ServicesSection({
               <div className="flex gap-2">
                 <Button
                   variant="outline"
+                  aria-label={`Edit ${service.name}`}
                   onClick={() => setDialog({ kind: "edit", service })}
                 >
                   <Pencil aria-hidden="true" />
-                  Edit<span className="sr-only"> {service.name}</span>
+                  Edit
                 </Button>
                 <Button
                   variant="destructive"
+                  aria-label={`Delete ${service.name}`}
                   onClick={() => setDialog({ kind: "delete", service })}
                 >
                   <Trash2 aria-hidden="true" />
-                  Delete<span className="sr-only"> {service.name}</span>
+                  Delete
                 </Button>
               </div>
             </li>
