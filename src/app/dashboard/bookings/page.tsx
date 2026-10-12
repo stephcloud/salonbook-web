@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { OwnerBookingsSection } from "@/components/features/dashboard/bookings/OwnerBookingsSection";
 import { OwnerSalonPage } from "@/components/features/dashboard/OwnerSalonPage";
 import { getSalonServices, getSalonStylists } from "@/lib/api-server";
@@ -5,7 +6,12 @@ import { getSalonServices, getSalonStylists } from "@/lib/api-server";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-export const metadata = { title: "Bookings · SalonBook" };
+export const metadata: Metadata = {
+  title: "Bookings · SalonBook",
+  description:
+    "See your salon's bookings and filter them by status, stylist and date.",
+  robots: { index: false, follow: false },
+};
 
 export default function OwnerBookingsPage() {
   return (

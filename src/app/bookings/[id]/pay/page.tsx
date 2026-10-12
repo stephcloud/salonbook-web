@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { QueryProvider } from "@/components/features/booking/QueryProvider";
@@ -10,7 +11,12 @@ import { safeNextPath } from "@/lib/auth/safe-next";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-export const metadata = { title: "Pay deposit · SalonBook" };
+export const metadata: Metadata = {
+  title: "Pay deposit · SalonBook",
+  description:
+    "Pay the deposit to confirm your salon booking before the hold runs out.",
+  robots: { index: false, follow: false },
+};
 
 const MAIN_CLASS =
   "mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 py-8";

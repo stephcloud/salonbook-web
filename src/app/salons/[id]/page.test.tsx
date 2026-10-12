@@ -144,10 +144,14 @@ describe("salon detail page loading", () => {
     getSalon.mockResolvedValueOnce(SALON);
     await expect(generateMetadata({ params })).resolves.toEqual({
       title: "Pink Studio · SalonBook",
+      description:
+        "Book Pink Studio, 12 Admiralty Way, Lekki. See its services and stylists and pay a deposit online.",
     });
     getSalon.mockRejectedValueOnce(new ApiError(500, "boom"));
     await expect(generateMetadata({ params })).resolves.toEqual({
       title: "Salon · SalonBook",
+      description:
+        "See a salon's services and stylists and book your appointment online.",
     });
   });
 });

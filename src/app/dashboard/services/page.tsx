@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { OwnerSalonPage } from "@/components/features/dashboard/OwnerSalonPage";
 import { ServicesSection } from "@/components/features/dashboard/ServicesSection";
 import { getSalonServices } from "@/lib/api-server";
@@ -5,7 +6,11 @@ import { getSalonServices } from "@/lib/api-server";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-export const metadata = { title: "Services · SalonBook" };
+export const metadata: Metadata = {
+  title: "Services · SalonBook",
+  description: "Add and edit the services your salon offers.",
+  robots: { index: false, follow: false },
+};
 
 export default function ServicesPage() {
   return (

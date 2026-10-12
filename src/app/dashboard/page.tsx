@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { OwnersOnlyNotice } from "@/components/features/auth/OwnersOnlyNotice";
 import { DashboardNav } from "@/components/features/dashboard/DashboardNav";
@@ -13,7 +14,12 @@ import { buildChecklist } from "@/lib/setup-checklist";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-export const metadata = { title: "Dashboard · SalonBook" };
+export const metadata: Metadata = {
+  title: "Dashboard · SalonBook",
+  description:
+    "Set up your salon, services and stylists, and share your booking link.",
+  robots: { index: false, follow: false },
+};
 
 const MAIN_CLASS =
   "mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-8";

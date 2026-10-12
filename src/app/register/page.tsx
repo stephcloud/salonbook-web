@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AuthShell } from "@/components/features/auth/AuthShell";
 import { RegisterForm } from "@/components/features/auth/RegisterForm";
@@ -8,7 +9,11 @@ import { safeNextPath } from "@/lib/auth/safe-next";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-export const metadata = { title: "Create account · SalonBook" };
+export const metadata: Metadata = {
+  title: "Create account · SalonBook",
+  description:
+    "Create a SalonBook account to book salon appointments, or register your own salon.",
+};
 
 export default async function RegisterPage({
   searchParams,
