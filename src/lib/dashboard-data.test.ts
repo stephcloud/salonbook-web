@@ -72,6 +72,51 @@ describe("loadChecklistInput", () => {
     expect(result.availability.unchecked).toBe(1);
   });
 
+  it("keeps the hours that were read, in order, when some reads fail and others succeed", async () => {
+    getSalonStylists.mockResolvedValue([
+      stylist("a"),
+      stylist("b"),
+      stylist("c"),
+      stylist("d"),
+    ]);
+    getStylistAvailability.mockImplementation(async (id: string) => {
+      if (id === "a" || id === "c") throw new Error("boom");
+      return { stylist_id: id, rules: [] };
+    });
+
+    const result = await loadChecklistInput(SALON);
+
+    expect(result.availability.read.map((r) => r.stylist_id)).toEqual([
+      "b",
+      "d",
+    ]);
+    expect(result.availability.unchecked).toBe(2);
+    expect(result.stylists).toHaveLength(4);
+  });
+
+  it("counts every stylist as unchecked when all hours reads fail", async () => {
+    getSalonStylists.mockResolvedValue([stylist("a"), stylist("b")]);
+    getStylistAvailability.mockRejectedValue(new Error("down"));
+
+    const result = await loadChecklistInput(SALON);
+
+    expect(result.availability).toEqual({ read: [], unchecked: 2 });
+  });
+
+  it("adds failed reads and stylists past the limit together", async () => {
+    const many = Array.from({ length: 22 }, (_, i) => stylist(`s${i}`));
+    getSalonStylists.mockResolvedValue(many);
+    getStylistAvailability.mockImplementation(async (id: string) => {
+      if (id === "s0") throw new Error("boom");
+      return { stylist_id: id, rules: [] };
+    });
+
+    const result = await loadChecklistInput(SALON);
+
+    expect(result.availability.read).toHaveLength(19);
+    expect(result.availability.unchecked).toBe(3);
+  });
+
   it("reads at most 20 stylists and counts the rest as unchecked", async () => {
     const many = Array.from({ length: 25 }, (_, i) => stylist(`s${i}`));
     getSalonStylists.mockResolvedValue(many);

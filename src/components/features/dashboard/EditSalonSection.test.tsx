@@ -79,6 +79,52 @@ describe("EditSalonSection", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Saved.");
   });
 
+  it("does not bring back an old Saved message when the form is reopened and cancelled", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json({ ...SALON, name: "New name" })),
+    );
+    render(<EditSalonSection salon={SALON} />);
+    fireEvent.click(screen.getByRole("button", { name: "Edit salon details" }));
+    fireEvent.change(screen.getByLabelText("Salon name"), {
+      target: { value: "New name" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    await screen.findByText("Saved.");
+
+    fireEvent.click(screen.getByRole("button", { name: "Edit salon details" }));
+
+    expect(screen.getByLabelText("Salon name")).toHaveFocus();
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.getAllByRole("status").at(-1)).toBeEmptyDOMElement();
+  });
+
+  it("does not say Saved after opening and cancelling without saving", () => {
+    render(<EditSalonSection salon={SALON} />);
+    fireEvent.click(screen.getByRole("button", { name: "Edit salon details" }));
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.getAllByRole("status").at(-1)).toBeEmptyDOMElement();
+  });
+
+  it("does not refresh the page or say Saved when the save fails", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({ detail: "Salon not found" }, { status: 404 }),
+      ),
+    );
+    render(<EditSalonSection salon={SALON} />);
+    fireEvent.click(screen.getByRole("button", { name: "Edit salon details" }));
+    fireEvent.change(screen.getByLabelText("Salon name"), {
+      target: { value: "New name" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    await screen.findByRole("alert");
+
+    expect(refresh).not.toHaveBeenCalled();
+    expect(screen.getAllByRole("status").at(-1)).toBeEmptyDOMElement();
+  });
+
   it("stays open and shows the problem when the save fails", async () => {
     vi.stubGlobal(
       "fetch",
