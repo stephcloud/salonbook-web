@@ -47,6 +47,21 @@ describe("landing page", () => {
     );
   });
 
+  it("treats a signed-in visitor with a missing or odd role like a client", async () => {
+    jar.set("sb_token", "t");
+    jar.set("sb_role", "admin");
+    await show();
+    expect(
+      screen.getByRole("link", { name: "Find a salon" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "Register your salon" }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole("link", { name: "Go to your dashboard" }),
+    ).toBeNull();
+  });
+
   it("adds a decorative hero tile that assistive tech skips and has no text", async () => {
     await show();
     const tile = screen.getByTestId("hero-tile");
