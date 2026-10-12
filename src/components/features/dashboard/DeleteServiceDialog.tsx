@@ -24,6 +24,8 @@ type DeleteServiceDialogProps = {
   onClose: () => void;
   /** The API deleted it (the section refreshes and closes). */
   onDeleted: (message: string) => void;
+  /** Where focus goes when the dialog closes (see Base UI's `finalFocus`). */
+  finalFocus?: () => boolean | HTMLElement | null;
 };
 
 type BodyProps = Omit<DeleteServiceDialogProps, "service" | "onClose"> & {
@@ -31,7 +33,12 @@ type BodyProps = Omit<DeleteServiceDialogProps, "service" | "onClose"> & {
   busyRef: { current: boolean };
 };
 
-function DeleteServiceBody({ service, onDeleted, busyRef }: BodyProps) {
+function DeleteServiceBody({
+  service,
+  onDeleted,
+  busyRef,
+  finalFocus,
+}: BodyProps) {
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
   const [locked, setLocked] = useState(false);
@@ -67,7 +74,7 @@ function DeleteServiceBody({ service, onDeleted, busyRef }: BodyProps) {
   const disabled = pending || locked;
 
   return (
-    <AlertDialogContent>
+    <AlertDialogContent finalFocus={finalFocus}>
       <AlertDialogHeader>
         <AlertDialogTitle>Delete {service.name}?</AlertDialogTitle>
         <AlertDialogDescription>
