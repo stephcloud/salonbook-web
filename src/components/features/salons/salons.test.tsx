@@ -175,6 +175,12 @@ describe("SalonSearchForm", () => {
     );
   });
 
+  it("links the input to the suggestions list and keeps its label", () => {
+    render(<SalonSearchForm query="" />);
+    const input = screen.getByLabelText("Search salons by name");
+    expect(input).toHaveAttribute("list", "salon-name-suggestions");
+  });
+
   it("shows the clear link only while a term is set", () => {
     const { rerender } = render(<SalonSearchForm query="" />);
     expect(screen.queryByRole("link", { name: "Clear search" })).toBeNull();

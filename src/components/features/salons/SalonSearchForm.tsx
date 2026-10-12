@@ -3,7 +3,7 @@ import { Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MAX_QUERY_LENGTH } from "@/lib/salon-search";
+import { MAX_QUERY_LENGTH, SALON_SUGGESTIONS_ID } from "@/lib/salon-search";
 
 /** A plain GET form: Enter submits it and the term lives in ?q=. */
 export function SalonSearchForm({ query }: { query: string }) {
@@ -25,6 +25,7 @@ export function SalonSearchForm({ query }: { query: string }) {
             maxLength={MAX_QUERY_LENGTH}
             placeholder="Salon name"
             autoComplete="off"
+            list={SALON_SUGGESTIONS_ID}
             className={`[&::-webkit-search-cancel-button]:hidden${query ? " pr-11" : ""}`}
           />
           {query ? (

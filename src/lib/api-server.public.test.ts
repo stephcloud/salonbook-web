@@ -8,6 +8,7 @@ vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 import { ApiError, isMissingResource } from "@/lib/api";
 import {
   getSalon,
+  getSalonNames,
   getSalonServices,
   getSalonStylists,
   getSalons,
@@ -123,6 +124,45 @@ describe("public salon calls", () => {
       const error = await searchSalons("pink").catch((e: unknown) => e);
       expect(error).toBeInstanceOf(ApiError);
       expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe("getSalonNames", () => {
+    it("makes one call for 100, de-duplicates, skips blanks and caps at 100", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(
+        jsonResponse([
+          { id: "a", name: "Pink Studio" },
+          { id: "b", name: "  pink studio " },
+          { id: "c", name: "Café Glow" },
+          { id: "d", name: "cafe glow" },
+          { id: "e", name: "   " },
+          ...Array.from({ length: 150 }, (_, i) => ({
+            id: `x${i}`,
+            name: `Salon ${i}`,
+          })),
+        ]),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+
+      const names = await getSalonNames();
+
+      expect(calledUrls(fetchMock)).toEqual([
+        `${API_URL}/salons?limit=100&offset=0`,
+      ]);
+      expect(names).toHaveLength(100);
+      expect(names.slice(0, 3)).toEqual([
+        "Pink Studio",
+        "Café Glow",
+        "Salon 0",
+      ]);
+    });
+
+    it("throws when the API is down so the caller can ignore it", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockImplementation(async () => jsonResponse({}, 503)),
+      );
+      await expect(getSalonNames()).rejects.toBeInstanceOf(ApiError);
     });
   });
 

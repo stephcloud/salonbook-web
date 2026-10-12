@@ -16,7 +16,7 @@ import type { components } from "@/lib/api-types";
 import { TOKEN_COOKIE } from "@/lib/auth/cookie";
 import { safeNextPath } from "@/lib/auth/safe-next";
 import { apiBaseUrl, fetchUpstream } from "@/lib/proxy/upstream";
-import { matchesSalonName } from "@/lib/salon-search";
+import { matchesSalonName, normalizeSearch } from "@/lib/salon-search";
 
 export type CurrentUser = components["schemas"]["UserResponse"];
 
@@ -104,6 +104,29 @@ export function getSalons(page = 1): Promise<Salon[]> {
   );
 }
 
+/** Cached per request so the search scan and the name suggestions share it. */
+const getSalonBatch = cache((offset: number): Promise<Salon[]> => {
+  return publicGet<Salon[]>(`/salons?limit=${MAX_LIST_LIMIT}&offset=${offset}`);
+});
+
+/**
+ * Up to 100 distinct salon names (first batch, API order) for the search box
+ * suggestions. Throws like any public read; the caller decides to ignore it.
+ */
+export async function getSalonNames(): Promise<string[]> {
+  const batch = await getSalonBatch(0);
+  const seen = new Set<string>();
+  const names: string[] = [];
+  for (const { name } of batch) {
+    const label = name.trim();
+    const key = normalizeSearch(label);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    names.push(label);
+  }
+  return names.slice(0, MAX_LIST_LIMIT);
+}
+
 // The API has no name search, so a search scans up to this many pages of 100.
 const MAX_SEARCH_SCAN = 5;
 
@@ -119,9 +142,7 @@ export async function searchSalons(
   const matches: Salon[] = [];
   let truncated = false;
   for (let i = 0; i < MAX_SEARCH_SCAN; i++) {
-    const batch = await publicGet<Salon[]>(
-      `/salons?limit=${MAX_LIST_LIMIT}&offset=${i * MAX_LIST_LIMIT}`,
-    );
+    const batch = await getSalonBatch(i * MAX_LIST_LIMIT);
     for (const salon of batch) {
       if (matchesSalonName(salon.name, query)) matches.push(salon);
     }

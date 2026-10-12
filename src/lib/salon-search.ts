@@ -1,4 +1,6 @@
 export const MAX_QUERY_LENGTH = 80;
+/** The id that links the search input to its suggestions <datalist>. */
+export const SALON_SUGGESTIONS_ID = "salon-name-suggestions";
 
 /** Lower-case, accent-folded and trimmed, so "Café " matches "cafe". */
 export function normalizeSearch(text: string): string {
