@@ -8,6 +8,7 @@ import type { Salon } from "@/lib/api";
 /** A button that opens the edit form in place and closes it after saving. */
 export function EditSalonSection({ salon }: { salon: Salon }) {
   const [open, setOpen] = useState(false);
+  const [saved, setSaved] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const wasOpen = useRef(false);
@@ -38,7 +39,10 @@ export function EditSalonSection({ salon }: { salon: Salon }) {
           <SalonForm
             mode="edit"
             salon={salon}
-            onSaved={() => setOpen(false)}
+            onSaved={() => {
+              setSaved(true);
+              setOpen(false);
+            }}
             onCancel={() => setOpen(false)}
           />
         </div>
@@ -48,12 +52,18 @@ export function EditSalonSection({ salon }: { salon: Salon }) {
             ref={buttonRef}
             variant="outline"
             size="lg"
-            onClick={() => setOpen(true)}
+            onClick={() => {
+              setSaved(false);
+              setOpen(true);
+            }}
           >
             Edit salon details
           </Button>
         </div>
       )}
+      <p role="status" className="min-h-5 text-sm text-muted-foreground">
+        {saved && !open ? "Saved." : ""}
+      </p>
     </section>
   );
 }

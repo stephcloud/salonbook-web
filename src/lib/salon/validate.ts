@@ -154,7 +154,7 @@ export function changedFields(
     changes.deposit_amount = next.deposit_amount;
   }
   const image = next.image_url ?? null;
-  if (image !== salon.image_url) changes.image_url = image;
+  if (image !== (salon.image_url ?? null)) changes.image_url = image;
   return changes;
 }
 

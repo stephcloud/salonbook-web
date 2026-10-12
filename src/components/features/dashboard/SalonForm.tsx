@@ -94,7 +94,6 @@ export function SalonForm(props: SalonFormProps) {
         setNotice("Salon created.");
         setPending(false);
       }
-      router.refresh();
     } catch (error) {
       const failure = describeSaveError(error, editing ? "edit" : "create");
       setErrors(failure.fields);
@@ -103,6 +102,13 @@ export function SalonForm(props: SalonFormProps) {
       if (failure.signedOut) setLocked(true);
       sending.current = failure.signedOut;
       setPending(false);
+      return;
+    }
+    // Outside the try: a failed refresh must not look like a failed save.
+    try {
+      router.refresh();
+    } catch {
+      // The salon is saved; the page updates on the next visit or reload.
     }
   }
 

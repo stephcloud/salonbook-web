@@ -343,3 +343,12 @@ describe("salonServerErrors", () => {
     expect(salonServerErrors({})).toEqual({ fields: {}, general: null });
   });
 });
+
+describe("changedFields with a salon that has no image_url field", () => {
+  it("treats a missing image as none, so nothing changes", () => {
+    const noField = { ...SALON } as Partial<Salon>;
+    delete noField.image_url;
+    const salon = noField as Salon;
+    expect(changedFields(salon, valuesFromSalon(salon))).toEqual({});
+  });
+});

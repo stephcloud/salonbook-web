@@ -83,7 +83,7 @@ describe("POST /api/auth/login", () => {
     },
   );
 
-  it("sets no role cookie for a role it does not know", async () => {
+  it("clears the role cookie for a role it does not know", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async (url: string) =>
@@ -96,8 +96,12 @@ describe("POST /api/auth/login", () => {
       loginRequest({ email: "ada@example.com", password: "password1" }),
     );
     expect(res.status).toBe(200);
-    const names = res.headers.getSetCookie().map((c) => c.split("=")[0]);
-    expect(names).toEqual(["sb_token"]);
+    const role = res.headers
+      .getSetCookie()
+      .find((c) => c.startsWith("sb_role="));
+    // A stale role from an earlier session is cleared, not kept.
+    expect(role).toContain("sb_role=;");
+    expect(role).toMatch(/Max-Age=0/i);
   });
 
   it("marks the cookie Secure in production", async () => {

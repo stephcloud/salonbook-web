@@ -83,7 +83,9 @@ export default async function DashboardPage() {
           <SalonOverview salon={salon} />
           <EditSalonSection salon={salon} />
         </div>
-        <SetupChecklist checklist={checklist} salonId={salon.id} />
+        <div className="order-first md:order-none">
+          <SetupChecklist checklist={checklist} salonId={salon.id} />
+        </div>
       </div>
     </main>
   );

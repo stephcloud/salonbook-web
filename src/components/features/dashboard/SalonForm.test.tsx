@@ -467,3 +467,23 @@ describe("SalonForm: edit", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
+
+describe("SalonForm: refresh failure", () => {
+  it("does not report a saved salon as a failed save, and stays locked", async () => {
+    refresh.mockImplementation(() => {
+      throw new Error("refresh failed");
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => respond(SALON, 201)),
+    );
+    render(<SalonForm mode="create" />);
+    fillCreateForm();
+
+    submit("Create salon");
+    await vi.waitFor(() => expect(refresh).toHaveBeenCalled());
+
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getByRole("button", { name: "Create salon" })).toBeDisabled();
+  });
+});

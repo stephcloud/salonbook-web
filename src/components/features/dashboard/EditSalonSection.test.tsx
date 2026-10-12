@@ -76,6 +76,7 @@ describe("EditSalonSection", () => {
     ).toBeInTheDocument();
     expect(refresh).toHaveBeenCalledTimes(1);
     expect(screen.queryByLabelText("Salon name")).toBeNull();
+    expect(screen.getByRole("status")).toHaveTextContent("Saved.");
   });
 
   it("stays open and shows the problem when the save fails", async () => {
