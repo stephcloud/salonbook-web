@@ -7,13 +7,10 @@ vi.mock("@/lib/api-server", () => ({
 }));
 
 import { OwnerPlaceholder } from "./OwnerPlaceholder";
-import ServicesPage from "@/app/dashboard/services/page";
-import StylistsPage from "@/app/dashboard/stylists/page";
 import AvailabilityPage from "@/app/dashboard/availability/page";
 
+// Services and stylists are real pages now (see OwnerSalonPage.test.tsx).
 const PAGES = [
-  ["/dashboard/services", "Services", ServicesPage],
-  ["/dashboard/stylists", "Stylists", StylistsPage],
   ["/dashboard/availability", "Weekly hours", AvailabilityPage],
 ] as const;
 
