@@ -117,3 +117,13 @@
 - **A day off on a date that already has a booking is accepted (200) with no warning and no 409.** The booking stays; slots on that day drop to 0. The page therefore says plainly that existing bookings are not cancelled; it cannot list clashes from this endpoint.
 - Errors: 401 `invalid credentials`, 403 `forbidden` (client, or another owner's stylist), 404 `stylist not found`, non-uuid id is a 422 with `loc: ["path","stylist_id"]`. A 422 echoes the submitted `input`, so the page only reads `loc` and `msg`.
 - Probe data left in the live database (no delete endpoints): three throwaway accounts, one probe salon with one service and one stylist (hours cleared), one cancelled probe booking.
+
+## 2026-10-12 (owner bookings)
+
+- Owner bookings list built on `feat/owner-bookings`: `/dashboard/bookings` with status, stylist and From/To filters, Previous/Next paging (20 per page), loading, waking-up message, error with Retry and empty states. A small dashboard nav (Overview, Services, Stylists, Weekly hours, Bookings) now sits on the owner pages. No new dependencies.
+- Contract (`GET /salons/{id}/bookings`) checked against the live API with throwaway accounts. The openapi does not say:
+  - `from` and `to` are Lagos calendar days and both are inclusive (a 00:00 Lagos booking, which is 23:00Z the day before, matched `from=to=<that Lagos day>`). `from` after `to` is 422 with a plain string detail.
+  - Rows come back earliest first. There is no sort parameter and no total, so the page asks for 21 rows and shows Next only when the 21st exists. The page says "Earliest first".
+  - A client token and another owner's token both get 403 `forbidden`; no token is 401.
+  - The row has no price or amount. The page shows the service price from the salon's services list, the salon's deposit, and the payment status.
+- Probe data (live database, cannot be deleted through the API): suffix `p7ar6j`: owner `bookings-probe-owner-p7ar6j@example.com`, second owner `bookings-probe-owner2-p7ar6j@example.com`, clients `bookings-probe-client-p7ar6j@example.com` and `bookings-probe-client2-p7ar6j@example.com`, a salon "BOOKINGS PROBE Salon" with two stylists and one service. All 6 probe bookings were cancelled. An earlier aborted run (3 bookings, hit the 3-pending limit) created a similar set whose suffix was not printed; its bookings expire after 15 minutes.
