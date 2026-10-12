@@ -26,11 +26,12 @@ type OwnerBookingsSectionProps = {
 
 function errorText(error: unknown): string {
   if (error instanceof ApiError) {
-    if (error.status === 401) return "Please sign in again.";
+    if (error.status === 401) return "Redirecting you to sign in...";
     if (error.status === 403) {
       return "Only the owner of this salon can see its bookings.";
     }
-    if (error.status === 422) return error.message;
+    if (error.status === 422)
+      return "Those filters were not accepted. Please change them and try again.";
   }
   return "We could not load your bookings. The server may be waking up or your connection dropped.";
 }
@@ -53,10 +54,13 @@ export function OwnerBookingsSection({
   // heading to keep keyboard users in place.
   const heading = useRef<HTMLHeadingElement>(null);
   const movedPage = useRef(false);
+  const fetching = query.isFetching;
   useEffect(() => {
-    if (movedPage.current) heading.current?.focus();
-    movedPage.current = false;
-  }, [page]);
+    if (movedPage.current && !fetching) {
+      heading.current?.focus();
+      movedPage.current = false;
+    }
+  }, [fetching]);
 
   function changeFilters(next: OwnerBookingFilters) {
     setFilters(next);
@@ -68,7 +72,11 @@ export function OwnerBookingsSection({
     setPage(next);
   }
 
-  const data = query.data;
+  // keepPreviousData shows the last page while the next one loads. That is
+  // not an answer for the current filters, so it is dimmed, and a failure
+  // never leaves it standing as if it were.
+  const stale = query.isPlaceholderData;
+  const data = query.isError && stale ? undefined : query.data;
   const filtered = hasActiveFilters(filters);
 
   let body;
@@ -98,7 +106,7 @@ export function OwnerBookingsSection({
   } else if (!data) {
     body = (
       <div className="flex flex-col gap-3">
-        <div role="status" className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1">
           <p className="font-semibold">
             {slow ? "Waking up the server..." : "Loading bookings..."}
           </p>
@@ -142,7 +150,10 @@ export function OwnerBookingsSection({
     );
   } else {
     body = (
-      <ul className="grid gap-4 md:grid-cols-2">
+      <ul
+        aria-busy={stale}
+        className={`grid gap-4 md:grid-cols-2 ${stale ? "opacity-50" : ""}`}
+      >
         {data.bookings.map((booking) => (
           <OwnerBookingCard
             key={booking.id}
@@ -189,11 +200,24 @@ export function OwnerBookingsSection({
           </Button>
         </div>
       ) : null}
+      <p role="status" className="sr-only">
+        {problem
+          ? ""
+          : stale || query.isFetching
+            ? slow
+              ? "Waking up the server..."
+              : "Loading bookings..."
+            : data
+              ? data.bookings.length === 0
+                ? "No bookings found."
+                : `${data.bookings.length} bookings shown, page ${page}.`
+              : ""}
+      </p>
       {body}
       {data && !problem ? (
         <>
           <p className="text-sm text-muted-foreground">
-            Earliest first, as the server sorts them.
+            Earliest bookings come first.
           </p>
           <Pager
             page={page}

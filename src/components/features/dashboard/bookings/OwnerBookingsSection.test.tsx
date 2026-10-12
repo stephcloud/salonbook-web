@@ -212,11 +212,15 @@ describe("OwnerBookingsSection", () => {
     try {
       routeFetch({ [LIST]: () => new Promise<Response>(() => {}) });
       renderSection();
-      expect(screen.getByText("Loading bookings...")).toBeInTheDocument();
+      expect(screen.getAllByText("Loading bookings...").length).toBeGreaterThan(
+        0,
+      );
       await act(async () => {
         await vi.advanceTimersByTimeAsync(4500);
       });
-      expect(screen.getByText("Waking up the server...")).toBeInTheDocument();
+      expect(
+        screen.getAllByText("Waking up the server...").length,
+      ).toBeGreaterThan(0);
     } finally {
       vi.useRealTimers();
     }

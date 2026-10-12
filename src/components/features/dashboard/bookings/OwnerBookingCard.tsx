@@ -20,6 +20,12 @@ export function OwnerBookingCard({
   depositKobo,
 }: OwnerBookingCardProps) {
   const price = servicePriceLabel(booking, services);
+  // The amount is the salon's current deposit, so it is only shown where a
+  // deposit was actually taken.
+  const showAmount =
+    booking.payment_status === "paid" ||
+    booking.payment_status === "refund_pending" ||
+    booking.payment_status === "refunded";
 
   return (
     <li className="flex flex-col gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
@@ -37,18 +43,19 @@ export function OwnerBookingCard({
       </div>
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
         <dt className="text-muted-foreground">Service</dt>
-        <dd>{booking.service.name}</dd>
+        <dd className="min-w-0 break-words">{booking.service.name}</dd>
         <dt className="text-muted-foreground">Stylist</dt>
-        <dd>{booking.stylist.name}</dd>
+        <dd className="min-w-0 break-words">{booking.stylist.name}</dd>
         {price ? (
           <>
             <dt className="text-muted-foreground">Price</dt>
-            <dd>{price}</dd>
+            <dd className="min-w-0 break-words">{price}</dd>
           </>
         ) : null}
         <dt className="text-muted-foreground">Deposit</dt>
-        <dd>
-          {depositLabel(depositKobo)} · {paymentLabel(booking)}
+        <dd className="min-w-0 break-words">
+          {showAmount ? `${depositLabel(depositKobo)} · ` : ""}
+          {paymentLabel(booking)}
         </dd>
       </dl>
     </li>

@@ -65,7 +65,9 @@ export function BookingFilters({
             value={filters.from}
             max={filters.to || undefined}
             aria-invalid={problem ? true : undefined}
-            aria-describedby={problem ? "filter-problem" : undefined}
+            aria-describedby={
+              problem ? "filter-help filter-problem" : "filter-help"
+            }
             onChange={(event) =>
               onChange({ ...filters, from: event.target.value })
             }
@@ -79,14 +81,16 @@ export function BookingFilters({
             value={filters.to}
             min={filters.from || undefined}
             aria-invalid={problem ? true : undefined}
-            aria-describedby={problem ? "filter-problem" : undefined}
+            aria-describedby={
+              problem ? "filter-help filter-problem" : "filter-help"
+            }
             onChange={(event) =>
               onChange({ ...filters, to: event.target.value })
             }
           />
         </div>
       </div>
-      <p className="text-sm text-muted-foreground">
+      <p id="filter-help" className="text-sm text-muted-foreground">
         Dates are Lagos days, and both ends are included.
       </p>
       {problem ? (
