@@ -115,7 +115,9 @@ describe("POST /api/dashboard/stylists", () => {
     vi.stubGlobal("fetch", fetchMock);
     await call({ salon_id: SALON_ID, name: "A" });
     await call({ salon_id: SALON_ID, name: "B" });
-    const [a, b] = fetchMock.mock.calls.map(
+    const [a, b] = (
+      fetchMock.mock.calls as unknown as [string, RequestInit][]
+    ).map(
       ([, init]) =>
         JSON.parse(String((init as RequestInit).body)) as Record<
           string,
