@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { PaymentCallback } from "@/components/features/payment/PaymentCallback";
 import { QueryProvider } from "@/components/features/booking/QueryProvider";
 import { requireUser } from "@/lib/api-server";
@@ -5,7 +6,11 @@ import { requireUser } from "@/lib/api-server";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-export const metadata = { title: "Confirming payment · SalonBook" };
+export const metadata: Metadata = {
+  title: "Confirming payment · SalonBook",
+  description: "Confirming your deposit payment with SalonBook.",
+  robots: { index: false, follow: false },
+};
 
 // Paystack sends the client back here. This page deliberately does not read
 // the URL (no searchParams): the booking comes from sessionStorage and the

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AuthShell } from "@/components/features/auth/AuthShell";
 import { LoginForm } from "@/components/features/auth/LoginForm";
@@ -8,7 +9,11 @@ import { safeNextPath } from "@/lib/auth/safe-next";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-export const metadata = { title: "Sign in · SalonBook" };
+export const metadata: Metadata = {
+  title: "Sign in · SalonBook",
+  description:
+    "Sign in to SalonBook to manage your salon appointments or your own salon.",
+};
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const params = await searchParams;

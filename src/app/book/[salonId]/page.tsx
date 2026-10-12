@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { BookingWizard } from "@/components/features/booking/BookingWizard";
 import { ClientsOnlyNotice } from "@/components/features/booking/ClientsOnlyNotice";
 import { QueryProvider } from "@/components/features/booking/QueryProvider";
@@ -8,7 +9,12 @@ import { loadSalonBundle } from "@/lib/salon-bundle";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-export const metadata = { title: "Book · SalonBook" };
+export const metadata: Metadata = {
+  title: "Book · SalonBook",
+  description:
+    "Choose a service, a stylist and a free time, then pay a deposit to keep your spot.",
+  robots: { index: false, follow: false },
+};
 
 const MAIN_CLASS =
   "mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-8";

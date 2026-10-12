@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { AvailabilitySection } from "@/components/features/dashboard/availability/AvailabilitySection";
 import { OwnerSalonPage } from "@/components/features/dashboard/OwnerSalonPage";
 import { getSalonStylists, getStylistAvailability } from "@/lib/api-server";
@@ -5,7 +6,11 @@ import { getSalonStylists, getStylistAvailability } from "@/lib/api-server";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-export const metadata = { title: "Weekly hours · SalonBook" };
+export const metadata: Metadata = {
+  title: "Weekly hours · SalonBook",
+  description: "Set each stylist's weekly hours, breaks and days off.",
+  robots: { index: false, follow: false },
+};
 
 export default function AvailabilityPage() {
   return (

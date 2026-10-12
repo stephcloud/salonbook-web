@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { SalonResults } from "@/components/features/salons/SalonResults";
 import { SalonResultsFallback } from "@/components/features/salons/SalonResultsFallback";
@@ -7,7 +8,11 @@ import { parseQuery } from "@/lib/salon-search";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-export const metadata = { title: "Salons · SalonBook" };
+export const metadata: Metadata = {
+  title: "Salons · SalonBook",
+  description:
+    "Browse salons on SalonBook, search by name and pick a service and a stylist.",
+};
 
 export default async function SalonsPage({
   searchParams,

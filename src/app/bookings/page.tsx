@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ClientsOnlyNotice } from "@/components/features/booking/ClientsOnlyNotice";
 import { QueryProvider } from "@/components/features/booking/QueryProvider";
@@ -8,7 +9,12 @@ import { getMyBookings, loginRedirectUrl, requireUser } from "@/lib/api-server";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-export const metadata = { title: "My bookings · SalonBook" };
+export const metadata: Metadata = {
+  title: "My bookings · SalonBook",
+  description:
+    "See your upcoming and past salon appointments and cancel a booking.",
+  robots: { index: false, follow: false },
+};
 
 const MAIN_CLASS =
   "mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-8";

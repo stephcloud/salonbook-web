@@ -132,7 +132,7 @@
 
 - Built on `feat/landing-page`: `/` is now the real landing page (hero with "Find a salon" and "Register your salon", the problem, who it is for, three steps each for clients and owners, and the pricing placeholder "Free while we launch, simple monthly plan later"). Title and meta description set for `/`. No new dependencies, no API call (the page reads the same display-only cookies as the header), no images, stats or testimonials.
 - `/register` redirects signed-in people away, so the second hero button changes: owners see "Go to your dashboard", signed-in clients see only "Find a salon".
-- The starter backend-status card is gone from `/`. `getHealth` in `lib/api.ts` is now unused (left in place).
+- The starter backend-status card is gone from `/`. `getHealth` in `lib/api.ts` is now unused (left in place; removed in the polish step below).
 - `/salons` has pagination (20 per page, Previous/Next) but no search by name yet.
 
 ## 2026-10-12 (salon search)
@@ -142,3 +142,11 @@
 - So a search reads salons 100 at a time (at most 5 requests, 500 salons), filters by name here (case and accent insensitive) and pages the matches. This is a stopgap: salons past the first 500 are not searched. Once the API accepts a name parameter, replace the body of `searchSalons` in `src/lib/api-server.ts` with one call.
 - Without a search, `/salons` still makes one call per page.
 - The results sit in a `Suspense` boundary keyed on the term and page, so the heading and search box show at once. The fallback says "Searching…" (or "Loading salons…") in a status region and reveals a "Waking up the server" note after 6 seconds with CSS only (no client component). Each Next or Previous click on a search still repeats up to 5 API calls.
+
+## 2026-10-12 (polish)
+
+- Built on `chore/polish`, after an audit of every route. Each page now has its own meta description; the private pages (`/bookings`, `/book/[salonId]`, pay, callback, `/dashboard/*`) are also `noindex`. `/salons/[id]` describes the salon by name and address.
+- Added a branded 404 (`app/not-found.tsx`) and `app/global-error.tsx` for crashes in the root layout. The root loading page now says "Loading…" and only shows "Waking up the server..." after 4 seconds (`useSlowPending`).
+- Removed `getHealth` and its test, the five starter SVGs in `public/` and two stale `.gitkeep` files. Cold-start retries are unchanged.
+- README rewritten (it was still the starter template text).
+- `npm run lint`, `npm run build` and the full test suite (1251 tests) pass. No new dependencies.

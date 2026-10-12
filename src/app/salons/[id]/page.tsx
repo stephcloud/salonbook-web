@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { CopySalonLinkButton } from "@/components/features/salons/CopySalonLinkButton";
 import { SalonHeader } from "@/components/features/salons/SalonHeader";
 import { ServiceList } from "@/components/features/salons/ServiceList";
@@ -10,13 +11,22 @@ export const maxDuration = 300;
 
 type PageProps = { params: Promise<{ id: string }> };
 
-export async function generateMetadata({ params }: PageProps) {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { id } = await params;
   try {
     const salon = await getSalon(id);
-    return { title: `${salon.name} · SalonBook` };
+    return {
+      title: `${salon.name} · SalonBook`,
+      description: `Book ${salon.name}, ${salon.address}. See its services and stylists and pay a deposit online.`,
+    };
   } catch {
-    return { title: "Salon · SalonBook" };
+    return {
+      title: "Salon · SalonBook",
+      description:
+        "See a salon's services and stylists and book your appointment online.",
+    };
   }
 }
 
