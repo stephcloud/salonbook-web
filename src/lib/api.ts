@@ -235,6 +235,62 @@ export function cancelBooking(id: string): Promise<Booking> {
   });
 }
 
+export type OwnerBooking = components["schemas"]["OwnerBookingItem"];
+export type BookingStatus = components["schemas"]["BookingStatus"];
+
+/** Bookings shown per page on the owner's list. */
+export const OWNER_BOOKINGS_PAGE_SIZE = 20;
+/** The API's largest `offset`. */
+export const OWNER_BOOKINGS_MAX_OFFSET = 10_000;
+
+export type OwnerBookingFilters = {
+  /** "" means any status. */
+  status: BookingStatus | "";
+  /** "" means any stylist. */
+  stylistId: string;
+  /** Lagos calendar day "YYYY-MM-DD", inclusive; "" means no limit. */
+  from: string;
+  to: string;
+};
+
+export const NO_OWNER_BOOKING_FILTERS: OwnerBookingFilters = {
+  status: "",
+  stylistId: "",
+  from: "",
+  to: "",
+};
+
+/**
+ * One page (1-based) of a salon's bookings for its owner (browser). The API
+ * sorts by start time, earliest first, and sends no total, so one extra row is
+ * asked for: when it comes back there is a next page. `from` and `to` are
+ * Lagos calendar days, both inclusive (checked against the live API).
+ * Throws ApiError: 403 (not this salon's owner), 401 (signed out), 422.
+ */
+export async function listSalonBookings(
+  salonId: string,
+  filters: OwnerBookingFilters,
+  page: number,
+): Promise<{ bookings: OwnerBooking[]; hasNext: boolean }> {
+  const query = new URLSearchParams({
+    limit: String(OWNER_BOOKINGS_PAGE_SIZE + 1),
+    offset: String((page - 1) * OWNER_BOOKINGS_PAGE_SIZE),
+  });
+  if (filters.status) query.set("status", filters.status);
+  if (filters.stylistId) query.set("stylist_id", filters.stylistId);
+  if (filters.from) query.set("from", filters.from);
+  if (filters.to) query.set("to", filters.to);
+  const rows = await apiFetch<OwnerBooking[]>(
+    `salons/${encodeURIComponent(salonId)}/bookings?${query.toString()}`,
+  );
+  return {
+    bookings: rows.slice(0, OWNER_BOOKINGS_PAGE_SIZE),
+    hasNext:
+      rows.length > OWNER_BOOKINGS_PAGE_SIZE &&
+      page * OWNER_BOOKINGS_PAGE_SIZE <= OWNER_BOOKINGS_MAX_OFFSET,
+  };
+}
+
 export type SalonInput = components["schemas"]["SalonCreate"];
 export type SalonUpdate = components["schemas"]["SalonUpdate"];
 
