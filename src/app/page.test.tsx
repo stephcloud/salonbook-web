@@ -47,6 +47,14 @@ describe("landing page", () => {
     );
   });
 
+  it("adds a decorative hero tile that assistive tech skips and has no text", async () => {
+    await show();
+    const tile = screen.getByTestId("hero-tile");
+    expect(tile).toHaveAttribute("aria-hidden", "true");
+    expect(tile).toBeEmptyDOMElement();
+    expect(tile).toHaveClass("hidden", "lg:block");
+  });
+
   it("shows the exact pricing placeholder", async () => {
     await show();
     expect(
