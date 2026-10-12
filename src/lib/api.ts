@@ -14,6 +14,8 @@ export class ApiError extends Error {
     public readonly status: number,
     message: string,
     public readonly fieldErrors: FieldErrors = {},
+    /** The raw `detail` of a 422, for callers that need the whole `loc` path (such as a row index). */
+    public readonly detail: unknown = undefined,
   ) {
     super(message);
     this.name = "ApiError";
@@ -85,6 +87,7 @@ async function request<T>(
     res.status,
     messageFrom(body, "Something went wrong. Please try again."),
     res.status === 422 ? parseFieldErrors(detail) : {},
+    res.status === 422 ? detail : undefined,
   );
 }
 
@@ -309,6 +312,33 @@ export function setStylistServices(
   return apiFetch<StylistServices>(
     `stylists/${encodeURIComponent(stylistId)}/services`,
     { method: "PUT", body: { service_ids: serviceIds } },
+  );
+}
+
+export type AvailabilityRule =
+  components["schemas"]["AvailabilityRuleResponse"];
+export type AvailabilityRuleInput =
+  components["schemas"]["AvailabilityRuleInput"];
+export type Availability = components["schemas"]["AvailabilityResponse"];
+
+/** One stylist's weekly hours, breaks and days off (browser). Owner of that salon only. */
+export function getAvailability(stylistId: string): Promise<Availability> {
+  return apiFetch<Availability>(
+    `stylists/${encodeURIComponent(stylistId)}/availability`,
+  );
+}
+
+/**
+ * Replaces ALL of a stylist's rules (hours, breaks and days off together) with
+ * exactly these (browser). Anything not sent is deleted.
+ */
+export function setAvailability(
+  stylistId: string,
+  rules: AvailabilityRuleInput[],
+): Promise<Availability> {
+  return apiFetch<Availability>(
+    `stylists/${encodeURIComponent(stylistId)}/availability`,
+    { method: "PUT", body: { rules } },
   );
 }
 
