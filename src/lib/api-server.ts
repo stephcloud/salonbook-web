@@ -16,6 +16,7 @@ import type { components } from "@/lib/api-types";
 import { TOKEN_COOKIE } from "@/lib/auth/cookie";
 import { safeNextPath } from "@/lib/auth/safe-next";
 import { apiBaseUrl, fetchUpstream } from "@/lib/proxy/upstream";
+import { matchesSalonName } from "@/lib/salon-search";
 
 export type CurrentUser = components["schemas"]["UserResponse"];
 
@@ -101,6 +102,39 @@ export function getSalons(page = 1): Promise<Salon[]> {
   return publicGet<Salon[]>(
     `/salons?limit=${SALONS_PAGE_SIZE}&offset=${offset}`,
   );
+}
+
+// The API has no name search, so a search scans up to this many pages of 100.
+const MAX_SEARCH_SCAN = 5;
+
+/**
+ * Salons whose name contains `query`, one page of them. The API cannot search,
+ * so this reads salons 100 at a time (at most 500) and filters here. Replace
+ * with a single call once the API accepts a name parameter.
+ */
+export async function searchSalons(
+  query: string,
+  page = 1,
+): Promise<{ salons: Salon[]; hasNext: boolean; truncated: boolean }> {
+  const matches: Salon[] = [];
+  let truncated = false;
+  for (let i = 0; i < MAX_SEARCH_SCAN; i++) {
+    const batch = await publicGet<Salon[]>(
+      `/salons?limit=${MAX_LIST_LIMIT}&offset=${i * MAX_LIST_LIMIT}`,
+    );
+    for (const salon of batch) {
+      if (matchesSalonName(salon.name, query)) matches.push(salon);
+    }
+    if (batch.length < MAX_LIST_LIMIT) break;
+    truncated = i === MAX_SEARCH_SCAN - 1;
+  }
+  const start = (Math.max(1, page) - 1) * SALONS_PAGE_SIZE;
+  return {
+    salons: matches.slice(start, start + SALONS_PAGE_SIZE),
+    hasNext: matches.length > start + SALONS_PAGE_SIZE,
+    // Every page was full, so salons beyond the scan limit were not searched.
+    truncated,
+  };
 }
 
 /** Cached per request so the page and its metadata share one call. */

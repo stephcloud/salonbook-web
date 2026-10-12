@@ -134,3 +134,11 @@
 - `/register` redirects signed-in people away, so the second hero button changes: owners see "Go to your dashboard", signed-in clients see only "Find a salon".
 - The starter backend-status card is gone from `/`. `getHealth` in `lib/api.ts` is now unused (left in place).
 - `/salons` has pagination (20 per page, Previous/Next) but no search by name yet.
+
+## 2026-10-12 (salon search)
+
+- Built on `feat/salons-search`: `/salons` has a search-by-name box (plain GET form, term in `?q=`, Enter submits, "Clear search" icon link) and Previous/Next that keep the term. Empty search says "No salons match 'x'" with a "Show all salons" link. No new dependencies.
+- Contract (`GET /salons`, live openapi, public): only `limit` (1 to 100, default 20) and `offset` (0 to 10000). **No name search and no total**; the response is a bare array.
+- So a search reads salons 100 at a time (at most 5 requests, 500 salons), filters by name here (case and accent insensitive) and pages the matches. This is a stopgap: salons past the first 500 are not searched. Once the API accepts a name parameter, replace the body of `searchSalons` in `src/lib/api-server.ts` with one call.
+- Without a search, `/salons` still makes one call per page.
+- The results sit in a `Suspense` boundary keyed on the term and page, so the heading and search box show at once. The fallback says "Searching…" (or "Loading salons…") in a status region and reveals a "Waking up the server" note after 6 seconds with CSS only (no client component). Each Next or Previous click on a search still repeats up to 5 API calls.
