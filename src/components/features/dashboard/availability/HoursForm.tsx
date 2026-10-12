@@ -68,6 +68,16 @@ export function HoursForm({
   );
   const saved = parsed.draft;
   const [days, setDays] = useState<DayDraft[]>(saved.days);
+  // When the saved hours change under us (another tab, the copy dialog) and the
+  // owner has no edits, show the new hours; otherwise "unsaved changes" would be
+  // false and the next save would overwrite them with the old ones.
+  const [base, setBase] = useState(saved);
+  if (base !== saved) {
+    setBase(saved);
+    if (JSON.stringify(days) === JSON.stringify(base.days)) {
+      setDays(saved.days);
+    }
+  }
   const [failure, setFailure] = useState<AvailabilitySaveFailure | null>(null);
   const [pageMessage, setPageMessage] = useState<string | null>(null);
   const [acknowledged, setAcknowledged] = useState(false);
@@ -130,6 +140,10 @@ export function HoursForm({
     const { rules, refs } = draftToRules(payload);
     let result: Availability;
     try {
+      // A read that started before this save must not land after it and undo it.
+      await queryClient.cancelQueries({
+        queryKey: availabilityKey(stylist.id),
+      });
       result = await setAvailability(stylist.id, rules);
     } catch (error) {
       const problem = describeAvailabilitySaveError(error, refs);

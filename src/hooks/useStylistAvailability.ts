@@ -20,5 +20,9 @@ export function useStylistAvailability(
     queryFn: () => getAvailability(stylistId),
     initialData,
     retry: 1,
+    // The editor owns what is on screen: no background refetch may replace it.
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 }

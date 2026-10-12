@@ -68,6 +68,7 @@ function CopyToStylistForm({
         days,
         daysOff: withDaysOff ? daysOff : undefined,
       });
+      await queryClient.cancelQueries({ queryKey: availabilityKey(target.id) });
       queryClient.setQueryData(availabilityKey(target.id), saved);
     } catch (caught) {
       const failure = describeAvailabilitySaveError(caught, []);

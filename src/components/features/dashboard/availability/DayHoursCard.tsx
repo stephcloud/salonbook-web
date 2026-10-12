@@ -183,7 +183,7 @@ export function DayHoursCard({
             </ul>
           ) : null}
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-col gap-3 min-[420px]:flex-row min-[420px]:flex-wrap">
             <Button
               type="button"
               variant="outline"
@@ -197,6 +197,7 @@ export function DayHoursCard({
               <span className="sr-only"> on {name}</span>
             </Button>
             <Button
+              className="h-auto min-h-11 py-2 text-left whitespace-normal"
               type="button"
               variant="outline"
               disabled={disabled}
