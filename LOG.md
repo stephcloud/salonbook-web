@@ -127,3 +127,10 @@
   - A client token and another owner's token both get 403 `forbidden`; no token is 401.
   - The row has no price or amount. The page shows the service price from the salon's services list, the salon's deposit, and the payment status.
 - Probe data (live database, cannot be deleted through the API): suffix `p7ar6j`: owner `bookings-probe-owner-p7ar6j@example.com`, second owner `bookings-probe-owner2-p7ar6j@example.com`, clients `bookings-probe-client-p7ar6j@example.com` and `bookings-probe-client2-p7ar6j@example.com`, a salon "BOOKINGS PROBE Salon" with two stylists and one service. All 6 probe bookings were cancelled. An earlier aborted run (3 bookings, hit the 3-pending limit) created a similar set whose suffix was not printed; its bookings expire after 15 minutes.
+
+## 2026-10-12 (landing page)
+
+- Built on `feat/landing-page`: `/` is now the real landing page (hero with "Find a salon" and "Register your salon", the problem, who it is for, three steps each for clients and owners, and the pricing placeholder "Free while we launch, simple monthly plan later"). Title and meta description set for `/`. No new dependencies, no API call (the page reads the same display-only cookies as the header), no images, stats or testimonials.
+- `/register` redirects signed-in people away, so the second hero button changes: owners see "Go to your dashboard", signed-in clients see only "Find a salon".
+- The starter backend-status card is gone from `/`. `getHealth` in `lib/api.ts` is now unused (left in place).
+- `/salons` has pagination (20 per page, Previous/Next) but no search by name yet.
