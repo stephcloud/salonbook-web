@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { OwnersOnlyNotice } from "@/components/features/auth/OwnersOnlyNotice";
 import { QueryProvider } from "@/components/features/booking/QueryProvider";
+import { DashboardNav } from "@/components/features/dashboard/DashboardNav";
 import { buttonVariants } from "@/components/ui/button";
 import { ApiError, type Salon } from "@/lib/api";
 import { getMySalons, loginRedirectUrl, requireUser } from "@/lib/api-server";
@@ -90,6 +91,7 @@ export async function OwnerSalonPage({
         <h1 className="text-2xl font-bold">{title}</h1>
         <p className="text-muted-foreground">{description}</p>
       </header>
+      <DashboardNav />
       <QueryProvider>{body}</QueryProvider>
       {back}
     </main>
