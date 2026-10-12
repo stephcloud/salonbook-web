@@ -120,6 +120,33 @@ describe("ServicesSection: focus and announcements", () => {
     );
   });
 
+  it("puts focus on the heading without waiting for the lists to reload", async () => {
+    // The reload after a delete can take seconds (or hang); focus must not wait for it.
+    routeFetch({
+      [DELETE]: noContent,
+      [LIST]: () => new Promise<Response>(() => {}),
+    });
+    renderSection([BRAIDS]);
+    fireEvent.click(screen.getByRole("button", { name: "Delete Braids" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete service" }));
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        screen.getByRole("heading", { name: "Your services" }),
+      ),
+    );
+  });
+
+  it("leaves focus alone after a plain Cancel, with no stray jump to the heading", async () => {
+    routeFetch({});
+    renderSection([BRAIDS]);
+    fireEvent.click(screen.getByRole("button", { name: "Delete Braids" }));
+    fireEvent.click(screen.getByRole("button", { name: "Keep service" }));
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+    expect(document.activeElement).not.toBe(
+      screen.getByRole("heading", { name: "Your services" }),
+    );
+  });
+
   it("moves focus to the message when a delete is refused", async () => {
     routeFetch({ [DELETE]: () => json({ detail: "x" }, 409) });
     renderSection([BRAIDS]);

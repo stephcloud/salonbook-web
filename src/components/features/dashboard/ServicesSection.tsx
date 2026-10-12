@@ -43,10 +43,19 @@ export function ServicesSection({
     await refresh();
   }
 
-  // The Delete button that opened the dialog no longer exists: put focus somewhere sensible.
+  // The Delete button that opened the dialog no longer exists, so when the
+  // dialog closes after a delete, focus goes to the heading. The dialog does this
+  // itself as it closes, so it never waits for the lists to reload (that can
+  // take seconds, and focus would sit on the page body meanwhile).
+  const focusHeadingOnClose = useRef(false);
+  function finalFocus() {
+    if (!focusHeadingOnClose.current) return true; // the dialog's default
+    focusHeadingOnClose.current = false;
+    return headingRef.current;
+  }
   async function deleted(message: string) {
+    focusHeadingOnClose.current = true;
     await done(message);
-    headingRef.current?.focus();
   }
 
   return (
@@ -150,6 +159,7 @@ export function ServicesSection({
         service={dialog.kind === "delete" ? dialog.service : null}
         onClose={close}
         onDeleted={deleted}
+        finalFocus={finalFocus}
       />
     </section>
   );
