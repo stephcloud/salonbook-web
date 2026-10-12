@@ -10,7 +10,7 @@ export function AudienceSection() {
         <Card className="rounded-2xl bg-muted">
           <CardContent className="flex flex-col gap-2">
             <h3 className="text-lg font-semibold">Clients</h3>
-            <p>
+            <p className="text-base">
               Choose a service and a stylist, see when they are really free, and
               book without waiting for a reply. Manage your bookings in one
               place.
@@ -20,7 +20,7 @@ export function AudienceSection() {
         <Card className="rounded-2xl bg-muted">
           <CardContent className="flex flex-col gap-2">
             <h3 className="text-lg font-semibold">Salon owners</h3>
-            <p>
+            <p className="text-base">
               Register, set up your salon, services, stylists and hours, then
               share your salon link. Deposits help protect your time.
             </p>

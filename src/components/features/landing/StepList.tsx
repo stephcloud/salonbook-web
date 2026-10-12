@@ -11,7 +11,7 @@ export function StepList({ steps }: StepListProps) {
           >
             {index + 1}
           </span>
-          <span className="pt-1">{step}</span>
+          <span className="pt-1 text-base">{step}</span>
         </li>
       ))}
     </ol>

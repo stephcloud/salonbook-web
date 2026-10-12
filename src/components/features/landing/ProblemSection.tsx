@@ -27,7 +27,9 @@ export function ProblemSection() {
             <Card className="h-full rounded-2xl">
               <CardContent className="flex flex-col gap-2">
                 <h3 className="text-lg font-semibold">{problem.title}</h3>
-                <p className="text-muted-foreground">{problem.text}</p>
+                <p className="text-base text-muted-foreground">
+                  {problem.text}
+                </p>
               </CardContent>
             </Card>
           </li>
