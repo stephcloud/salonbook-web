@@ -15,7 +15,11 @@ const OFFLINE =
   "Could not reach the server. Check your connection and try again.";
 
 /** Turns whatever a failed add or edit threw into what the form shows. */
-export function describeServiceSaveError(error: unknown): ServiceSaveFailure {
+export function describeServiceSaveError(
+  error: unknown,
+  /** False while a quote is chosen: the price field is hidden then. */
+  priceVisible = true,
+): ServiceSaveFailure {
   if (!(error instanceof ApiError)) {
     return { fields: {}, message: OFFLINE, signedOut: false };
   }
@@ -36,7 +40,10 @@ export function describeServiceSaveError(error: unknown): ServiceSaveFailure {
         signedOut: false,
       };
     case 422: {
-      const { fields, general } = serviceServerErrors(error.fieldErrors);
+      const { fields, general } = serviceServerErrors(
+        error.fieldErrors,
+        priceVisible,
+      );
       const hasFields = Object.keys(fields).length > 0;
       // When the API's detail is a plain sentence, ApiError carries it as its message.
       const sentence = error.message.startsWith("Something went wrong.")

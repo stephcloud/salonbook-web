@@ -131,16 +131,24 @@ export function changedServiceFields(
 /**
  * Puts the server's 422 field errors on the form. The price message is
  * replaced because the API talks in kobo. Anything for a field the form does
- * not have goes to `general`.
+ * not show (the price type, or the price while a quote is chosen) goes to
+ * `general`.
  */
-export function serviceServerErrors(serverErrors: FieldErrors): {
+export function serviceServerErrors(
+  serverErrors: FieldErrors,
+  /** False while a quote is chosen: the price field is hidden then. */
+  priceVisible = true,
+): {
   fields: FieldErrors;
   general: string | null;
 } {
   const fields: FieldErrors = {};
   const other: string[] = [];
   for (const [field, message] of Object.entries(serverErrors)) {
-    if (field === "price") fields.price = PRICE_RANGE_MESSAGE;
+    // A message for a field the person cannot see would hide the reason.
+    if (field === "price_type" || (field === "price" && !priceVisible))
+      other.push(message);
+    else if (field === "price") fields.price = PRICE_RANGE_MESSAGE;
     else if ((SERVICE_FIELDS as readonly string[]).includes(field))
       fields[field] = message;
     else other.push(message);

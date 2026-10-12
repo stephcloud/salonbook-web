@@ -139,6 +139,13 @@ export async function POST(request: NextRequest) {
 
   if (response.status === 422) {
     const detail = safeDetail(raw);
+    // Only our own email or password failed: nothing the owner can fix.
+    if (detail !== null && detail.length === 0) {
+      return NextResponse.json(
+        { error: "Could not add the stylist. Please try again." },
+        { status: 502 },
+      );
+    }
     return NextResponse.json(
       { error: "Check the form.", detail: detail ?? undefined },
       { status: 422 },
@@ -150,8 +157,12 @@ export async function POST(request: NextRequest) {
   if (response.status === 404) {
     return NextResponse.json({ error: "salon not found" }, { status: 404 });
   }
+  // Only statuses we understand pass through; anything else is a bad answer.
+  const status = [400, 409, 429].includes(response.status)
+    ? response.status
+    : 502;
   return NextResponse.json(
     { error: "Could not add the stylist. Please try again." },
-    { status: response.status >= 500 ? 502 : response.status },
+    { status },
   );
 }

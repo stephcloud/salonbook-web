@@ -8,6 +8,11 @@ export type StylistFailure = {
   message: string | null;
   /** The API said the session is over; the browser is already going to /login. */
   signedOut: boolean;
+  /**
+   * The server did not answer, so the stylist may have been created anyway.
+   * The lists should be re-read and the owner told to check before retrying.
+   */
+  uncertain?: boolean;
 };
 
 const GENERIC = "Something went wrong on our side. Please try again.";
@@ -46,6 +51,15 @@ export function describeStylistCreateError(error: unknown): StylistFailure {
     }
     case 500:
       return { fields: {}, message: GENERIC, signedOut: false };
+    case 502:
+    case 504:
+      return {
+        fields: {},
+        message:
+          "The server did not answer in time. The stylist may have been added. Check the list before you try again, so you do not add them twice.",
+        signedOut: false,
+        uncertain: true,
+      };
     default:
       return { fields: {}, message: error.message, signedOut: false };
   }

@@ -16,7 +16,7 @@ export function formatNaira(kobo: number): string {
   return `${kobo < 0 ? "-" : ""}₦${whole}${decimals}`;
 }
 
-/** The most a service can cost: ₦1,000,000, in kobo (the API's limit). */
+/** The most a service can cost: ₦1,000,000, in kobo (the API's limit, same as the deposit). */
 export const MAX_PRICE_KOBO = 100_000_000;
 
 /** The most a salon can ask as a deposit: ₦1,000,000, in kobo (the API's limit). */

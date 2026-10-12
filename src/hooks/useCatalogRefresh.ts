@@ -9,7 +9,8 @@ import { stylistsKey } from "@/hooks/useSalonStylists";
 /**
  * Call after any change to services or stylists: re-reads both lists and asks
  * the server to render again, so the setup checklist and the public salon page
- * show the change. A failed refresh never turns a saved change into an error.
+ * show the change. The lists come from the query cache (seeded by the server
+ * render), which only this call refreshes: `router.refresh()` alone would not.
  */
 export function useCatalogRefresh(salonId: string) {
   const queryClient = useQueryClient();
@@ -19,10 +20,6 @@ export function useCatalogRefresh(salonId: string) {
       queryClient.invalidateQueries({ queryKey: servicesKey(salonId) }),
       queryClient.invalidateQueries({ queryKey: stylistsKey(salonId) }),
     ]);
-    try {
-      router.refresh();
-    } catch {
-      // The change is saved; the page catches up on the next visit.
-    }
+    router.refresh();
   }, [queryClient, router, salonId]);
 }
