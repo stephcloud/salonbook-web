@@ -232,6 +232,25 @@ export function cancelBooking(id: string): Promise<Booking> {
   });
 }
 
+export type SalonInput = components["schemas"]["SalonCreate"];
+export type SalonUpdate = components["schemas"]["SalonUpdate"];
+
+/** Creates a salon owned by the signed-in owner (browser). 403 for a client. */
+export function createSalon(input: SalonInput): Promise<Salon> {
+  return apiFetch<Salon>("salons", { method: "POST", body: input });
+}
+
+/**
+ * Edits one of the owner's salons (browser). Send only what changed; an
+ * explicit `image_url: null` clears the image.
+ */
+export function updateSalon(id: string, input: SalonUpdate): Promise<Salon> {
+  return apiFetch<Salon>(`salons/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: input,
+  });
+}
+
 /**
  * A measurement taking longer than this is too uncertain to use: the server
  * read its clock somewhere in the round trip, so the midpoint can be wrong by

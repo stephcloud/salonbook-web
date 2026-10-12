@@ -2,14 +2,18 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { LogoutButton } from "@/components/features/auth/LogoutButton";
 import { NavLink } from "@/components/features/nav/NavLink";
-import { TOKEN_COOKIE } from "@/lib/auth/cookie";
+import { ROLE_COOKIE, TOKEN_COOKIE, parseRole } from "@/lib/auth/cookie";
 
 /**
- * The site header. It only checks that the login cookie is there (no call to
- * the API, so no extra wait on any page), so it cannot tell clients from
- * owners: owners also get "My bookings" and are told it is for clients.
+ * The site header. It reads two cookies and makes no call to the API (so no
+ * extra wait on any page): the login cookie says whether someone is signed in,
+ * and the display-only `sb_role` cookie says which link to show, Dashboard for
+ * owners and My bookings for clients. The role cookie is not a permission: it
+ * can be edited, so every protected page still checks the real role. A signed-in
+ * session without a valid role cookie (made before it existed, or edited) gets
+ * My bookings, which is what everyone saw before.
  *
- * Reading the cookie means every page is rendered per request, including the
+ * Reading cookies means every page is rendered per request, including the
  * landing page. Those pages already fetch from the API (so they were dynamic
  * anyway); the cost is accepted for a header that is right on first paint.
  *
@@ -17,7 +21,9 @@ import { TOKEN_COOKIE } from "@/lib/auth/cookie";
  * row of links never wraps in an uneven way.
  */
 export async function SiteHeader() {
-  const signedIn = (await cookies()).has(TOKEN_COOKIE);
+  const store = await cookies();
+  const signedIn = Boolean(store.get(TOKEN_COOKIE));
+  const role = parseRole(store.get(ROLE_COOKIE)?.value);
 
   return (
     <header className="border-b border-border bg-card">
@@ -38,7 +44,11 @@ export async function SiteHeader() {
           {signedIn ? (
             <>
               <li>
-                <NavLink href="/bookings">My bookings</NavLink>
+                {role === "owner" ? (
+                  <NavLink href="/dashboard">Dashboard</NavLink>
+                ) : (
+                  <NavLink href="/bookings">My bookings</NavLink>
+                )}
               </li>
               <li>
                 <LogoutButton />

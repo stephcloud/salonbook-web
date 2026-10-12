@@ -141,6 +141,11 @@ describe("/api/proxy/[...path]", () => {
     const cookie = res.headers.get("set-cookie") ?? "";
     expect(cookie).toContain("sb_token=;");
     expect(cookie).toMatch(/Max-Age=0/i);
+    const role = res.headers
+      .getSetCookie()
+      .find((c) => c.startsWith("sb_role="));
+    expect(role).toContain("sb_role=;");
+    expect(role).toMatch(/Max-Age=0/i);
   });
 
   it("passes 204 through with no body", async () => {

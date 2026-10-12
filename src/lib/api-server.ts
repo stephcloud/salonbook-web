@@ -162,6 +162,32 @@ async function authedGet<T>(
   return { data: (await response.json()) as T, receivedAt };
 }
 
+export type StylistAvailability = components["schemas"]["AvailabilityResponse"];
+
+/**
+ * The owner's salons, newest first as the API returns them (up to 100).
+ * Throws ApiError: 403 (not an owner), 401 (signed out).
+ */
+export async function getMySalons(): Promise<Salon[]> {
+  const { data } = await authedGet<Salon[]>(
+    `/salons/mine?limit=${MAX_LIST_LIMIT}`,
+  );
+  return data;
+}
+
+/**
+ * One stylist's weekly rules. Only the owner of the stylist's salon may read
+ * them (403 otherwise).
+ */
+export async function getStylistAvailability(
+  stylistId: string,
+): Promise<StylistAvailability> {
+  const { data } = await authedGet<StylistAvailability>(
+    `/stylists/${encodeURIComponent(stylistId)}/availability`,
+  );
+  return data;
+}
+
 /**
  * One of the client's bookings for a server render, with the server's clock
  * so the browser can correct a wrong device clock when counting down the hold.

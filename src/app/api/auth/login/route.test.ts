@@ -59,6 +59,51 @@ describe("POST /api/auth/login", () => {
     expect(cookie).not.toMatch(/;\s*Secure/i);
   });
 
+  it.each(["owner", "client"])(
+    "also sets a display-only %s role cookie",
+    async (role) => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async (url: string) =>
+          url.endsWith("/auth/login")
+            ? Response.json({ access_token: SECRET, token_type: "bearer" })
+            : Response.json({ ...USER, role }),
+        ),
+      );
+      const res = await POST(
+        loginRequest({ email: "ada@example.com", password: "password1" }),
+      );
+      const roleCookie = res.headers
+        .getSetCookie()
+        .find((c) => c.startsWith("sb_role="));
+      expect(roleCookie).toContain(`sb_role=${role};`);
+      expect(roleCookie).toMatch(/HttpOnly/i);
+      expect(roleCookie).toMatch(/Max-Age=1800/i);
+      expect(roleCookie).toMatch(/Path=\//i);
+    },
+  );
+
+  it("clears the role cookie for a role it does not know", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) =>
+        url.endsWith("/auth/login")
+          ? Response.json({ access_token: SECRET, token_type: "bearer" })
+          : Response.json({ ...USER, role: "admin" }),
+      ),
+    );
+    const res = await POST(
+      loginRequest({ email: "ada@example.com", password: "password1" }),
+    );
+    expect(res.status).toBe(200);
+    const role = res.headers
+      .getSetCookie()
+      .find((c) => c.startsWith("sb_role="));
+    // A stale role from an earlier session is cleared, not kept.
+    expect(role).toContain("sb_role=;");
+    expect(role).toMatch(/Max-Age=0/i);
+  });
+
   it("marks the cookie Secure in production", async () => {
     mockHappyPath();
     vi.stubEnv("NODE_ENV", "production");
