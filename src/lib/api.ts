@@ -251,6 +251,91 @@ export function updateSalon(id: string, input: SalonUpdate): Promise<Salon> {
   });
 }
 
+export type ServiceInput = components["schemas"]["ServiceCreate"];
+export type ServiceUpdate = components["schemas"]["ServiceUpdate"];
+export type StylistServices = components["schemas"]["StylistServicesResponse"];
+
+// The API's biggest page; a salon will not come close in the MVP.
+const LIST_LIMIT = 100;
+
+/** A salon's services (browser, public read). */
+export function listSalonServices(salonId: string): Promise<Service[]> {
+  return apiFetch<Service[]>(
+    `salons/${encodeURIComponent(salonId)}/services?limit=${LIST_LIMIT}`,
+  );
+}
+
+/** A salon's stylists with their service ids (browser, public read). */
+export function listSalonStylists(salonId: string): Promise<Stylist[]> {
+  return apiFetch<Stylist[]>(
+    `salons/${encodeURIComponent(salonId)}/stylists?limit=${LIST_LIMIT}`,
+  );
+}
+
+/** Adds a service to one of the owner's salons (browser). */
+export function createService(
+  salonId: string,
+  input: ServiceInput,
+): Promise<Service> {
+  return apiFetch<Service>(`salons/${encodeURIComponent(salonId)}/services`, {
+    method: "POST",
+    body: input,
+  });
+}
+
+/** Edits a service (browser). Send only what changed. */
+export function updateService(
+  id: string,
+  input: ServiceUpdate,
+): Promise<Service> {
+  return apiFetch<Service>(`services/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: input,
+  });
+}
+
+/** Deletes a service (browser). The API refuses when it has bookings. */
+export function deleteService(id: string): Promise<void> {
+  return apiFetch<void>(`services/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+}
+
+/** Replaces the set of services a stylist offers (browser). */
+export function setStylistServices(
+  stylistId: string,
+  serviceIds: string[],
+): Promise<StylistServices> {
+  return apiFetch<StylistServices>(
+    `stylists/${encodeURIComponent(stylistId)}/services`,
+    { method: "PUT", body: { service_ids: serviceIds } },
+  );
+}
+
+/** What our own route handler returns for a new stylist. */
+export type CreatedStylist = {
+  id: string;
+  name: string;
+  image_url: string | null;
+};
+
+/**
+ * Adds a stylist through /api/dashboard/stylists. The API wants an email and
+ * a password for every stylist; that handler makes throw-away ones on the
+ * server, so the browser never sees or sends them.
+ */
+export function createStylist(input: {
+  salon_id: string;
+  name: string;
+  image_url?: string;
+}): Promise<CreatedStylist> {
+  return request<CreatedStylist>(
+    "/api/dashboard/stylists",
+    { method: "POST", body: input },
+    true,
+  );
+}
+
 /**
  * A measurement taking longer than this is too uncertain to use: the server
  * read its clock somewhere in the round trip, so the midpoint can be wrong by
