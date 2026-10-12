@@ -126,3 +126,14 @@ export function describeAvailabilitySaveError(
   }
   return result;
 }
+
+/** One sentence for a place with no rows to put messages on, such as a dialog. */
+export function firstMessage(failure: AvailabilitySaveFailure): string {
+  return (
+    failure.message ??
+    Object.values(failure.days)[0] ??
+    Object.values(failure.breaks)[0] ??
+    failure.daysOff ??
+    GENERIC
+  );
+}
