@@ -64,3 +64,11 @@
     @apply font-sans;
   }
 }
+
+/* Shows an element after a delay (used for the slow-server note). It is
+   hidden from everyone, screen readers included, until it appears. */
+@keyframes reveal-late {
+  to {
+    visibility: visible;
+  }
+}

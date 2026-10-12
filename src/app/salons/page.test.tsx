@@ -1,27 +1,30 @@
 import { render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: vi.fn() }) }));
 vi.mock("next/navigation", () => ({ redirect: vi.fn(), notFound: vi.fn() }));
-
-const getSalons = vi.fn();
-vi.mock("@/lib/api-server", () => ({
-  getSalons: (page: number) => getSalons(page),
+// The results are an async server component; its own test covers the fetching.
+vi.mock("@/components/features/salons/SalonResults", () => ({
+  SalonResults: ({ query, page }: { query: string; page: number }) => (
+    <p data-testid="results">{`${JSON.stringify(query)} page ${page}`}</p>
+  ),
 }));
 
 import SalonsPage from "./page";
 
-function searchParams(page?: string) {
-  return Promise.resolve(page === undefined ? {} : { page });
+function searchParams(page?: string, q?: string) {
+  return Promise.resolve({
+    ...(page === undefined ? {} : { page }),
+    ...(q === undefined ? {} : { q }),
+  });
+}
+
+async function renderPage(page?: string, q?: string) {
+  render(await SalonsPage({ searchParams: searchParams(page, q) }));
 }
 
 describe("SalonsPage", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    getSalons.mockResolvedValue([]);
-  });
-
   it.each([
     [undefined, 1],
     ["3", 3],
@@ -30,16 +33,29 @@ describe("SalonsPage", () => {
     ["-2", 1],
     ["9999", 500],
   ])("reads ?page=%s as page %i", async (raw, expected) => {
-    await SalonsPage({ searchParams: searchParams(raw) });
-    expect(getSalons).toHaveBeenCalledWith(expected);
+    await renderPage(raw);
+    expect(screen.getByTestId("results")).toHaveTextContent(
+      `"" page ${expected}`,
+    );
   });
 
-  it("shows the empty state inside the main landmark", async () => {
-    render(await SalonsPage({ searchParams: searchParams() }));
+  it("shows the heading and the search box inside the main landmark", async () => {
+    await renderPage();
     expect(screen.getByRole("main")).toHaveAttribute("id", "main-content");
     expect(
       screen.getByRole("heading", { level: 1, name: "Salons" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("No salons yet")).toBeInTheDocument();
+    expect(screen.getByLabelText("Search salons by name")).toHaveValue("");
+  });
+
+  it("passes the trimmed ?q= on and keeps it in the box", async () => {
+    await renderPage("2", "  pink ");
+    expect(screen.getByTestId("results")).toHaveTextContent('"pink" page 2');
+    expect(screen.getByLabelText("Search salons by name")).toHaveValue("pink");
+  });
+
+  it("treats a blank ?q= as no search", async () => {
+    await renderPage(undefined, "   ");
+    expect(screen.getByTestId("results")).toHaveTextContent('"" page 1');
   });
 });

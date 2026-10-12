@@ -1,6 +1,8 @@
-import { SalonList } from "@/components/features/salons/SalonList";
-import { SALONS_PAGE_SIZE } from "@/lib/api";
-import { getSalons } from "@/lib/api-server";
+import { Suspense } from "react";
+import { SalonResults } from "@/components/features/salons/SalonResults";
+import { SalonResultsFallback } from "@/components/features/salons/SalonResultsFallback";
+import { SalonSearchForm } from "@/components/features/salons/SalonSearchForm";
+import { parseQuery } from "@/lib/salon-search";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -10,15 +12,14 @@ export const metadata = { title: "Salons · SalonBook" };
 export default async function SalonsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; q?: string | string[] }>;
 }) {
-  const { page: rawPage } = await searchParams;
+  const { page: rawPage, q: rawQuery } = await searchParams;
   const parsed = Number.parseInt(rawPage ?? "1", 10);
   // The API allows offsets up to 10000, which is page 500 at 20 per page.
   const page =
     Number.isFinite(parsed) && parsed > 0 ? Math.min(parsed, 500) : 1;
-  const salons = await getSalons(page);
-
+  const query = parseQuery(rawQuery);
   return (
     <main
       id="main-content"
@@ -30,7 +31,13 @@ export default async function SalonsPage({
           Pick a salon to see its services and stylists.
         </p>
       </header>
-      <SalonList salons={salons} page={page} pageSize={SALONS_PAGE_SIZE} />
+      <SalonSearchForm query={query} />
+      <Suspense
+        key={`${query}|${page}`}
+        fallback={<SalonResultsFallback searching={query !== ""} />}
+      >
+        <SalonResults query={query} page={page} />
+      </Suspense>
     </main>
   );
 }

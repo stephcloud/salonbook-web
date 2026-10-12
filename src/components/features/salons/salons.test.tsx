@@ -8,6 +8,7 @@ import { LoadingShell } from "./LoadingShell";
 import { SalonHeader } from "./SalonHeader";
 import { SalonImage } from "./SalonImage";
 import { SalonList } from "./SalonList";
+import { SalonSearchForm } from "./SalonSearchForm";
 import { ServiceList } from "./ServiceList";
 import { ServiceRow } from "./ServiceRow";
 import { StylistAvatar } from "./StylistAvatar";
@@ -118,6 +119,71 @@ describe("SalonList paging", () => {
       "/salons?page=2",
     );
     expect(screen.queryByRole("link", { name: "Previous" })).toBeNull();
+  });
+});
+
+describe("SalonList search", () => {
+  const two = [makeSalon({ id: "a" }), makeSalon({ id: "b" })];
+
+  it("keeps the term in the paging links and trusts hasNext", () => {
+    render(
+      <SalonList salons={two} page={2} pageSize={20} query="pink" hasNext />,
+    );
+    expect(screen.getByRole("link", { name: "Previous" })).toHaveAttribute(
+      "href",
+      "/salons?q=pink",
+    );
+    expect(screen.getByRole("link", { name: "Next" })).toHaveAttribute(
+      "href",
+      "/salons?q=pink&page=3",
+    );
+  });
+
+  it("hides Next when the search has no further page, even if the page is full", () => {
+    render(
+      <SalonList
+        salons={two}
+        page={1}
+        pageSize={2}
+        query="pink"
+        hasNext={false}
+      />,
+    );
+    expect(screen.queryByRole("link", { name: "Next" })).toBeNull();
+  });
+
+  it("offers the first page of the same search when a later page is empty", () => {
+    render(<SalonList salons={[]} page={4} pageSize={20} query="pink" />);
+    expect(screen.getByText("No more results")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Back to the first page" }),
+    ).toHaveAttribute("href", "/salons?q=pink");
+  });
+});
+
+describe("SalonSearchForm", () => {
+  it("is a labelled GET form that Enter submits", () => {
+    render(<SalonSearchForm query="" />);
+    const input = screen.getByLabelText("Search salons by name");
+    expect(input).toHaveAttribute("name", "q");
+    const form = screen.getByRole("search");
+    expect(form).toHaveAttribute("method", "get");
+    expect(form).toHaveAttribute("action", "/salons");
+    expect(screen.getByRole("button", { name: "Search" })).toHaveAttribute(
+      "type",
+      "submit",
+    );
+  });
+
+  it("shows the clear link only while a term is set", () => {
+    const { rerender } = render(<SalonSearchForm query="" />);
+    expect(screen.queryByRole("link", { name: "Clear search" })).toBeNull();
+    rerender(<SalonSearchForm query="pink" />);
+    expect(screen.getByLabelText("Search salons by name")).toHaveValue("pink");
+    expect(screen.getByRole("link", { name: "Clear search" })).toHaveAttribute(
+      "href",
+      "/salons",
+    );
   });
 });
 

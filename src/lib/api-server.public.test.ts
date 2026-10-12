@@ -11,6 +11,7 @@ import {
   getSalonServices,
   getSalonStylists,
   getSalons,
+  searchSalons,
 } from "./api-server";
 
 const API_URL = "https://api.example.test/api/v1";
@@ -44,6 +45,85 @@ describe("public salon calls", () => {
     ]);
     const init = fetchMock.mock.calls[0][1] as { headers: Headers };
     expect(init.headers.has("authorization")).toBe(false);
+  });
+
+  describe("searchSalons", () => {
+    function salons(count: number, prefix: string) {
+      return Array.from({ length: count }, (_, i) => ({
+        id: `${prefix}-${i}`,
+        name: `${prefix} ${i}`,
+      }));
+    }
+
+    it("scans 100 at a time until a short page and filters by name", async () => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(
+          jsonResponse([...salons(99, "Other"), ...salons(1, "Pink")]),
+        )
+        .mockResolvedValueOnce(jsonResponse(salons(2, "pink")));
+      vi.stubGlobal("fetch", fetchMock);
+
+      const result = await searchSalons("PINK");
+
+      expect(calledUrls(fetchMock)).toEqual([
+        `${API_URL}/salons?limit=100&offset=0`,
+        `${API_URL}/salons?limit=100&offset=100`,
+      ]);
+      expect(result.salons.map((s) => s.name)).toEqual([
+        "Pink 0",
+        "pink 0",
+        "pink 1",
+      ]);
+      expect(result.hasNext).toBe(false);
+      expect(result.truncated).toBe(false);
+    });
+
+    it("pages the matches and says whether another page exists", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi
+          .fn()
+          .mockImplementation(async () => jsonResponse(salons(25, "Pink"))),
+      );
+
+      const first = await searchSalons("pink", 1);
+      expect(first.salons).toHaveLength(20);
+      expect(first.hasNext).toBe(true);
+
+      const second = await searchSalons("pink", 2);
+      expect(second.salons).toHaveLength(5);
+      expect(second.hasNext).toBe(false);
+
+      expect((await searchSalons("pink", 3)).salons).toEqual([]);
+    });
+
+    it("stops after 5 requests even when every page is full", async () => {
+      const fetchMock = vi
+        .fn()
+        .mockImplementation(async () => jsonResponse(salons(100, "Other")));
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(searchSalons("zzz")).resolves.toEqual({
+        salons: [],
+        hasNext: false,
+        truncated: true,
+      });
+      expect(fetchMock).toHaveBeenCalledTimes(5);
+    });
+
+    it("retries a 503 once, then throws an ApiError", async () => {
+      const fetchMock = vi
+        .fn()
+        .mockImplementation(async () =>
+          jsonResponse({ detail: "waking" }, 503),
+        );
+      vi.stubGlobal("fetch", fetchMock);
+
+      const error = await searchSalons("pink").catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(ApiError);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
   });
 
   it("asks for up to 100 services and stylists of one salon", async () => {

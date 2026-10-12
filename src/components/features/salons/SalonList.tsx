@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Salon } from "@/lib/api";
+import { salonsHref } from "@/lib/salon-search";
 import { buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/features/salons/EmptyState";
 import { SalonCard } from "@/components/features/salons/SalonCard";
@@ -8,17 +9,45 @@ type SalonListProps = {
   salons: Salon[];
   page: number;
   pageSize: number;
+  /** The search term, "" when not searching. */
+  query?: string;
+  /** Known exactly when searching; otherwise guessed from a full page. */
+  hasNext?: boolean;
 };
 
-export function SalonList({ salons, page, pageSize }: SalonListProps) {
+export function SalonList({
+  salons,
+  page,
+  pageSize,
+  query = "",
+  hasNext: knownHasNext,
+}: SalonListProps) {
   if (salons.length === 0) {
-    return page > 1 ? (
-      <EmptyState title="No more salons">
-        <Link href="/salons" className={buttonVariants({ variant: "outline" })}>
-          Back to the first page
-        </Link>
-      </EmptyState>
-    ) : (
+    if (page > 1) {
+      return (
+        <EmptyState title={query ? "No more results" : "No more salons"}>
+          <Link
+            href={salonsHref(query, 1)}
+            className={buttonVariants({ variant: "outline" })}
+          >
+            Back to the first page
+          </Link>
+        </EmptyState>
+      );
+    }
+    if (query) {
+      return (
+        <EmptyState title={`No salons match '${query}'`}>
+          <Link
+            href="/salons"
+            className={buttonVariants({ variant: "outline" })}
+          >
+            Show all salons
+          </Link>
+        </EmptyState>
+      );
+    }
+    return (
       <EmptyState title="No salons yet">
         Salons will show up here as soon as owners finish setting up.
       </EmptyState>
@@ -26,8 +55,8 @@ export function SalonList({ salons, page, pageSize }: SalonListProps) {
   }
 
   const hasPrevious = page > 1;
-  // The API gives no total, so a full page means there may be more.
-  const hasNext = salons.length >= pageSize;
+  // Without a search the API gives no total, so a full page means maybe more.
+  const hasNext = knownHasNext ?? salons.length >= pageSize;
 
   return (
     <>
@@ -43,7 +72,7 @@ export function SalonList({ salons, page, pageSize }: SalonListProps) {
         >
           {hasPrevious ? (
             <Link
-              href={page === 2 ? "/salons" : `/salons?page=${page - 1}`}
+              href={salonsHref(query, page - 1)}
               className={buttonVariants({ variant: "outline" })}
             >
               Previous
@@ -52,7 +81,7 @@ export function SalonList({ salons, page, pageSize }: SalonListProps) {
           <span className="text-sm text-muted-foreground">Page {page}</span>
           {hasNext ? (
             <Link
-              href={`/salons?page=${page + 1}`}
+              href={salonsHref(query, page + 1)}
               className={buttonVariants({ variant: "outline" })}
             >
               Next
