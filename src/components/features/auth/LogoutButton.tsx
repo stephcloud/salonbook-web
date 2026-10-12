@@ -29,6 +29,7 @@ export function LogoutButton() {
         type="button"
         variant="outline"
         onClick={onClick}
+        data-leaves-page=""
         disabled={pending}
       >
         {pending ? "Signing out…" : "Sign out"}

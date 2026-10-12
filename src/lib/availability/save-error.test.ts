@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { ApiError } from "@/lib/api";
 import type { RuleRef } from "./convert";
-import { breakKey, describeAvailabilitySaveError } from "./save-error";
+import {
+  breakKey,
+  describeAvailabilitySaveError,
+  rowMessages,
+} from "./save-error";
 
 const refs: RuleRef[] = [
   { kind: "hours", day: 0 },
@@ -95,5 +99,24 @@ describe("describeAvailabilitySaveError", () => {
       describeAvailabilitySaveError(new TypeError("fetch failed"), refs)
         .message,
     ).toMatch(/Could not reach the server/);
+  });
+});
+
+describe("rowMessages", () => {
+  it("names the day and the break", () => {
+    const failure = describeAvailabilitySaveError(
+      unprocessable([
+        {
+          loc: ["body", "rules", 2],
+          msg: "Value error, end_time must be after start_time",
+        },
+        { loc: ["body", "rules", 1, "start_time"], msg: "Bad time" },
+      ]),
+      refs,
+    );
+    expect(rowMessages(failure)).toEqual([
+      "Friday: The end time must be after the start time.",
+      "Monday, break 1: Bad time",
+    ]);
   });
 });

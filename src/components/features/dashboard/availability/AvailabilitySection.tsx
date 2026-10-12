@@ -19,6 +19,10 @@ export function AvailabilitySection({
   initialAvailability,
 }: AvailabilitySectionProps) {
   const [stylistId, setStylistId] = useState(stylists[0]?.id ?? "");
+  // The server's read is only right for the first mount. After the owner moves
+  // to another stylist it is dropped, so coming back never shows older hours
+  // than the last save (the cache has them, or the page reads them again).
+  const [snapshot, setSnapshot] = useState(initialAvailability);
   const dirtyRef = useRef(false);
   const onDirtyChange = useCallback((dirty: boolean) => {
     dirtyRef.current = dirty;
@@ -71,6 +75,7 @@ export function AvailabilitySection({
               return;
             }
             dirtyRef.current = false;
+            setSnapshot(null);
             setStylistId(next);
           }}
           className="min-h-11 w-full rounded-xl border border-input bg-card px-3 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/40"
@@ -88,9 +93,7 @@ export function AvailabilitySection({
         stylist={stylist}
         others={stylists.filter((s) => s.id !== stylist.id)}
         initialAvailability={
-          first && stylist.id === first.id
-            ? (initialAvailability ?? undefined)
-            : undefined
+          first && stylist.id === first.id ? (snapshot ?? undefined) : undefined
         }
         onDirtyChange={onDirtyChange}
       />

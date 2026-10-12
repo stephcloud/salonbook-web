@@ -27,7 +27,8 @@ export function useUnsavedChangesWarning(dirty: boolean) {
       }
       const target = event.target;
       if (!(target instanceof Element)) return;
-      const link = target.closest("a[href]");
+      // Links, and buttons that leave the page on their own (such as Sign out).
+      const link = target.closest("a[href], [data-leaves-page]");
       if (!link || link.getAttribute("target") === "_blank") return;
       const href = link.getAttribute("href") ?? "";
       if (href.startsWith("#")) return;

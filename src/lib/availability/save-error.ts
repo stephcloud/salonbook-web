@@ -1,5 +1,6 @@
 import { ApiError } from "@/lib/api";
 import type { RuleRef } from "./convert";
+import { WEEKDAY_NAMES } from "./draft";
 
 export const breakKey = (day: number, index: number) => `${day}:${index}`;
 
@@ -136,4 +137,19 @@ export function firstMessage(failure: AvailabilitySaveFailure): string {
     failure.daysOff ??
     GENERIC
   );
+}
+
+/**
+ * The row messages as sentences that name the day, for a place that is not the
+ * row itself (such as a save that did not come from the hours on screen).
+ */
+export function rowMessages(failure: AvailabilitySaveFailure): string[] {
+  const days = Object.entries(failure.days).map(
+    ([day, message]) => `${WEEKDAY_NAMES[Number(day)] ?? "A day"}: ${message}`,
+  );
+  const breaks = Object.entries(failure.breaks).map(([key, message]) => {
+    const [day, index] = key.split(":").map(Number);
+    return `${WEEKDAY_NAMES[day ?? -1] ?? "A day"}, break ${(index ?? 0) + 1}: ${message}`;
+  });
+  return [...days, ...breaks];
 }

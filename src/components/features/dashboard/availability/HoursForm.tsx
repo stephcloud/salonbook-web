@@ -24,6 +24,7 @@ import {
 import {
   breakKey,
   describeAvailabilitySaveError,
+  rowMessages,
   type AvailabilitySaveFailure,
 } from "@/lib/availability/save-error";
 import { validateDraft } from "@/lib/availability/validate";
@@ -147,8 +148,21 @@ export function HoursForm({
       result = await setAvailability(stylist.id, rules);
     } catch (error) {
       const problem = describeAvailabilitySaveError(error, refs);
-      setFailure(problem);
-      setPageMessage(problem.message);
+      if (keepEdits) {
+        // This request carried the SAVED hours, not the ones being edited, so a
+        // row message would land on the wrong (edited) row: say it in words.
+        const rows = rowMessages(problem);
+        setFailure({ ...problem, days: {}, breaks: {} });
+        setPageMessage(
+          problem.message ??
+            (rows.length > 0
+              ? `A saved rule was refused. ${rows.join(" ")}`
+              : null),
+        );
+      } else {
+        setFailure(problem);
+        setPageMessage(problem.message);
+      }
       if (problem.signedOut) setLocked(true);
       busyRef.current = problem.signedOut;
       setPending(false);
@@ -183,15 +197,6 @@ export function HoursForm({
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Always mounted so a new message is announced. */}
-      <p
-        role="status"
-        aria-live="polite"
-        className={notice ? "text-sm font-medium text-green-900" : "sr-only"}
-      >
-        {notice}
-      </p>
-
       {parsed.issues.length > 0 ? (
         <div className="flex flex-col gap-3 rounded-2xl bg-amber-100 p-4 text-amber-900">
           <p className="font-semibold">
@@ -287,6 +292,16 @@ export function HoursForm({
               Copy to another stylist
             </Button>
           ) : null}
+          {/* Always mounted so a new message is announced; shown beside the button just pressed. */}
+          <p
+            role="status"
+            aria-live="polite"
+            className={
+              notice ? "text-sm font-medium text-green-900" : "sr-only"
+            }
+          >
+            {notice}
+          </p>
           {dirty ? (
             <p className="text-sm font-medium text-amber-900">
               You have unsaved changes.
