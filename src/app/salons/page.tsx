@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { SalonNameSuggestions } from "@/components/features/salons/SalonNameSuggestions";
 import { SalonResults } from "@/components/features/salons/SalonResults";
 import { SalonResultsFallback } from "@/components/features/salons/SalonResultsFallback";
 import { SalonSearchForm } from "@/components/features/salons/SalonSearchForm";
@@ -37,6 +38,9 @@ export default async function SalonsPage({
         </p>
       </header>
       <SalonSearchForm query={query} />
+      <Suspense fallback={null}>
+        <SalonNameSuggestions />
+      </Suspense>
       <Suspense
         key={`${query}|${page}`}
         fallback={<SalonResultsFallback searching={query !== ""} />}

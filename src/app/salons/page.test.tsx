@@ -11,6 +11,11 @@ vi.mock("@/components/features/salons/SalonResults", () => ({
   ),
 }));
 
+// Suggestions are optional: rendering nothing must leave the page working.
+vi.mock("@/components/features/salons/SalonNameSuggestions", () => ({
+  SalonNameSuggestions: () => null,
+}));
+
 import SalonsPage from "./page";
 
 function searchParams(page?: string, q?: string) {
@@ -52,6 +57,13 @@ describe("SalonsPage", () => {
     await renderPage("2", "  pink ");
     expect(screen.getByTestId("results")).toHaveTextContent('"pink" page 2');
     expect(screen.getByLabelText("Search salons by name")).toHaveValue("pink");
+  });
+
+  it("still shows the search box and results without suggestions", async () => {
+    await renderPage();
+    expect(document.querySelector("datalist")).toBeNull();
+    expect(screen.getByLabelText("Search salons by name")).toBeInTheDocument();
+    expect(screen.getByTestId("results")).toBeInTheDocument();
   });
 
   it("treats a blank ?q= as no search", async () => {
