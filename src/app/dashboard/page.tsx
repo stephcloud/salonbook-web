@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { OwnersOnlyNotice } from "@/components/features/auth/OwnersOnlyNotice";
+import { DashboardNav } from "@/components/features/dashboard/DashboardNav";
 import { EditSalonSection } from "@/components/features/dashboard/EditSalonSection";
 import { SalonForm } from "@/components/features/dashboard/SalonForm";
 import { SalonOverview } from "@/components/features/dashboard/SalonOverview";
@@ -78,6 +79,7 @@ export default async function DashboardPage() {
           </p>
         ) : null}
       </header>
+      <DashboardNav />
       <div className="grid gap-6 md:grid-cols-[2fr_3fr] md:items-start">
         <div className="flex flex-col gap-4">
           <SalonOverview salon={salon} />

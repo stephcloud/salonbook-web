@@ -7,6 +7,7 @@ const redirect = vi.fn((url: string) => {
 vi.mock("next/navigation", () => ({
   redirect: (url: string) => redirect(url),
   useRouter: () => ({ refresh: vi.fn() }),
+  usePathname: () => "/dashboard",
 }));
 
 const requireUser = vi.fn();
@@ -181,7 +182,9 @@ describe("DashboardPage: an owner with a salon", () => {
     render(await DashboardPage());
 
     expect(screen.getByText("4 of 4 set up")).toBeInTheDocument();
-    const items = within(screen.getByRole("list")).getAllByRole("listitem");
+    const items = within(
+      screen.getByRole("region", { name: /set up your salon/i }),
+    ).getAllByRole("listitem");
     expect(items[4]).toHaveTextContent("Ready to share.");
   });
 
