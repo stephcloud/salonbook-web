@@ -104,3 +104,16 @@
   3. `DELETE /services/{id}` should answer 409 with a message when the service has bookings (today: 500). Consider whether cancelled and completed bookings should block a delete at all.
   4. PATCH 422 for a service returns `detail` as a string while POST returns a list; one shape would be easier to map.
 - Stylists section has no edit or delete on purpose (no endpoints). The checklist still ticks "add a stylist" as soon as one exists; the no-services flag is shown on the stylists section instead.
+
+## 2026-10-12 (owner availability)
+
+- Built on `feat/owner-availability`. Contract checked against the live API with ONE throwaway owner, ONE other owner (for the 403 check) and ONE throwaway client (names "AVAIL PROBE ...", `@example.com`; tokens and passwords were never printed or stored). Only two endpoints exist: `GET` and `PUT /stylists/{id}/availability`. There are no separate break or day-off endpoints.
+- **PUT replaces everything** (`{rules: [...]}`, at most 200; 201 is a 422; `[]` is valid and clears all). Rule ids change on every PUT, so the page never relies on them. Unknown extra fields are rejected.
+- **Weekday 0 is Monday** (proven with `/slots`: a rule on weekday 0 opened Monday 2026-10-19 and no other day). 6 is Sunday. 7 and -1 are 422.
+- Times are `HH:MM:SS` wall-clock strings, no zone, read back as `09:00:00`; the slots built from them carry `+01:00`, so they are Lagos times. `H:MM` ("9:00") is a 422, `24:00:00` is a 422; seconds and fractions are accepted and read back (`09:00:00.500000`). Slots step every 15 minutes (09:00 to 17:00 with a 30 minute service gives 31 slots).
+- A break really removes slots (a 12:00 to 13:00 break on Monday removed the noon slots on Monday only).
+- Server rules (422): end after start (`loc: ["body","rules",i]`, message "Value error, end_time must be after start_time"); weekday, start and end required for working/break; `off_date` required for day_off; day_off takes only `off_date`; working/break refuse `off_date`; bad kind/date/time are per field (`loc: ["body","rules",i,"field"]`). Plain-sentence `detail` (no row index): "overlapping break rules on weekday N", "overlapping working rules on weekday N", "duplicate day_off date". Touching breaks (12:00 to 13:00 and 13:00 to 14:00) are fine.
+- **Accepted by the server, so the page must check them itself:** a break outside the working hours, a break on a day with no working rule, a day off in the past, and **two working rules on one day** (a split shift). The page shows one start and end per day, so a stored split shift is reported and not silently rewritten.
+- **A day off on a date that already has a booking is accepted (200) with no warning and no 409.** The booking stays; slots on that day drop to 0. The page therefore says plainly that existing bookings are not cancelled; it cannot list clashes from this endpoint.
+- Errors: 401 `invalid credentials`, 403 `forbidden` (client, or another owner's stylist), 404 `stylist not found`, non-uuid id is a 422 with `loc: ["path","stylist_id"]`. A 422 echoes the submitted `input`, so the page only reads `loc` and `msg`.
+- Probe data left in the live database (no delete endpoints): three throwaway accounts, one probe salon with one service and one stylist (hours cleared), one cancelled probe booking.
