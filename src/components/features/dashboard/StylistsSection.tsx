@@ -4,9 +4,11 @@ import { useState } from "react";
 import { Plus, TriangleAlert } from "lucide-react";
 import { AddStylistDialog } from "@/components/features/dashboard/AddStylistDialog";
 import { AssignServicesDialog } from "@/components/features/dashboard/AssignServicesDialog";
+import { NoServicesNotice } from "@/components/features/dashboard/NoServicesNotice";
 import { StylistAvatar } from "@/components/features/salons/StylistAvatar";
 import { Button } from "@/components/ui/button";
 import { useCatalogRefresh } from "@/hooks/useCatalogRefresh";
+import { useNotice } from "@/hooks/useNotice";
 import { useSalonServices } from "@/hooks/useSalonServices";
 import { useSalonStylists } from "@/hooks/useSalonStylists";
 import type { Service, Stylist } from "@/lib/api";
@@ -39,7 +41,7 @@ export function StylistsSection({
   const refresh = useCatalogRefresh(salonId);
   const [adding, setAdding] = useState(false);
   const [assigning, setAssigning] = useState<Stylist | null>(null);
-  const [notice, setNotice] = useState("");
+  const [notice, showNotice] = useNotice();
 
   const list = stylists.data;
   const serviceList = services.data;
@@ -47,7 +49,7 @@ export function StylistsSection({
   const fetching = stylists.isFetching || services.isFetching;
 
   async function done(message: string) {
-    setNotice(message);
+    showNotice(message);
     setAdding(false);
     setAssigning(null);
     await refresh();
@@ -65,10 +67,11 @@ export function StylistsSection({
         </Button>
       </div>
 
+      {/* Always mounted so a new message is announced; only takes room when it has text. */}
       <p
         role="status"
         aria-live="polite"
-        className="min-h-5 text-sm text-muted-foreground"
+        className={notice ? "text-sm text-muted-foreground" : "sr-only"}
       >
         {notice}
       </p>
@@ -98,12 +101,13 @@ export function StylistsSection({
         <div className="flex flex-col items-start gap-3 rounded-2xl bg-card p-6 ring-1 ring-border">
           <h3 className="font-semibold">No stylists yet</h3>
           <p className="text-muted-foreground">
-            Add the people customers can book with. Add your services first,
-            then choose which ones each stylist offers.
+            Add the people customers can book with, then choose which services
+            each one offers.
           </p>
+          {serviceList.length === 0 ? <NoServicesNotice /> : null}
         </div>
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul className="flex flex-col gap-3" aria-busy={fetching}>
           {list.map((stylist) => {
             const names = serviceNames(stylist, serviceList);
             return (
@@ -118,7 +122,7 @@ export function StylistsSection({
                       {stylist.name}
                     </h3>
                     {names.length > 0 ? (
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm break-words text-muted-foreground">
                         {names.join(", ")}
                       </p>
                     ) : (

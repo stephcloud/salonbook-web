@@ -41,7 +41,7 @@ export function ServiceCheckboxList({
         return (
           <label
             key={service.id}
-            className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl px-2 hover:bg-muted"
+            className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl px-2 hover:bg-muted has-focus-visible:ring-3 has-focus-visible:ring-ring"
           >
             <Checkbox
               id={`${idPrefix}-${service.id}`}

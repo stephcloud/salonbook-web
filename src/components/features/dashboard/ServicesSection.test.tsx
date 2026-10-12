@@ -216,8 +216,14 @@ describe("ServicesSection: add", () => {
     fireEvent.submit(form);
     fireEvent.submit(form);
     expect(api.count(CREATE)).toBe(1);
-    expect(screen.getByRole("button", { name: "Saving…" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Saving…" })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: "Cancel" })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
 
     release(json(service(), 201));
     await waitFor(() => expect(refresh).toHaveBeenCalled());
@@ -347,7 +353,10 @@ describe("ServicesSection: delete", () => {
     fireEvent.click(confirm);
     fireEvent.click(confirm);
 
-    expect(screen.getByRole("button", { name: "Deleting…" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Deleting…" })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
     expect(screen.getByRole("button", { name: "Keep service" })).toBeDisabled();
     expect(api.count(DELETE)).toBe(1);
     release(noContent());

@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { QueryProvider } from "@/components/features/booking/QueryProvider";
 import type { Service, Stylist } from "@/lib/api";
@@ -102,7 +108,9 @@ describe("StylistsSection: add", () => {
   it("explains that services come first when the salon has none", () => {
     renderSection([], []);
     openAdd();
-    expect(screen.getByText(/Add a service first/)).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("dialog")).getByText(/Add a service first/),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "Go to services" }),
     ).toHaveAttribute("href", "/dashboard/services");
@@ -221,8 +229,14 @@ describe("StylistsSection: add", () => {
     fireEvent.submit(form);
 
     expect(api.count(CREATE)).toBe(1);
-    expect(screen.getByRole("button", { name: "Saving…" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Saving…" })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: "Cancel" })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
 
     release(json({ id: ADA, name: "Ada", image_url: null }, 201));
     await waitFor(() => expect(refresh).toHaveBeenCalled());
@@ -368,7 +382,10 @@ describe("StylistsSection: assign services", () => {
     fireEvent.submit(form);
     fireEvent.submit(form);
     expect(api.count(ASSIGN)).toBe(1);
-    expect(screen.getByRole("button", { name: "Saving…" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Saving…" })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
     release(json({ stylist_id: ADA, service_ids: [BRAIDS] }));
     await waitFor(() => expect(refresh).toHaveBeenCalled());
   });

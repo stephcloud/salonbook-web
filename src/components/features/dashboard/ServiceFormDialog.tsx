@@ -69,6 +69,12 @@ function ServiceForm({
   const [locked, setLocked] = useState(false);
   const waking = useSlowPending(pending);
   const formRef = useRef<HTMLFormElement>(null);
+  const alertRef = useRef<HTMLParagraphElement>(null);
+
+  // A form-level message can sit out of view in a scrolling dialog: bring it into view and read it.
+  useEffect(() => {
+    if (formError) alertRef.current?.focus();
+  }, [formError]);
 
   // Move focus to the first invalid field so keyboard and screen-reader users land on the problem.
   useEffect(() => {
@@ -110,7 +116,10 @@ function ServiceForm({
         await createService(salonId, toServicePayload(values));
       }
     } catch (error) {
-      const failure = describeServiceSaveError(error);
+      const failure = describeServiceSaveError(
+        error,
+        values.price_type === "fixed",
+      );
       setErrors(failure.fields);
       setFormError(failure.message);
       // On a 401 apiFetch is already going to /login: stay disabled.
@@ -138,7 +147,9 @@ function ServiceForm({
       {formError ? (
         <p
           role="alert"
-          className="rounded-xl bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive"
+          ref={alertRef}
+          tabIndex={-1}
+          className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive outline-none"
         >
           {formError}
         </p>
@@ -147,6 +158,7 @@ function ServiceForm({
         id="service-name"
         label="Service name"
         value={values.name}
+        disabled={disabled}
         onChange={(e) => set("name", e.target.value)}
         error={errors.name}
       />
@@ -156,6 +168,7 @@ function ServiceForm({
         inputMode="numeric"
         hint="How long it takes, for example 90."
         value={values.duration_minutes}
+        disabled={disabled}
         onChange={(e) => set("duration_minutes", e.target.value)}
         error={errors.duration_minutes}
       />
@@ -194,12 +207,18 @@ function ServiceForm({
           inputMode="decimal"
           hint="In naira, for example 5000."
           value={values.price}
+          disabled={disabled}
           onChange={(e) => set("price", e.target.value)}
           error={errors.price}
         />
       )}
       <div className="flex flex-wrap gap-3">
-        <Button type="submit" size="lg" disabled={disabled}>
+        <Button
+          type="submit"
+          size="lg"
+          disabled={disabled}
+          focusableWhenDisabled
+        >
           {pending ? "Saving…" : service ? "Save changes" : "Add service"}
         </Button>
         <Button
@@ -207,6 +226,7 @@ function ServiceForm({
           size="lg"
           variant="outline"
           disabled={disabled}
+          focusableWhenDisabled
           onClick={onClose}
         >
           Cancel

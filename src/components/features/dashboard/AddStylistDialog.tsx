@@ -67,6 +67,12 @@ function AddStylistForm({
   const [created, setCreated] = useState<CreatedStylist | null>(null);
   const waking = useSlowPending(pending);
   const formRef = useRef<HTMLFormElement>(null);
+  const alertRef = useRef<HTMLParagraphElement>(null);
+
+  // A form-level message can sit out of view in a scrolling dialog: bring it into view and read it.
+  useEffect(() => {
+    if (formError) alertRef.current?.focus();
+  }, [formError]);
 
   // Move focus to the first invalid field so keyboard and screen-reader users land on the problem.
   useEffect(() => {
@@ -80,6 +86,8 @@ function AddStylistForm({
       await setStylistServices(stylist.id, selected);
     } catch (error) {
       const failure = describeAssignError(error);
+      // The stylist exists even though the services failed: show them in the list.
+      onCreated();
       setFormError(
         `${stylist.name} was added, but their services were not saved. ${failure.message} You can try saving the services again, or close this and assign them later.`,
       );
@@ -119,6 +127,8 @@ function AddStylistForm({
       const failure = describeStylistCreateError(error);
       setErrors(failure.fields);
       setFormError(failure.message);
+      // After a timeout the stylist may exist: show the list as it really is.
+      if (failure.uncertain) onCreated();
       // On a 401 apiFetch is already going to /login: stay disabled.
       if (failure.signedOut) setLocked(true);
       busyRef.current = failure.signedOut;
@@ -127,7 +137,6 @@ function AddStylistForm({
     }
 
     setCreated(stylist);
-    onCreated();
     if (selected.length === 0) {
       busyRef.current = false;
       setPending(false);
@@ -154,12 +163,19 @@ function AddStylistForm({
       {formError ? (
         <p
           role="alert"
-          className="rounded-xl bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive"
+          ref={alertRef}
+          tabIndex={-1}
+          className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive outline-none"
         >
           {formError}
         </p>
       ) : null}
-      {retrying ? null : (
+      {retrying ? (
+        <p className="text-sm text-muted-foreground">
+          Stylist:{" "}
+          <span className="font-medium text-foreground">{created.name}</span>
+        </p>
+      ) : (
         <>
           <FormField
             id="stylist-name"
@@ -206,7 +222,12 @@ function AddStylistForm({
         />
       )}
       <div className="flex flex-wrap gap-3">
-        <Button type="submit" size="lg" disabled={disabled}>
+        <Button
+          type="submit"
+          size="lg"
+          disabled={disabled}
+          focusableWhenDisabled
+        >
           {pending
             ? "Saving…"
             : retrying
@@ -218,6 +239,7 @@ function AddStylistForm({
           size="lg"
           variant="outline"
           disabled={disabled}
+          focusableWhenDisabled
           onClick={onClose}
         >
           {retrying ? "Close" : "Cancel"}

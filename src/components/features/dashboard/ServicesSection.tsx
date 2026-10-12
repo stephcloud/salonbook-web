@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { DeleteServiceDialog } from "@/components/features/dashboard/DeleteServiceDialog";
 import { ServiceFormDialog } from "@/components/features/dashboard/ServiceFormDialog";
 import { Button } from "@/components/ui/button";
 import { useCatalogRefresh } from "@/hooks/useCatalogRefresh";
+import { useNotice } from "@/hooks/useNotice";
 import { useSalonServices } from "@/hooks/useSalonServices";
 import type { Service } from "@/lib/api";
 import { formatDuration, formatServicePrice } from "@/lib/price";
@@ -30,21 +31,33 @@ export function ServicesSection({
   const services = useSalonServices(salonId, initialServices);
   const refresh = useCatalogRefresh(salonId);
   const [dialog, setDialog] = useState<Dialog>({ kind: "none" });
-  const [notice, setNotice] = useState("");
+  const [notice, showNotice] = useNotice();
+  const headingRef = useRef<HTMLHeadingElement>(null);
 
   const list = services.data;
   const close = () => setDialog({ kind: "none" });
 
   async function done(message: string) {
-    setNotice(message);
+    showNotice(message);
     close();
     await refresh();
+  }
+
+  // The Delete button that opened the dialog no longer exists: put focus somewhere sensible.
+  async function deleted(message: string) {
+    await done(message);
+    headingRef.current?.focus();
   }
 
   return (
     <section aria-labelledby="services-heading" className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="services-heading" className="text-xl font-bold">
+        <h2
+          id="services-heading"
+          ref={headingRef}
+          tabIndex={-1}
+          className="text-xl font-bold outline-none"
+        >
           Your services
         </h2>
         <Button size="lg" onClick={() => setDialog({ kind: "add" })}>
@@ -53,10 +66,11 @@ export function ServicesSection({
         </Button>
       </div>
 
+      {/* Always mounted so a new message is announced; only takes room when it has text. */}
       <p
         role="status"
         aria-live="polite"
-        className="min-h-5 text-sm text-muted-foreground"
+        className={notice ? "text-sm text-muted-foreground" : "sr-only"}
       >
         {notice}
       </p>
@@ -89,20 +103,20 @@ export function ServicesSection({
           </p>
         </div>
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul className="flex flex-col gap-3" aria-busy={services.isFetching}>
           {list.map((service) => (
             <li
               key={service.id}
               className="flex flex-col gap-3 rounded-2xl bg-card p-4 ring-1 ring-border sm:flex-row sm:items-center sm:justify-between"
             >
-              <div className="flex flex-col gap-0.5">
-                <h3 className="font-semibold">{service.name}</h3>
+              <div className="flex min-w-0 flex-col gap-0.5">
+                <h3 className="font-semibold break-words">{service.name}</h3>
                 <p className="text-sm text-muted-foreground">
                   {formatDuration(service.duration_minutes)} ·{" "}
                   {formatServicePrice(service)}
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   variant="outline"
                   aria-label={`Edit ${service.name}`}
@@ -135,7 +149,7 @@ export function ServicesSection({
       <DeleteServiceDialog
         service={dialog.kind === "delete" ? dialog.service : null}
         onClose={close}
-        onDeleted={done}
+        onDeleted={deleted}
       />
     </section>
   );

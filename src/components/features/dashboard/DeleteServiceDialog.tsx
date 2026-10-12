@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +36,12 @@ function DeleteServiceBody({ service, onDeleted, busyRef }: BodyProps) {
   const [failed, setFailed] = useState<string | null>(null);
   const [locked, setLocked] = useState(false);
   const waking = useSlowPending(pending);
+  const alertRef = useRef<HTMLParagraphElement>(null);
+
+  // A form-level message can sit out of view in a scrolling dialog: bring it into view and read it.
+  useEffect(() => {
+    if (failed) alertRef.current?.focus();
+  }, [failed]);
 
   async function confirm() {
     if (busyRef.current) return;
@@ -71,7 +77,9 @@ function DeleteServiceBody({ service, onDeleted, busyRef }: BodyProps) {
       {failed ? (
         <p
           role="alert"
-          className="rounded-xl bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive"
+          ref={alertRef}
+          tabIndex={-1}
+          className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive outline-none"
         >
           {failed}
         </p>
@@ -79,7 +87,7 @@ function DeleteServiceBody({ service, onDeleted, busyRef }: BodyProps) {
       <p
         role="status"
         aria-live="polite"
-        className="text-sm text-muted-foreground empty:hidden"
+        className="min-h-5 text-sm text-muted-foreground"
       >
         {waking
           ? "Waking up the server. This can take up to a minute, please wait."
@@ -99,6 +107,7 @@ function DeleteServiceBody({ service, onDeleted, busyRef }: BodyProps) {
             variant="destructive"
             className="w-full sm:w-auto"
             disabled={disabled}
+            focusableWhenDisabled
             onClick={confirm}
           >
             {pending ? "Deleting…" : failed ? "Try again" : "Delete service"}

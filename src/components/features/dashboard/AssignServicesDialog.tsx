@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { NoServicesNotice } from "@/components/features/dashboard/NoServicesNotice";
 import { ServiceCheckboxList } from "@/components/features/dashboard/ServiceCheckboxList";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,12 @@ function AssignServicesForm({
   const [pending, setPending] = useState(false);
   const [locked, setLocked] = useState(false);
   const waking = useSlowPending(pending);
+  const alertRef = useRef<HTMLParagraphElement>(null);
+
+  // A form-level message can sit out of view in a scrolling dialog: bring it into view and read it.
+  useEffect(() => {
+    if (formError) alertRef.current?.focus();
+  }, [formError]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -78,13 +84,15 @@ function AssignServicesForm({
       {formError ? (
         <p
           role="alert"
-          className="rounded-xl bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive"
+          ref={alertRef}
+          tabIndex={-1}
+          className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive outline-none"
         >
           {formError}
         </p>
       ) : null}
       {services.length === 0 ? (
-        <NoServicesNotice />
+        <NoServicesNotice mode="assign" />
       ) : (
         <>
           <ServiceCheckboxList
@@ -104,7 +112,12 @@ function AssignServicesForm({
       )}
       <div className="flex flex-wrap gap-3">
         {services.length === 0 ? null : (
-          <Button type="submit" size="lg" disabled={disabled}>
+          <Button
+            type="submit"
+            size="lg"
+            disabled={disabled}
+            focusableWhenDisabled
+          >
             {pending ? "Saving…" : "Save services"}
           </Button>
         )}
@@ -113,6 +126,7 @@ function AssignServicesForm({
           size="lg"
           variant="outline"
           disabled={disabled}
+          focusableWhenDisabled
           onClick={onClose}
         >
           {services.length === 0 ? "Close" : "Cancel"}
