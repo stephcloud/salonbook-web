@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { LogoutButton } from "@/components/features/auth/LogoutButton";
+import { HomeAnchors } from "@/components/features/nav/HomeAnchors";
 import { NavLink } from "@/components/features/nav/NavLink";
 import { ROLE_COOKIE, TOKEN_COOKIE, parseRole } from "@/lib/auth/cookie";
 
@@ -26,7 +27,7 @@ export async function SiteHeader() {
   const role = parseRole(store.get(ROLE_COOKIE)?.value);
 
   return (
-    <header className="border-b border-border bg-card">
+    <header className="relative border-b border-border bg-card">
       <nav
         aria-label="Main"
         className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-2 gap-y-1 px-4 py-2"
@@ -37,6 +38,7 @@ export async function SiteHeader() {
         >
           SalonBook
         </Link>
+        <HomeAnchors />
         <ul className="flex flex-wrap items-center gap-1">
           <li>
             <NavLink href="/salons">Salons</NavLink>
