@@ -21,10 +21,10 @@
 - `app/api/auth/*` and `app/api/proxy/[...path]` are route handlers (login, logout, API proxy)
 
 ## Decisions (do not change without asking me)
-- Look: pink, soft, rounded, mobile-first, widening to two columns on desktop. Font: Plus Jakarta Sans only (`next/font/google`, weights 400 to 700). No other font, no serif.
-- Palette: background `#FFF5F7`, card `#FFFFFF`, primary `#B93F66` (buttons, with white text), primary-dark `#A93A5B`, soft tint `#FCE4EB`, text `#2B1B21`, muted `#6F565F`. Pill buttons, rounded-2xl cards, 44px minimum touch targets.
+- Look: soft, rounded, feminine purple, mobile-first, widening to two columns on desktop. Font: Plus Jakarta Sans only (`next/font/google`, weights 400 to 700). No other font, no serif. (Changed from pink to purple on 2026-10-12, decided by the owner.)
+- Palette (tokens in `src/app/globals.css`): background `#FFFBF7`, card `#FFFFFF`, primary `#6D28D9` (buttons, with white text), primary-dark `#5B21B6` (hover), lavender `#EDE9FE` (soft tint, selected), blush `#FDF2F8` (accent), text `#292033`, muted `#6B6475`, border `#E8E1EC`. Pill buttons, rounded-2xl cards, 44px minimum touch targets.
 - Status badges: pending amber, confirmed green, cancelled grey, refunded blue.
-- Photos are optional. Salons and stylists have a nullable `image_url`. When empty, show a pink gradient tile or an initial avatar. Owner-supplied images use `next/image` with `unoptimized`. No lorem ipsum, no invented stats or ratings.
+- Photos are optional. Salons and stylists have a nullable `image_url`. When empty, show a soft gradient tile or an initial avatar. Owner-supplied images use `next/image` with `unoptimized`. No lorem ipsum, no invented stats or ratings.
 - Not in the MVP: map, distance, promo banners, business hours on the salon page, ratings, reschedule.
 - Landing page pricing: a light placeholder ("free while we launch, simple monthly plan later"). No made-up prices.
 - Auth: the token never reaches JavaScript. Route handlers store it in an httpOnly cookie (`sb_token`, 30 minutes). The browser calls `/api/proxy/*` on our own domain, which adds the Authorization header. No CORS setup is needed because the browser never calls Render directly.

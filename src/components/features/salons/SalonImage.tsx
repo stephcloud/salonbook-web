@@ -7,7 +7,7 @@ type SalonImageProps = {
   className?: string;
 };
 
-/** Owner photo, or a soft pink gradient tile when there is none. */
+/** Owner photo, or a soft gradient tile when there is none. */
 export function SalonImage({ src, alt, className }: SalonImageProps) {
   return (
     <div
