@@ -1,12 +1,13 @@
+import { SectionHeading } from "@/components/features/landing/SectionHeading";
+
 export function PricingNote() {
   return (
     <section
+      id="pricing"
       aria-labelledby="pricing-heading"
-      className="flex flex-col gap-2 rounded-2xl bg-muted p-6"
+      className="flex scroll-mt-4 flex-col gap-3 rounded-3xl bg-blush p-6 md:p-8"
     >
-      <h2 id="pricing-heading" className="text-2xl font-bold">
-        Pricing
-      </h2>
+      <SectionHeading id="pricing-heading" title="Pricing" />
       <p className="text-lg">Free while we launch, simple monthly plan later</p>
     </section>
   );

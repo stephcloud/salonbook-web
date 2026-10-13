@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { SectionHeading } from "@/components/features/landing/SectionHeading";
 
 const PROBLEMS = [
   {
@@ -17,10 +18,11 @@ const PROBLEMS = [
 
 export function ProblemSection() {
   return (
-    <section aria-labelledby="problem-heading" className="flex flex-col gap-4">
-      <h2 id="problem-heading" className="text-2xl font-bold">
-        Booking a salon should not be this hard
-      </h2>
+    <section aria-labelledby="problem-heading" className="flex flex-col gap-6">
+      <SectionHeading
+        id="problem-heading"
+        title="Booking a salon should not be this hard"
+      />
       <ul className="grid gap-4 md:grid-cols-3">
         {PROBLEMS.map((problem) => (
           <li key={problem.title}>

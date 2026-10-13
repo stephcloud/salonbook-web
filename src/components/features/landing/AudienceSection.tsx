@@ -1,11 +1,10 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { SectionHeading } from "@/components/features/landing/SectionHeading";
 
 export function AudienceSection() {
   return (
-    <section aria-labelledby="audience-heading" className="flex flex-col gap-4">
-      <h2 id="audience-heading" className="text-2xl font-bold">
-        Who SalonBook is for
-      </h2>
+    <section aria-labelledby="audience-heading" className="flex flex-col gap-6">
+      <SectionHeading id="audience-heading" title="Who SalonBook is for" />
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="rounded-2xl bg-muted">
           <CardContent className="flex flex-col gap-2">
@@ -17,7 +16,7 @@ export function AudienceSection() {
             </p>
           </CardContent>
         </Card>
-        <Card className="rounded-2xl bg-muted">
+        <Card className="rounded-2xl bg-blush">
           <CardContent className="flex flex-col gap-2">
             <h3 className="text-lg font-semibold">Salon owners</h3>
             <p className="text-base">
