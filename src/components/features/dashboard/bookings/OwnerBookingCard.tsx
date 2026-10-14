@@ -65,7 +65,7 @@ export function OwnerBookingCard({
       {onCancel ? (
         <Button
           variant="outline"
-          className="self-start"
+          className="self-start text-destructive"
           aria-label={`Cancel booking for ${booking.client_name} on ${formatLagosDateTime(booking.starts_at)}`}
           onClick={() => onCancel(booking)}
         >

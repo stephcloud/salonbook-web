@@ -61,6 +61,10 @@ export function OwnerBookingsSection({
   }, []);
   const [cancelling, setCancelling] = useState<OwnerBooking | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  // Hidden at once, before the refreshed list arrives, so it cannot be reopened.
+  const [cancelledIds, setCancelledIds] = useState<ReadonlySet<string>>(
+    new Set(),
+  );
   const noticeRef = useRef<HTMLParagraphElement>(null);
 
   // After Previous/Next the button may become disabled, so focus moves to the
@@ -75,13 +79,19 @@ export function OwnerBookingsSection({
     }
   }, [fetching]);
 
+  useEffect(() => {
+    if (notice) noticeRef.current?.focus();
+  }, [notice]);
+
   function changeFilters(next: OwnerBookingFilters) {
+    setNotice(null);
     setFilters(next);
     setPage(1);
   }
 
   function goToPage(next: number) {
     movedPage.current = true;
+    setNotice(null);
     setPage(next);
   }
 
@@ -174,7 +184,7 @@ export function OwnerBookingsSection({
             services={services}
             depositKobo={depositKobo}
             onCancel={
-              canOwnerCancel(booking, now)
+              !cancelledIds.has(booking.id) && canOwnerCancel(booking, now)
                 ? (b) => {
                     setNotice(null);
                     setCancelling(b);
@@ -237,7 +247,6 @@ export function OwnerBookingsSection({
       {notice ? (
         <p
           ref={noticeRef}
-          role="status"
           tabIndex={-1}
           className="rounded-2xl bg-secondary p-4 font-semibold outline-none focus-visible:ring-3 focus-visible:ring-ring"
         >
@@ -251,9 +260,10 @@ export function OwnerBookingsSection({
         onClose={() => setCancelling(null)}
         onCancelled={({ booking, outcome }) => {
           setCancelling(null);
+          setCancelledIds((ids) => new Set(ids).add(booking.id));
+          // The card that opened the dialog may be gone; the effect above
+          // moves focus to this result.
           setNotice(`Cancelled ${booking.client_name}'s booking. ${outcome}.`);
-          // The card that opened the dialog may be gone; keep focus on the result.
-          setTimeout(() => noticeRef.current?.focus(), 0);
         }}
       />
       {data && !problem ? (

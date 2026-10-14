@@ -60,6 +60,7 @@ function OwnerCancelDialogBody({
   > | null>(null);
   const [signedOut, setSignedOut] = useState(false);
   const releaseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const alertRef = useRef<HTMLParagraphElement>(null);
 
   useEffect(
     () => () => {
@@ -120,6 +121,12 @@ function OwnerCancelDialogBody({
   // Another try would fail the same way, so the only thing left is to close.
   const final = failure?.kind === "stale" || failure?.kind === "forbidden";
 
+  // The footer swaps to a single Close button, so keyboard focus moves to the
+  // message instead of falling to the page.
+  useEffect(() => {
+    if (final) alertRef.current?.focus();
+  }, [final]);
+
   return (
     <AlertDialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl data-[size=default]:max-w-[calc(100%-2rem)] data-[size=default]:sm:max-w-sm">
       <AlertDialogHeader className="place-items-start text-left">
@@ -139,9 +146,13 @@ function OwnerCancelDialogBody({
 
       {/* Always present, so an error is announced when its text arrives. */}
       <p
+        ref={alertRef}
         role="alert"
+        tabIndex={-1}
         className={
-          failure ? "text-sm font-semibold text-destructive" : "sr-only"
+          failure
+            ? "text-sm font-semibold text-destructive outline-none"
+            : "sr-only"
         }
       >
         {failure?.message ?? ""}
@@ -168,9 +179,11 @@ function OwnerCancelDialogBody({
             <AlertDialogAction
               variant="destructive"
               size="lg"
-              className="w-full disabled:cursor-wait disabled:opacity-100 sm:w-auto"
+              className="w-full aria-disabled:cursor-wait sm:w-auto"
               onClick={confirm}
-              disabled={busy}
+              // aria-disabled, not disabled, so keyboard focus stays on the
+              // button while the request runs; confirm() ignores extra clicks.
+              aria-disabled={busy}
               aria-busy={busy}
             >
               {busy ? (

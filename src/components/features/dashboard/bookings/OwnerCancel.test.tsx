@@ -198,7 +198,7 @@ describe("owner cancel dialog", () => {
 
     expect(
       await screen.findByRole("button", { name: "Cancelling..." }),
-    ).toBeDisabled();
+    ).toHaveAttribute("aria-disabled", "true");
     expect(count(CANCEL)).toBe(1);
     finish();
     await screen.findByText(/Deposit refunded in full/);
