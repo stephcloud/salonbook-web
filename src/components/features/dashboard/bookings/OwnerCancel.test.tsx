@@ -301,3 +301,150 @@ describe("owner cancel dialog", () => {
     expect(count(CANCEL)).toBe(0);
   });
 });
+
+describe("owner cancel edge cases", () => {
+  async function cancelFirst() {
+    await openDialog();
+    fireEvent.click(screen.getByRole("button", { name: "Cancel booking" }));
+    return screen.findByText(/Cancelled Ngozi O\.'s booking/);
+  }
+
+  function pagedRows() {
+    return [
+      booking(),
+      ...Array.from({ length: 20 }, (_, i) =>
+        booking({
+          id: `other-${i}`,
+          status: "completed",
+          client_name: `Client ${i}`,
+        }),
+      ),
+    ];
+  }
+
+  it("sends the owner to sign in after a 401 on cancel", async () => {
+    const assign = vi.fn();
+    vi.stubGlobal("location", {
+      ...window.location,
+      assign,
+      pathname: "/dashboard/bookings",
+      search: "",
+    });
+    routeFetch({
+      [LIST]: () => json([booking()]),
+      [CANCEL]: () => json({ detail: "not authenticated" }, 401),
+    });
+    renderSection();
+
+    await openDialog();
+    fireEvent.click(screen.getByRole("button", { name: "Cancel booking" }));
+
+    await waitFor(() => expect(assign).toHaveBeenCalledTimes(1));
+    expect(assign.mock.calls[0][0]).toMatch(/^\/login\?next=/);
+  });
+
+  it("clears the result notice when a filter changes", async () => {
+    routeFetch({
+      [LIST]: () => json([booking()]),
+      [CANCEL]: () => json(cancelled(true)),
+    });
+    renderSection();
+
+    expect(await cancelFirst()).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Status"), {
+      target: { value: "confirmed" },
+    });
+
+    await waitFor(() =>
+      expect(
+        screen.queryByText(/Cancelled Ngozi O\.'s booking/),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
+  it("clears the result notice when Next is clicked", async () => {
+    routeFetch({
+      [LIST]: () => json(pagedRows()),
+      [CANCEL]: () => json(cancelled(true)),
+    });
+    renderSection();
+
+    expect(await cancelFirst()).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Next" })).toBeEnabled(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByText(/Cancelled Ngozi O\.'s booking/),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
+  it("clears the result notice when Previous is clicked", async () => {
+    routeFetch({
+      [LIST]: () => json(pagedRows()),
+      [CANCEL]: () => json(cancelled(true)),
+    });
+    renderSection();
+
+    await screen.findByText("Client 0");
+    fireEvent.click(await screen.findByRole("button", { name: "Next" }));
+    await screen.findByText("Page 2");
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Previous" })).toBeEnabled(),
+    );
+
+    expect(await cancelFirst()).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Previous" })).toBeEnabled(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Previous" }));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByText(/Cancelled Ngozi O\.'s booking/),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
+  it("hides the Cancel button at once, before the refreshed list arrives", async () => {
+    let lists = 0;
+    const { count } = routeFetch({
+      [LIST]: () => {
+        lists += 1;
+        if (lists === 1) return json([booking()]);
+        return new Promise<Response>(() => {});
+      },
+      [CANCEL]: () => json(cancelled(true)),
+    });
+    renderSection();
+
+    expect(await cancelFirst()).toBeInTheDocument();
+    await waitFor(() => expect(count(LIST)).toBe(2));
+    expect(screen.getByText("Ngozi O.")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Cancel booking for/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("says the booking could not be found for a 404 and offers only Close", async () => {
+    routeFetch({
+      [LIST]: () => json([booking()]),
+      [CANCEL]: () => json({ detail: "Booking not found" }, 404),
+    });
+    renderSection();
+
+    await openDialog();
+    fireEvent.click(screen.getByRole("button", { name: "Cancel booking" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "This booking could not be found.",
+    );
+    expect(screen.getByRole("button", { name: "Close" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Try again" }),
+    ).not.toBeInTheDocument();
+  });
+});
