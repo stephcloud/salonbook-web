@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { BookingStatusBadge } from "@/components/features/bookings/BookingStatusBadge";
 import type { OwnerBooking, Service } from "@/lib/api";
 import { formatLagosDateTime } from "@/lib/time";
@@ -12,12 +13,15 @@ type OwnerBookingCardProps = {
   booking: OwnerBooking;
   services: Pick<Service, "id" | "price_type" | "price">[];
   depositKobo: number;
+  /** Set when this booking can be cancelled; the button is hidden otherwise. */
+  onCancel?: (booking: OwnerBooking) => void;
 };
 
 export function OwnerBookingCard({
   booking,
   services,
   depositKobo,
+  onCancel,
 }: OwnerBookingCardProps) {
   const price = servicePriceLabel(booking, services);
   // The amount is the salon's current deposit, so it is only shown where a
@@ -58,6 +62,16 @@ export function OwnerBookingCard({
           {paymentLabel(booking)}
         </dd>
       </dl>
+      {onCancel ? (
+        <Button
+          variant="outline"
+          className="self-start text-destructive"
+          aria-label={`Cancel booking for ${booking.client_name} on ${formatLagosDateTime(booking.starts_at)}`}
+          onClick={() => onCancel(booking)}
+        >
+          Cancel
+        </Button>
+      ) : null}
     </li>
   );
 }
