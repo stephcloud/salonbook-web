@@ -75,9 +75,9 @@ describe("classifyOwnerCancelError", () => {
 });
 
 describe("ownerCancelOutcome", () => {
-  it("says the deposit was refunded only when refund_due is true", () => {
-    expect(ownerCancelOutcome(true)).toBe("Deposit refunded in full");
-    expect(ownerCancelOutcome(false)).toBe("Booking cancelled");
-    expect(ownerCancelOutcome(null)).toBe("Booking cancelled");
+  it("says the deposit will be refunded only when refund_due is true", () => {
+    expect(ownerCancelOutcome(true)).toBe("Deposit will be refunded in full");
+    expect(ownerCancelOutcome(false)).toBe("Nothing to refund");
+    expect(ownerCancelOutcome(null)).toBe("Nothing to refund");
   });
 });
