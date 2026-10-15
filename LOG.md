@@ -154,5 +154,5 @@
 ## 2026-10-14 (owner cancel)
 
 - Built on `feat/owner-cancel-button`: owners get a Cancel button on upcoming pending and confirmed bookings in `/dashboard/bookings` (hidden for cancelled, completed, no show and started bookings). A confirm dialog says the client gets the full deposit back and is emailed (confirmed), or that there is nothing to refund (pending). Uses `POST /bookings/{id}/cancel`, then refreshes the list.
-- The result line comes from `refund_due`: "Deposit refunded in full" only when true, otherwise "Booking cancelled". No amount is shown because the salon deposit setting may have changed since the client paid.
+- The result line comes from `refund_due`: "Deposit will be refunded in full" only when true (the booking is only `refund_pending` at that moment), otherwise "Nothing to refund". No amount is shown because the salon deposit setting may have changed since the client paid.
 - 409 says the booking cannot be cancelled any more and refreshes the list; 403 shows a role message; 422 shows the server field errors; a network failure offers "Try again". The OpenAPI file lists only 200 and 422 for this route, the other errors are behaviour of the deployed API. No new dependencies.

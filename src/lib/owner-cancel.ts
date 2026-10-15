@@ -73,5 +73,7 @@ export function classifyOwnerCancelError(error: unknown): OwnerCancelFailure {
  * deposit setting may have changed since the client paid.
  */
 export function ownerCancelOutcome(refundDue: boolean | null): string {
-  return refundDue === true ? "Deposit refunded in full" : "Booking cancelled";
+  return refundDue === true
+    ? "Deposit will be refunded in full"
+    : "Nothing to refund";
 }
