@@ -26,7 +26,7 @@ const SIGN_IN_REDIRECT_MS = 10_000;
 
 export type OwnerCancelResult = {
   booking: OwnerBooking;
-  /** From the API's refund_due: "Deposit refunded in full" or "Booking cancelled". */
+  /** From the API's refund_due: "Deposit will be refunded in full" or "Nothing to refund". */
   outcome: string;
 };
 

@@ -151,7 +151,7 @@ describe("owner cancel dialog", () => {
 
     expect(
       await screen.findByText(
-        "Cancelled Ngozi O.'s booking. Deposit refunded in full.",
+        "Cancelled Ngozi O.'s booking. Deposit will be refunded in full.",
       ),
     ).toBeInTheDocument();
     await waitFor(() => expect(count(LIST)).toBe(2));
@@ -162,7 +162,7 @@ describe("owner cancel dialog", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("stays neutral when the API does not say a refund is due", async () => {
+  it("says there is nothing to refund when the API does not say a refund is due", async () => {
     routeFetch({
       [LIST]: () =>
         json([booking({ status: "pending", payment_status: null })]),
@@ -175,7 +175,7 @@ describe("owner cancel dialog", () => {
 
     expect(
       await screen.findByText(
-        "Cancelled Ngozi O.'s booking. Booking cancelled.",
+        "Cancelled Ngozi O.'s booking. Nothing to refund.",
       ),
     ).toBeInTheDocument();
   });
@@ -201,7 +201,7 @@ describe("owner cancel dialog", () => {
     ).toHaveAttribute("aria-disabled", "true");
     expect(count(CANCEL)).toBe(1);
     finish();
-    await screen.findByText(/Deposit refunded in full/);
+    await screen.findByText(/Deposit will be refunded in full/);
     expect(count(CANCEL)).toBe(1);
   });
 
@@ -284,7 +284,9 @@ describe("owner cancel dialog", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "Try again" }));
 
-    expect(await screen.findByText(/Deposit refunded in full/)).toBeVisible();
+    expect(
+      await screen.findByText(/Deposit will be refunded in full/),
+    ).toBeVisible();
     expect(count(CANCEL)).toBe(2);
   });
 
