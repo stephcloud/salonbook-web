@@ -1,15 +1,10 @@
-import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
+import { ImagePlaceholder } from "@/components/features/landing/ImagePlaceholder";
+import {
+  LandingActions,
+  type Viewer,
+} from "@/components/features/landing/LandingActions";
 
-export type Viewer = "guest" | "client" | "owner";
-
-type HeroProps = { viewer: Viewer };
-
-/**
- * `/register` sends signed-in people away, so the second button changes with
- * the viewer: owners get their dashboard, clients get no second button.
- */
-export function Hero({ viewer }: HeroProps) {
+export function Hero({ viewer }: { viewer: Viewer }) {
   return (
     <section
       aria-labelledby="hero-heading"
@@ -23,39 +18,18 @@ export function Hero({ viewer }: HeroProps) {
           id="hero-heading"
           className="max-w-2xl text-3xl leading-tight font-bold md:text-5xl"
         >
-          Book your salon appointment online and pay the deposit.
+          Online booking for your salon, with a deposit to protect your time.
         </h1>
         <p className="max-w-xl text-lg text-muted-foreground">
-          Pick a service and a stylist, see real free times, and keep your spot
-          with a deposit. Salon owners set up their own page and share one link.
+          Clients pick a service and a stylist, see real free times, and keep
+          their spot with a deposit. Salon owners set up their own page and
+          share one link.
         </p>
-        <div className="flex flex-wrap gap-3">
-          <Link href="/salons" className={buttonVariants({ size: "lg" })}>
-            Find a salon
-          </Link>
-          {viewer === "guest" ? (
-            <Link
-              href="/register"
-              className={buttonVariants({ size: "lg", variant: "outline" })}
-            >
-              Register your salon
-            </Link>
-          ) : null}
-          {viewer === "owner" ? (
-            <Link
-              href="/dashboard"
-              className={buttonVariants({ size: "lg", variant: "outline" })}
-            >
-              Go to your dashboard
-            </Link>
-          ) : null}
-        </div>
+        <LandingActions viewer={viewer} />
       </div>
-      <div
-        aria-hidden="true"
-        data-testid="hero-tile"
-        className="hidden aspect-[4/3] rounded-3xl bg-gradient-to-br from-muted via-muted to-primary/40 lg:block"
-      />
+      <div className="hidden lg:block" data-testid="hero-tile">
+        <ImagePlaceholder slot="heroDashboard" />
+      </div>
     </section>
   );
 }

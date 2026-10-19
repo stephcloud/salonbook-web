@@ -151,6 +151,15 @@
 - README rewritten (it was still the starter template text).
 - `npm run lint`, `npm run build` and the full test suite (1251 tests) pass. No new dependencies.
 
+## 2026-10-12 (landing redesign)
+
+- Built on `feat/landing-redesign`, adapting the layout rhythm of the Studiova template (big headings, generous spacing, tinted bands, framed product preview) in Next.js and Tailwind. No Bootstrap, jQuery or AOS, no new dependencies.
+- The whole app moved from pink to purple (decided by the owner). Tokens are in `src/app/globals.css` (`--blush` is new); `CLAUDE.md` Decisions updated. The form input border is `#8a7f96` to keep 3:1 against white.
+- `/` now has: hero, product preview, problem, features (only what exists today), audience, how it works, benefits, pricing placeholder (exact wording kept), FAQ (native `<details>`) and a final call to action. Copy and icons are in `src/lib/landing-content.ts`.
+- Picture slots are labelled placeholders (`ImagePlaceholder`), all listed in `src/lib/landing-placeholders.ts` with the future file names. No image files exist yet.
+- Header shows Features, How it works, Pricing and FAQ links on `/` only (a Menu button on phones). New footer links only to Find a salon, Sign in and Register.
+- Not built, so not claimed: reminders, reports, client history, reschedule. No testimonials, stats or prices. No Privacy or Terms pages exist, so the footer has no legal links.
+
 ## 2026-10-14 (owner cancel)
 
 - Built on `feat/owner-cancel-button`: owners get a Cancel button on upcoming pending and confirmed bookings in `/dashboard/bookings` (hidden for cancelled, completed, no show and started bookings). A confirm dialog says the client gets the full deposit back and is emailed (confirmed), or that there is nothing to refund (pending). Uses `POST /bookings/{id}/cancel`, then refreshes the list.

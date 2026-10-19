@@ -172,6 +172,7 @@ describe("SiteHeader", () => {
 
   it("lists the links in a list inside the navigation", async () => {
     signIn("client");
+    pathname = "/salons";
     render(await SiteHeader());
     const nav = screen.getByRole("navigation", { name: "Main" });
     expect(within(nav).getAllByRole("listitem")).toHaveLength(3);

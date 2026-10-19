@@ -170,7 +170,7 @@ export function SalonForm(props: SalonFormProps) {
         autoCapitalize="none"
         spellCheck={false}
         placeholder="https://"
-        hint="A link to a photo, starting with https://. Leave empty to show a pink tile."
+        hint="A link to a photo, starting with https://. Leave empty to show a soft colour tile."
         value={values.image_url}
         onChange={(e) => set("image_url", e.target.value)}
         error={errors.image_url}
