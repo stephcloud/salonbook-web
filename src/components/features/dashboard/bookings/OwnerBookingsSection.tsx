@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { BookingFilters } from "@/components/features/dashboard/bookings/BookingFilters";
+import { OwnerCancelDialog } from "@/components/features/dashboard/bookings/OwnerCancelDialog";
 import { OwnerBookingCard } from "@/components/features/dashboard/bookings/OwnerBookingCard";
 import { Pager } from "@/components/features/dashboard/bookings/Pager";
 import { EmptyState } from "@/components/features/salons/EmptyState";
@@ -11,11 +12,13 @@ import { useSlowPending } from "@/hooks/useSlowPending";
 import {
   ApiError,
   NO_OWNER_BOOKING_FILTERS,
+  type OwnerBooking,
   type OwnerBookingFilters,
   type Service,
   type Stylist,
 } from "@/lib/api";
 import { filterProblem, hasActiveFilters } from "@/lib/owner-bookings";
+import { canOwnerCancel } from "@/lib/owner-cancel";
 
 type OwnerBookingsSectionProps = {
   salonId: string;
@@ -50,6 +53,20 @@ export function OwnerBookingsSection({
   const query = useOwnerBookings(salonId, filters, page, problem === null);
   const slow = useSlowPending(query.isFetching);
 
+  // A start time passing hides the Cancel button, so the clock ticks.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(timer);
+  }, []);
+  const [cancelling, setCancelling] = useState<OwnerBooking | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  // Hidden at once, before the refreshed list arrives, so it cannot be reopened.
+  const [cancelledIds, setCancelledIds] = useState<ReadonlySet<string>>(
+    new Set(),
+  );
+  const noticeRef = useRef<HTMLParagraphElement>(null);
+
   // After Previous/Next the button may become disabled, so focus moves to the
   // heading to keep keyboard users in place.
   const heading = useRef<HTMLHeadingElement>(null);
@@ -62,13 +79,19 @@ export function OwnerBookingsSection({
     }
   }, [fetching]);
 
+  useEffect(() => {
+    if (notice) noticeRef.current?.focus();
+  }, [notice]);
+
   function changeFilters(next: OwnerBookingFilters) {
+    setNotice(null);
     setFilters(next);
     setPage(1);
   }
 
   function goToPage(next: number) {
     movedPage.current = true;
+    setNotice(null);
     setPage(next);
   }
 
@@ -160,6 +183,14 @@ export function OwnerBookingsSection({
             booking={booking}
             services={services}
             depositKobo={depositKobo}
+            onCancel={
+              !cancelledIds.has(booking.id) && canOwnerCancel(booking, now)
+                ? (b) => {
+                    setNotice(null);
+                    setCancelling(b);
+                  }
+                : undefined
+            }
           />
         ))}
       </ul>
@@ -213,7 +244,28 @@ export function OwnerBookingsSection({
                 : `${data.bookings.length} bookings shown, page ${page}.`
               : ""}
       </p>
+      {notice ? (
+        <p
+          ref={noticeRef}
+          tabIndex={-1}
+          className="rounded-2xl bg-secondary p-4 font-semibold outline-none focus-visible:ring-3 focus-visible:ring-ring"
+        >
+          {notice}
+        </p>
+      ) : null}
       {body}
+      <OwnerCancelDialog
+        salonId={salonId}
+        booking={cancelling}
+        onClose={() => setCancelling(null)}
+        onCancelled={({ booking, outcome }) => {
+          setCancelling(null);
+          setCancelledIds((ids) => new Set(ids).add(booking.id));
+          // The card that opened the dialog may be gone; the effect above
+          // moves focus to this result.
+          setNotice(`Cancelled ${booking.client_name}'s booking. ${outcome}.`);
+        }}
+      />
       {data && !problem ? (
         <>
           <p className="text-sm text-muted-foreground">
