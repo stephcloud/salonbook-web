@@ -1,12 +1,17 @@
 "use client";
 
+import Link from "next/link";
 import { StepHeading } from "@/components/features/booking/StepHeading";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSlowPending } from "@/hooks/useSlowPending";
 import { useSlots } from "@/hooks/useSlots";
 import { ApiError } from "@/lib/api";
+import {
+  isSalonNotAccepting,
+  SALON_NOT_ACCEPTING_MESSAGE,
+} from "@/lib/salon-status";
 import { formatLagosDay, formatLagosTime, lagosToday } from "@/lib/time";
 
 type SlotStepProps = {
@@ -25,10 +30,22 @@ type SlotStepProps = {
 const LOAD_ERROR_MESSAGE = "Could not load the free times. Please try again.";
 
 /** What to say when loading the times fails. A 401 means apiFetch is already redirecting to /login. */
-function loadErrorDetails(error: unknown): { message: string; retry: boolean } {
+function loadErrorDetails(error: unknown): {
+  message: string;
+  retry: boolean;
+  salonClosed?: boolean;
+} {
   if (error instanceof ApiError) {
     if (error.status === 401) {
       return { message: "Redirecting you to sign in...", retry: false };
+    }
+    // Retrying will not help while the salon is pending or suspended.
+    if (isSalonNotAccepting(error)) {
+      return {
+        message: SALON_NOT_ACCEPTING_MESSAGE,
+        retry: false,
+        salonClosed: true,
+      };
     }
     // Server errors can carry raw text; show our own wording instead.
     if (error.status >= 500) {
@@ -131,8 +148,21 @@ export function SlotStep({
                 Retry
               </Button>
             </div>
+          ) : loadError.salonClosed ? (
+            <div role="alert" className="flex flex-col items-start gap-3">
+              <p className="font-semibold">{loadError.message}</p>
+              <p className="text-sm">
+                Please try again later or choose another salon.
+              </p>
+              <Link
+                href="/salons"
+                className={buttonVariants({ variant: "outline" })}
+              >
+                Browse salons
+              </Link>
+            </div>
           ) : (
-            <p>{loadError.message}</p>
+            <p role="alert">{loadError.message}</p>
           )
         ) : loading ? (
           <div>

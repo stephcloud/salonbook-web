@@ -1,4 +1,8 @@
 import { ApiError } from "@/lib/api";
+import {
+  isSalonNotAccepting,
+  SALON_NOT_ACCEPTING_MESSAGE,
+} from "@/lib/salon-status";
 
 export type PayFailure =
   /** 401: apiFetch is already sending the client to /login, so stay quiet. */
@@ -19,7 +23,8 @@ const OTHER_MESSAGE = "We could not start the payment. Please try again.";
  * Maps a failed POST /bookings/{id}/pay. Checked against the live API: a
  * cancelled booking is 409 "This booking can no longer be paid for.", someone
  * else's booking is 403 "forbidden", an unknown booking is 404 "not found" and
- * a malformed id is 422.
+ * a malformed id is 422. A salon that is pending or suspended is 409 "salon
+ * is not accepting bookings"; it is shown in our own words.
  */
 export function classifyPayError(error: unknown): PayFailure {
   if (!(error instanceof ApiError)) {
@@ -36,7 +41,9 @@ export function classifyPayError(error: unknown): PayFailure {
   if (error.status === 409) {
     return {
       kind: "closed",
-      message: error.message || "This booking can no longer be paid for.",
+      message: isSalonNotAccepting(error)
+        ? SALON_NOT_ACCEPTING_MESSAGE
+        : error.message || "This booking can no longer be paid for.",
     };
   }
   // Server errors can carry raw text; show our own wording instead.

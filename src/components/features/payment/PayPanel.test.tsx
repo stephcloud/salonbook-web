@@ -678,6 +678,20 @@ describe("PayPanel", () => {
       );
     });
 
+    it("says the salon isn't taking bookings, in our words, and keeps Pay available", async () => {
+      payBooking.mockRejectedValue(
+        new ApiError(409, "salon is not accepting bookings"),
+      );
+      getBooking.mockResolvedValue(booking());
+      renderPanel();
+      await click("Pay deposit");
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "This salon isn't taking bookings right now.",
+      );
+      expect(screen.queryByText("salon is not accepting bookings")).toBeNull();
+      expect(screen.getByRole("button", { name: "Pay deposit" })).toBeEnabled();
+    });
+
     it("gives a friendly message when the booking is not the client's (403)", async () => {
       payBooking.mockRejectedValue(new ApiError(403, "forbidden"));
       renderPanel();

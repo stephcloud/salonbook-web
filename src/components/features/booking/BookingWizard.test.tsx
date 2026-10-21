@@ -254,6 +254,28 @@ describe("BookingWizard", () => {
       expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
     });
 
+    it("says the salon is not taking bookings, with no Retry, on that 409", async () => {
+      getSlots.mockRejectedValueOnce(
+        new ApiError(409, "salon is not accepting bookings"),
+      );
+      const user = userEvent.setup();
+      renderWizard(BRAIDS);
+      await user.click(screen.getByRole("radio", { name: /Amara/ }));
+      await user.click(screen.getByRole("button", { name: "Continue" }));
+
+      expect(
+        await screen.findByText("This salon isn't taking bookings right now."),
+      ).toBeInTheDocument();
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "This salon isn't taking bookings right now.",
+      );
+      expect(
+        screen.getByRole("link", { name: "Browse salons" }),
+      ).toHaveAttribute("href", "/salons");
+      expect(screen.queryByRole("button", { name: "Retry" })).toBeNull();
+      expect(screen.queryByText("salon is not accepting bookings")).toBeNull();
+    });
+
     it("stays quiet on a 401 while the login redirect happens (no Retry)", async () => {
       getSlots.mockRejectedValueOnce(
         new ApiError(401, "Please sign in again."),
@@ -566,6 +588,33 @@ describe("BookingWizard", () => {
       expect(
         screen.getByRole("button", { name: "Confirm booking" }),
       ).toBeEnabled();
+    });
+
+    it("stays on review and links to other salons when the salon stops taking bookings", async () => {
+      createBooking.mockRejectedValue(
+        new ApiError(409, "salon is not accepting bookings"),
+      );
+      const user = userEvent.setup();
+      renderWizard(BRAIDS);
+      await walkToReview(user);
+      await user.click(screen.getByRole("button", { name: "Confirm booking" }));
+
+      expect(
+        await screen.findByText("This salon isn't taking bookings right now."),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/just taken/)).toBeNull();
+      expect(
+        screen.getByRole("heading", { name: "Review your booking" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("link", { name: "Browse salons" }),
+      ).toHaveAttribute("href", "/salons");
+      expect(
+        screen.getByRole("button", { name: "Confirm booking" }),
+      ).toBeDisabled();
+      // Focus moves to the reason, not lost with the disabled button.
+      await waitFor(() => expect(screen.getByRole("alert")).toHaveFocus());
+      expect(screen.getByRole("button", { name: "Back" })).toBeEnabled();
     });
 
     it("shows the server's field errors on a 422", async () => {
