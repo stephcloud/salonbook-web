@@ -4,6 +4,108 @@
  */
 
 export interface paths {
+    "/api/v1/admin/salons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Salons */
+        get: operations["list_salons_api_v1_admin_salons_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/salons/{salon_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve Salon */
+        post: operations["approve_salon_api_v1_admin_salons__salon_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/salons/{salon_id}/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Suspend Salon */
+        post: operations["suspend_salon_api_v1_admin_salons__salon_id__suspend_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/salons/{salon_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Salon */
+        delete: operations["delete_salon_api_v1_admin_salons__salon_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Users */
+        get: operations["list_users_api_v1_admin_users_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete User */
+        delete: operations["delete_user_api_v1_admin_users__user_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/register": {
         parameters: {
             query?: never;
@@ -338,6 +440,72 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AdminSalonItem
+         * @description One salon in the admin list. The owner's name only: no email.
+         */
+        AdminSalonItem: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            status: components["schemas"]["SalonStatus"];
+            owner: components["schemas"]["AdminSalonOwner"];
+            /** Booking Count */
+            booking_count: number;
+            /** Active Booking Count */
+            active_booking_count: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** AdminSalonOwner */
+        AdminSalonOwner: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+        };
+        /** AdminSalonStatusResponse */
+        AdminSalonStatusResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            status: components["schemas"]["SalonStatus"];
+        };
+        /**
+         * AdminUserItem
+         * @description One account in the admin list. Never any password data.
+         */
+        AdminUserItem: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+            role: components["schemas"]["UserRole"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
         /** AvailabilityResponse */
         AvailabilityResponse: {
             /**
@@ -671,6 +839,40 @@ export interface components {
             name: string;
         };
         /**
+         * OwnerSalonResponse
+         * @description What an owner sees of their own salon: the public fields plus its status.
+         */
+        OwnerSalonResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Owner Id
+             * Format: uuid
+             */
+            owner_id: string;
+            /** Name */
+            name: string;
+            /** Address */
+            address: string;
+            /** Phone */
+            phone: string;
+            /** Image Url */
+            image_url: string | null;
+            /** Cancellation Hours */
+            cancellation_hours: number;
+            /** Deposit Amount */
+            deposit_amount: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            status: components["schemas"]["SalonStatus"];
+        };
+        /**
          * PaymentResponse
          * @description What the client needs to pay. Never includes Paystack secrets or refund internals.
          */
@@ -750,7 +952,10 @@ export interface components {
             /** Deposit Amount */
             deposit_amount: number;
         };
-        /** SalonResponse */
+        /**
+         * SalonResponse
+         * @description The public shape: no moderation status.
+         */
         SalonResponse: {
             /**
              * Id
@@ -780,6 +985,11 @@ export interface components {
              */
             created_at: string;
         };
+        /**
+         * SalonStatus
+         * @enum {string}
+         */
+        SalonStatus: "pending" | "approved" | "suspended";
         /** SalonUpdate */
         SalonUpdate: {
             /** Name */
@@ -911,6 +1121,11 @@ export interface components {
             /** Service Ids */
             service_ids: string[];
         };
+        /** SuspendRequest */
+        SuspendRequest: {
+            /** Reason */
+            reason?: string | null;
+        };
         /** Token */
         Token: {
             /** Access Token */
@@ -968,6 +1183,11 @@ export interface components {
              */
             created_at: string;
         };
+        /**
+         * UserRole
+         * @enum {string}
+         */
+        UserRole: "owner" | "stylist" | "client" | "admin";
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -990,6 +1210,196 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    list_salons_api_v1_admin_salons_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["SalonStatus"] | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminSalonItem"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_salon_api_v1_admin_salons__salon_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                salon_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminSalonStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    suspend_salon_api_v1_admin_salons__salon_id__suspend_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                salon_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SuspendRequest"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminSalonStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_salon_api_v1_admin_salons__salon_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                salon_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_users_api_v1_admin_users_get: {
+        parameters: {
+            query?: {
+                role?: components["schemas"]["UserRole"] | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUserItem"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_user_api_v1_admin_users__user_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     register_api_v1_auth_register_post: {
         parameters: {
             query?: never;
@@ -1318,7 +1728,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SalonResponse"];
+                    "application/json": components["schemas"]["OwnerSalonResponse"];
                 };
             };
             /** @description Validation Error */
@@ -1350,7 +1760,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SalonResponse"][];
+                    "application/json": components["schemas"]["OwnerSalonResponse"][];
                 };
             };
             /** @description Validation Error */
@@ -1416,7 +1826,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SalonResponse"];
+                    "application/json": components["schemas"]["OwnerSalonResponse"];
                 };
             };
             /** @description Validation Error */

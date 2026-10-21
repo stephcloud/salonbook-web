@@ -114,6 +114,9 @@ export function isMissingResource(error: unknown): boolean {
 }
 
 export type Salon = components["schemas"]["SalonResponse"];
+/** What an owner sees of their own salon: the public fields plus its moderation status. */
+export type OwnerSalon = components["schemas"]["OwnerSalonResponse"];
+export type SalonStatus = components["schemas"]["SalonStatus"];
 export type Service = components["schemas"]["ServiceResponse"];
 export type Stylist = components["schemas"]["PublicStylistResponse"];
 
