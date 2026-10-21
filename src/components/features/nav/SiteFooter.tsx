@@ -69,7 +69,10 @@ export async function SiteFooter() {
   const store = await cookies();
   const signedIn = Boolean(store.get(TOKEN_COOKIE));
   const role = parseRole(store.get(ROLE_COOKIE)?.value);
-  const columns = footerColumns(signedIn, role);
+  // A column with nothing to show (e.g. no pricing anchor for a guest) is left out.
+  const columns = footerColumns(signedIn, role).filter(
+    ({ links }) => links.length > 0,
+  );
 
   return (
     <footer className="border-t border-border bg-card">

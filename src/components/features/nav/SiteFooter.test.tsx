@@ -1,5 +1,5 @@
-import { render, screen, within } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const jar = new Map<string, string>();
 vi.mock("next/headers", () => ({
@@ -11,11 +11,21 @@ vi.mock("next/headers", () => ({
   }),
 }));
 
+import Home from "@/app/page";
+import { HOME_ANCHORS } from "@/lib/landing-content";
 import { SiteFooter } from "./SiteFooter";
 
 const COLUMNS = ["For clients", "For salon owners", "Company"];
+const PRICING: Link = ["Pricing", "/#pricing"];
+const COMPANY: Link[] = [
+  ["Features", "/#features"],
+  ["How it works", "/#how-it-works"],
+  ["FAQ", "/#faq"],
+];
 
-/** Renders the footer and returns each column's link hrefs by its label. */
+type Link = [label: string, href: string | null];
+
+/** Renders the footer and returns each column's links as [label, href]. */
 async function columns() {
   render(await SiteFooter());
   return Object.fromEntries(
@@ -23,7 +33,7 @@ async function columns() {
       name,
       within(screen.getByRole("navigation", { name }))
         .getAllByRole("link")
-        .map((a) => a.getAttribute("href")),
+        .map((a): Link => [a.textContent ?? "", a.getAttribute("href")]),
     ]),
   );
 }
@@ -57,9 +67,13 @@ describe("SiteFooter", () => {
 
   it("gives guests sign in and register", async () => {
     expect(await columns()).toEqual({
-      "For clients": ["/salons", "/login", "/register"],
-      "For salon owners": ["/#pricing"],
-      Company: ["/#features", "/#how-it-works", "/#faq"],
+      "For clients": [
+        ["Find a salon", "/salons"],
+        ["Sign in", "/login"],
+        ["Register", "/register"],
+      ],
+      "For salon owners": [PRICING],
+      Company: COMPANY,
     });
   });
 
@@ -67,14 +81,14 @@ describe("SiteFooter", () => {
     jar.set("sb_token", "t");
     jar.set("sb_role", "owner");
     expect(await columns()).toEqual({
-      "For clients": ["/salons"],
+      "For clients": [["Find a salon", "/salons"]],
       "For salon owners": [
-        "/dashboard",
-        "/dashboard/availability",
-        "/dashboard/bookings",
-        "/#pricing",
+        ["Dashboard", "/dashboard"],
+        ["Weekly hours", "/dashboard/availability"],
+        ["Bookings", "/dashboard/bookings"],
+        PRICING,
       ],
-      Company: ["/#features", "/#how-it-works", "/#faq"],
+      Company: COMPANY,
     });
   });
 
@@ -82,9 +96,12 @@ describe("SiteFooter", () => {
     jar.set("sb_token", "t");
     jar.set("sb_role", "client");
     expect(await columns()).toEqual({
-      "For clients": ["/salons", "/bookings"],
-      "For salon owners": ["/#pricing"],
-      Company: ["/#features", "/#how-it-works", "/#faq"],
+      "For clients": [
+        ["Find a salon", "/salons"],
+        ["My bookings", "/bookings"],
+      ],
+      "For salon owners": [PRICING],
+      Company: COMPANY,
     });
   });
 
@@ -92,15 +109,15 @@ describe("SiteFooter", () => {
     jar.set("sb_token", "t");
     jar.set("sb_role", "admin");
     const result = await columns();
-    expect(result["For clients"]).toEqual(["/salons", "/bookings"]);
-    expect(result["For salon owners"]).toEqual(["/#pricing"]);
+    expect(result["For clients"]).toContainEqual(["My bookings", "/bookings"]);
+    expect(result["For salon owners"]).toEqual([PRICING]);
   });
 
   it("treats a signed-in visitor without a role cookie as a client", async () => {
     jar.set("sb_token", "t");
     const result = await columns();
-    expect(result["For clients"]).toEqual(["/salons", "/bookings"]);
-    expect(result["For salon owners"]).toEqual(["/#pricing"]);
+    expect(result["For clients"]).toContainEqual(["My bookings", "/bookings"]);
+    expect(result["For salon owners"]).toEqual([PRICING]);
   });
 
   it("links to /register only once for guests", async () => {
@@ -111,16 +128,53 @@ describe("SiteFooter", () => {
     expect(register).toHaveLength(1);
   });
 
-  it("only links to landing sections that exist", async () => {
-    const { HOME_ANCHORS } = await import("@/lib/landing-content");
-    const known = new Set(HOME_ANCHORS.map(({ href }) => href));
+  it("only links to sections that exist on the landing page", async () => {
     render(await SiteFooter());
     const anchors = screen
       .getAllByRole("link")
       .map((a) => a.getAttribute("href") ?? "")
       .filter((href) => href.startsWith("/#"));
+    cleanup();
+
+    const { container } = render(await Home());
     expect(anchors.length).toBeGreaterThan(0);
-    for (const href of anchors) expect(known).toContain(href);
+    for (const href of anchors) {
+      expect(container.querySelector(href.slice(1))).not.toBeNull();
+    }
+  });
+
+  describe("without a pricing anchor", () => {
+    const saved = [...HOME_ANCHORS];
+    beforeEach(() => {
+      HOME_ANCHORS.splice(
+        HOME_ANCHORS.findIndex(({ href }) => href === "/#pricing"),
+        1,
+      );
+    });
+    afterEach(() => HOME_ANCHORS.splice(0, HOME_ANCHORS.length, ...saved));
+
+    it("leaves out a column that would have no links", async () => {
+      render(await SiteFooter());
+      expect(
+        screen.queryByRole("navigation", { name: "For salon owners" }),
+      ).toBeNull();
+      expect(
+        screen.queryByRole("heading", { name: "For salon owners" }),
+      ).toBeNull();
+      expect(
+        screen.getByRole("navigation", { name: "For clients" }),
+      ).toBeInTheDocument();
+    });
+
+    it("keeps the column for an owner, who still has dashboard links", async () => {
+      jar.set("sb_token", "t");
+      jar.set("sb_role", "owner");
+      expect((await columns())["For salon owners"]).toEqual([
+        ["Dashboard", "/dashboard"],
+        ["Weekly hours", "/dashboard/availability"],
+        ["Bookings", "/dashboard/bookings"],
+      ]);
+    });
   });
 
   it("never shows register or sign in to a signed-in visitor", async () => {
@@ -137,7 +191,11 @@ describe("SiteFooter", () => {
   it("ignores a role cookie without a login", async () => {
     jar.set("sb_role", "owner");
     const result = await columns();
-    expect(result["For clients"]).toEqual(["/salons", "/login", "/register"]);
-    expect(result["For salon owners"]).toEqual(["/#pricing"]);
+    expect(result["For clients"]).toEqual([
+      ["Find a salon", "/salons"],
+      ["Sign in", "/login"],
+      ["Register", "/register"],
+    ]);
+    expect(result["For salon owners"]).toEqual([PRICING]);
   });
 });
