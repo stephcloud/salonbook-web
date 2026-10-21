@@ -9,15 +9,19 @@ import {
 } from "@/lib/auth/cookie";
 import { HOME_ANCHORS } from "@/lib/landing-content";
 
-// Placeholders until the accounts exist: replace "#" with the real profile URLs.
-const SOCIAL_LINKS = [
+type FooterLink = { href: string; label: string };
+type FooterColumn = { title: string; links: FooterLink[] };
+
+/**
+ * Social profiles. Put the real profile URL in `href` when an account exists;
+ * an entry without a real `https://` URL (like the "#" placeholders) is not
+ * shown, and the whole column is hidden while none has one.
+ */
+export const SOCIAL_LINKS: FooterLink[] = [
   { href: "#", label: "Facebook" },
   { href: "#", label: "LinkedIn" },
   { href: "#", label: "Instagram" },
 ];
-
-type FooterLink = { href: string; label: string };
-type FooterColumn = { title: string; links: FooterLink[] };
 
 const PRICING = "/#pricing";
 
@@ -72,6 +76,23 @@ function footerColumns(
   ];
 }
 
+/**
+ * True only for an absolute https URL with a real host name, so "#", "",
+ * relative paths, `http:` and `javascript:` are skipped.
+ */
+function isRealUrl(href: string): boolean {
+  try {
+    const url = new URL(href);
+    return (
+      href.startsWith("https://") &&
+      url.protocol === "https:" &&
+      url.hostname.includes(".")
+    );
+  } catch {
+    return false;
+  }
+}
+
 /** The site footer: brand block, link columns, and a bottom bar. */
 export async function SiteFooter() {
   const store = await cookies();
@@ -81,6 +102,9 @@ export async function SiteFooter() {
   const columns = footerColumns(signedIn, role).filter(
     ({ links }) => links.length > 0,
   );
+  const social = SOCIAL_LINKS.filter(({ href }) => isRealUrl(href));
+  // Three columns sit in one row from `sm`; two or four make even pairs.
+  const count = columns.length + (social.length > 0 ? 1 : 0);
 
   return (
     <footer className="border-t border-border bg-card">
@@ -96,7 +120,9 @@ export async function SiteFooter() {
             Book your salon appointment and pay the deposit online.
           </p>
         </div>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div
+          className={`grid grid-cols-1 gap-6 ${count === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2"} lg:grid-cols-none lg:auto-cols-fr lg:grid-flow-col`}
+        >
           {columns.map(({ title, links }) => (
             <nav key={title} aria-label={title}>
               <h2 className="text-sm font-semibold text-foreground">{title}</h2>
@@ -111,27 +137,29 @@ export async function SiteFooter() {
               </ul>
             </nav>
           ))}
-          <nav aria-label="Find us on social">
-            <h2 className="text-sm font-semibold text-foreground">
-              Find us on social
-            </h2>
-            <ul className="mt-2 -ml-3 flex flex-col">
-              {SOCIAL_LINKS.map(({ href, label }) => (
-                <li key={label}>
-                  <a
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`SalonBook on ${label}`}
-                    className={`${LINK_CLASS} gap-1.5`}
-                  >
-                    <ArrowUpRight aria-hidden="true" className="size-4" />
-                    {label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
+          {social.length > 0 && (
+            <nav aria-label="Find us on social">
+              <h2 className="text-sm font-semibold text-foreground">
+                Find us on social
+              </h2>
+              <ul className="mt-2 -ml-3 flex flex-col">
+                {social.map(({ href, label }) => (
+                  <li key={label}>
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`SalonBook on ${label} (opens in a new tab)`}
+                      className={`${LINK_CLASS} gap-1.5`}
+                    >
+                      <ArrowUpRight aria-hidden="true" className="size-4" />
+                      {label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          )}
         </div>
       </div>
       <div className="border-t border-border">

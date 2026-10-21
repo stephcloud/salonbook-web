@@ -13,7 +13,7 @@ vi.mock("next/headers", () => ({
 
 import Home from "@/app/page";
 import { HOME_ANCHORS } from "@/lib/landing-content";
-import { SiteFooter } from "./SiteFooter";
+import { SOCIAL_LINKS, SiteFooter } from "./SiteFooter";
 
 const COLUMNS = ["For clients", "For salon owners", "Company"];
 const PRICING: Link = ["Pricing", "/#pricing"];
@@ -197,5 +197,108 @@ describe("SiteFooter", () => {
       ["Register", "/register"],
     ]);
     expect(result["For salon owners"]).toEqual([PRICING]);
+  });
+
+  describe("social links", () => {
+    const saved = SOCIAL_LINKS.map((link) => ({ ...link }));
+    // Fresh copies, so setSocial never edits the saved originals.
+    afterEach(() =>
+      SOCIAL_LINKS.splice(
+        0,
+        SOCIAL_LINKS.length,
+        ...saved.map((link) => ({ ...link })),
+      ),
+    );
+
+    function setSocial(hrefs: Record<string, string>) {
+      for (const link of SOCIAL_LINKS) link.href = hrefs[link.label] ?? "";
+    }
+
+    it("hides the column while every entry is a placeholder", async () => {
+      setSocial({ Facebook: "#", LinkedIn: "#", Instagram: "#" });
+      render(await SiteFooter());
+      expect(
+        screen.queryByRole("navigation", { name: "Find us on social" }),
+      ).toBeNull();
+      expect(
+        screen.queryByRole("heading", { name: "Find us on social" }),
+      ).toBeNull();
+    });
+
+    it("hides the column when no entry has a real https URL", async () => {
+      setSocial({
+        Facebook: "",
+        LinkedIn: "/linkedin",
+        Instagram: "http://example.com/salonbook",
+      });
+      render(await SiteFooter());
+      expect(
+        screen.queryByRole("navigation", { name: "Find us on social" }),
+      ).toBeNull();
+    });
+
+    it("skips script, protocol-relative, bare and host-less URLs", async () => {
+      setSocial({
+        Facebook: "javascript:alert(1)",
+        LinkedIn: "//example.com/salonbook",
+        Instagram: "https://localhost/salonbook",
+      });
+      render(await SiteFooter());
+      expect(
+        screen.queryByRole("navigation", { name: "Find us on social" }),
+      ).toBeNull();
+    });
+
+    it("shows only the entries with a real URL, opening in a new tab", async () => {
+      setSocial({
+        Facebook: "#",
+        LinkedIn: "https://example.com/salonbook-linkedin",
+        Instagram: "",
+      });
+      render(await SiteFooter());
+      const nav = screen.getByRole("navigation", { name: "Find us on social" });
+      expect(
+        within(nav).getByRole("heading", {
+          level: 2,
+          name: "Find us on social",
+        }),
+      ).toBeInTheDocument();
+      const links = within(nav).getAllByRole("link");
+      expect(links).toHaveLength(1);
+      const [linkedIn] = links;
+      expect(linkedIn).toHaveAccessibleName(
+        "SalonBook on LinkedIn (opens in a new tab)",
+      );
+      expect(linkedIn).toHaveTextContent("LinkedIn");
+      expect(linkedIn).toHaveAttribute(
+        "href",
+        "https://example.com/salonbook-linkedin",
+      );
+      expect(linkedIn).toHaveAttribute("target", "_blank");
+      expect(linkedIn).toHaveAttribute("rel", "noopener noreferrer");
+      expect(linkedIn.querySelector("svg")).toHaveAttribute(
+        "aria-hidden",
+        "true",
+      );
+    });
+
+    it("shows every entry once all have real URLs", async () => {
+      setSocial({
+        Facebook: "https://example.com/fb",
+        LinkedIn: "https://example.com/li",
+        Instagram: "https://example.com/ig",
+      });
+      render(await SiteFooter());
+      const nav = screen.getByRole("navigation", { name: "Find us on social" });
+      expect(
+        within(nav)
+          .getAllByRole("link")
+          .map((a) => a.getAttribute("aria-label")),
+      ).toEqual([
+        "SalonBook on Facebook (opens in a new tab)",
+        "SalonBook on LinkedIn (opens in a new tab)",
+        "SalonBook on Instagram (opens in a new tab)",
+      ]);
+    });
   });
 });
