@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
@@ -81,6 +81,14 @@ export function ReviewStep({
   const failure = mutation.isError
     ? classifyBookingError(mutation.error)
     : null;
+  // Confirming again cannot work while the salon is not taking bookings.
+  const salonClosed = failure?.kind === "salon-closed";
+  // Confirm is disabled while it has focus; move focus to the reason instead.
+  const alertRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (salonClosed) alertRef.current?.focus();
+  }, [salonClosed]);
+
   if (failure?.kind === "clients-only") {
     return <ClientsOnlyNotice headingLevel={2} />;
   }
@@ -136,6 +144,9 @@ export function ReviewStep({
 
       {failure && failure.kind !== "signed-out" ? (
         <div
+          ref={alertRef}
+          id="review-error"
+          tabIndex={-1}
           role="alert"
           className="flex flex-col items-start gap-2 rounded-2xl bg-card p-4 ring-1 ring-destructive/40"
         >
@@ -151,6 +162,19 @@ export function ReviewStep({
                 className={buttonVariants({ variant: "outline" })}
               >
                 View my bookings
+              </Link>
+            </>
+          ) : failure.kind === "salon-closed" ? (
+            <>
+              <p className="font-semibold">{failure.message}</p>
+              <p className="text-sm">
+                Please try again later or choose another salon.
+              </p>
+              <Link
+                href="/salons"
+                className={buttonVariants({ variant: "outline" })}
+              >
+                Browse salons
               </Link>
             </>
           ) : failure.kind === "invalid" ? (
@@ -188,7 +212,12 @@ export function ReviewStep({
         <Button variant="outline" size="lg" onClick={onBack} disabled={busy}>
           Back
         </Button>
-        <Button size="lg" onClick={confirm} disabled={busy}>
+        <Button
+          size="lg"
+          onClick={confirm}
+          disabled={busy || salonClosed}
+          aria-describedby={salonClosed ? "review-error" : undefined}
+        >
           {busy ? "Creating booking..." : "Confirm booking"}
         </Button>
       </div>

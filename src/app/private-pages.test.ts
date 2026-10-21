@@ -11,6 +11,8 @@ vi.mock("@/lib/api-server", () => ({
   getSalon: vi.fn(),
   getSalonServices: vi.fn(),
   getSalonStylists: vi.fn(),
+  getOwnerSalonServices: vi.fn(),
+  getOwnerSalonStylists: vi.fn(),
   getStylistAvailability: vi.fn(),
 }));
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: vi.fn() }) }));

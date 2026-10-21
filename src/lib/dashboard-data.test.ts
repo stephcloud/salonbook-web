@@ -1,35 +1,35 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Salon, Service, Stylist } from "@/lib/api";
+import type { OwnerSalon, Service, Stylist } from "@/lib/api";
 
-const getSalonServices = vi.fn();
-const getSalonStylists = vi.fn();
+const getOwnerSalonServices = vi.fn();
+const getOwnerSalonStylists = vi.fn();
 const getStylistAvailability = vi.fn();
 vi.mock("@/lib/api-server", () => ({
-  getSalonServices: (id: string) => getSalonServices(id),
-  getSalonStylists: (id: string) => getSalonStylists(id),
+  getOwnerSalonServices: (id: string) => getOwnerSalonServices(id),
+  getOwnerSalonStylists: (id: string) => getOwnerSalonStylists(id),
   getStylistAvailability: (id: string) => getStylistAvailability(id),
 }));
 
 import { MAX_AVAILABILITY_READS, loadChecklistInput } from "./dashboard-data";
 
-const SALON = { id: "salon-1", name: "Pink Studio" } as Salon;
+const SALON = { id: "salon-1", name: "Pink Studio" } as OwnerSalon;
 const SERVICE = { id: "service-1" } as Service;
 const stylist = (id: string) => ({ id, name: id }) as Stylist;
 
 beforeEach(() => {
   vi.clearAllMocks();
-  getSalonServices.mockResolvedValue([]);
-  getSalonStylists.mockResolvedValue([]);
+  getOwnerSalonServices.mockResolvedValue([]);
+  getOwnerSalonStylists.mockResolvedValue([]);
 });
 
 describe("loadChecklistInput", () => {
   it("reads the salon's services and stylists and no hours when there are no stylists", async () => {
-    getSalonServices.mockResolvedValue([SERVICE]);
+    getOwnerSalonServices.mockResolvedValue([SERVICE]);
 
     const result = await loadChecklistInput(SALON);
 
-    expect(getSalonServices).toHaveBeenCalledWith("salon-1");
-    expect(getSalonStylists).toHaveBeenCalledWith("salon-1");
+    expect(getOwnerSalonServices).toHaveBeenCalledWith("salon-1");
+    expect(getOwnerSalonStylists).toHaveBeenCalledWith("salon-1");
     expect(getStylistAvailability).not.toHaveBeenCalled();
     expect(result).toEqual({
       salon: SALON,
@@ -40,7 +40,7 @@ describe("loadChecklistInput", () => {
   });
 
   it("reads each stylist's hours", async () => {
-    getSalonStylists.mockResolvedValue([stylist("a"), stylist("b")]);
+    getOwnerSalonStylists.mockResolvedValue([stylist("a"), stylist("b")]);
     getStylistAvailability.mockImplementation(async (id: string) => ({
       stylist_id: id,
       rules: [],
@@ -60,7 +60,7 @@ describe("loadChecklistInput", () => {
   });
 
   it("counts a stylist whose hours could not be read as unchecked, without failing", async () => {
-    getSalonStylists.mockResolvedValue([stylist("a"), stylist("b")]);
+    getOwnerSalonStylists.mockResolvedValue([stylist("a"), stylist("b")]);
     getStylistAvailability.mockImplementation(async (id: string) => {
       if (id === "b") throw new Error("boom");
       return { stylist_id: id, rules: [] };
@@ -73,7 +73,7 @@ describe("loadChecklistInput", () => {
   });
 
   it("keeps the hours that were read, in order, when some reads fail and others succeed", async () => {
-    getSalonStylists.mockResolvedValue([
+    getOwnerSalonStylists.mockResolvedValue([
       stylist("a"),
       stylist("b"),
       stylist("c"),
@@ -95,7 +95,7 @@ describe("loadChecklistInput", () => {
   });
 
   it("counts every stylist as unchecked when all hours reads fail", async () => {
-    getSalonStylists.mockResolvedValue([stylist("a"), stylist("b")]);
+    getOwnerSalonStylists.mockResolvedValue([stylist("a"), stylist("b")]);
     getStylistAvailability.mockRejectedValue(new Error("down"));
 
     const result = await loadChecklistInput(SALON);
@@ -105,7 +105,7 @@ describe("loadChecklistInput", () => {
 
   it("adds failed reads and stylists past the limit together", async () => {
     const many = Array.from({ length: 22 }, (_, i) => stylist(`s${i}`));
-    getSalonStylists.mockResolvedValue(many);
+    getOwnerSalonStylists.mockResolvedValue(many);
     getStylistAvailability.mockImplementation(async (id: string) => {
       if (id === "s0") throw new Error("boom");
       return { stylist_id: id, rules: [] };
@@ -119,7 +119,7 @@ describe("loadChecklistInput", () => {
 
   it("reads at most 20 stylists and counts the rest as unchecked", async () => {
     const many = Array.from({ length: 25 }, (_, i) => stylist(`s${i}`));
-    getSalonStylists.mockResolvedValue(many);
+    getOwnerSalonStylists.mockResolvedValue(many);
     getStylistAvailability.mockImplementation(async (id: string) => ({
       stylist_id: id,
       rules: [],
@@ -134,11 +134,11 @@ describe("loadChecklistInput", () => {
   });
 
   it("lets a failed services or stylists read through so the page can offer a retry", async () => {
-    getSalonServices.mockRejectedValue(new Error("down"));
+    getOwnerSalonServices.mockRejectedValue(new Error("down"));
     await expect(loadChecklistInput(SALON)).rejects.toThrow("down");
 
-    getSalonServices.mockResolvedValue([]);
-    getSalonStylists.mockRejectedValue(new Error("down too"));
+    getOwnerSalonServices.mockResolvedValue([]);
+    getOwnerSalonStylists.mockRejectedValue(new Error("down too"));
     await expect(loadChecklistInput(SALON)).rejects.toThrow("down too");
   });
 });

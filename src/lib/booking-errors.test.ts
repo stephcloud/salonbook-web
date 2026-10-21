@@ -28,6 +28,17 @@ describe("classifyBookingError", () => {
     expect(result).toEqual({ kind: "pending-limit", message });
   });
 
+  it("tells a salon that is not taking bookings apart from a taken slot", () => {
+    expect(
+      classifyBookingError(
+        new ApiError(409, "salon is not accepting bookings"),
+      ),
+    ).toEqual({
+      kind: "salon-closed",
+      message: "This salon isn't taking bookings right now.",
+    });
+  });
+
   it("keeps the server's field errors for a 422", () => {
     const result = classifyBookingError(
       new ApiError(422, "Invalid", {

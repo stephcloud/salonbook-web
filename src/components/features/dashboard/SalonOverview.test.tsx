@@ -1,9 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import type { Salon } from "@/lib/api";
+import type { OwnerSalon } from "@/lib/api";
 import { SalonOverview } from "./SalonOverview";
 
-const SALON: Salon = {
+const SALON: OwnerSalon = {
   id: "11111111-1111-4111-8111-111111111111",
   owner_id: "22222222-2222-4222-8222-222222222222",
   name: "Pink Studio",
@@ -13,6 +13,7 @@ const SALON: Salon = {
   cancellation_hours: 24,
   deposit_amount: 500000,
   created_at: "2026-10-01T10:00:00Z",
+  status: "approved",
 };
 
 describe("SalonOverview", () => {
@@ -24,6 +25,20 @@ describe("SalonOverview", () => {
     expect(screen.getByText("12 Admiralty Way, Lekki")).toBeInTheDocument();
     expect(screen.getByText("08012345678")).toBeInTheDocument();
   });
+
+  it.each([
+    ["pending", "Waiting for approval", /until it's approved/],
+    ["approved", "Approved", /Your salon is live/],
+    ["suspended", "Suspended", /bookings are paused/],
+  ] as const)(
+    "shows a %s salon's status in words",
+    (status, label, message) => {
+      render(<SalonOverview salon={{ ...SALON, status }} />);
+      expect(screen.getByText("Status:")).toBeInTheDocument();
+      expect(screen.getByText(label)).toBeInTheDocument();
+      expect(screen.getByText(message)).toBeInTheDocument();
+    },
+  );
 
   it("shows a gradient tile and no photo when the salon has no image", () => {
     render(<SalonOverview salon={SALON} />);

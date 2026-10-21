@@ -31,6 +31,15 @@ describe("classifyPayError", () => {
     });
   });
 
+  it("shows our own words when the salon is not taking bookings", () => {
+    expect(
+      classifyPayError(new ApiError(409, "salon is not accepting bookings")),
+    ).toEqual({
+      kind: "closed",
+      message: "This salon isn't taking bookings right now.",
+    });
+  });
+
   it("hides raw server error text on a 5xx", () => {
     expect(
       classifyPayError(new ApiError(500, "Traceback (most recent)")),

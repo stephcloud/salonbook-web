@@ -1,11 +1,16 @@
 import { MapPin, Phone } from "lucide-react";
+import { SalonStatusBadge } from "@/components/features/dashboard/SalonStatusBadge";
 import { SalonImage } from "@/components/features/salons/SalonImage";
-import type { Salon } from "@/lib/api";
+import type { OwnerSalon } from "@/lib/api";
 import { formatNaira } from "@/lib/money";
 import { refundRuleText } from "@/lib/refund";
+import { SALON_STATUS } from "@/lib/salon-status";
 
-/** The owner's salon at a glance: photo or tile, name, contact, deposit and cancellation rule. */
-export function SalonOverview({ salon }: { salon: Salon }) {
+/**
+ * The owner's salon at a glance: photo or tile, name, approval status, contact,
+ * deposit and cancellation rule.
+ */
+export function SalonOverview({ salon }: { salon: OwnerSalon }) {
   return (
     <section
       aria-labelledby="salon-overview-heading"
@@ -16,6 +21,21 @@ export function SalonOverview({ salon }: { salon: Salon }) {
         <h2 id="salon-overview-heading" className="text-xl font-bold">
           {salon.name}
         </h2>
+        <div className="flex flex-col items-start gap-1.5">
+          <p className="flex items-center gap-2 text-sm">
+            <span className="font-semibold">Status:</span>
+            <SalonStatusBadge status={salon.status} />
+          </p>
+          <p
+            className={`text-sm ${
+              salon.status === "suspended"
+                ? "font-medium text-foreground"
+                : "text-muted-foreground"
+            }`}
+          >
+            {SALON_STATUS[salon.status].message}
+          </p>
+        </div>
         <p className="flex items-start gap-2 text-muted-foreground">
           <MapPin aria-hidden="true" className="mt-1 size-4 shrink-0" />
           {salon.address}

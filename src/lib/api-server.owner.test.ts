@@ -10,10 +10,16 @@ vi.mock("next/headers", () => ({
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 
 import { ApiError } from "@/lib/api";
-import { getMySalons, getStylistAvailability } from "./api-server";
+import {
+  getMySalons,
+  getOwnerSalonServices,
+  getOwnerSalonStylists,
+  getStylistAvailability,
+} from "./api-server";
 
 const API_URL = "https://api.example.test/api/v1";
 const STYLIST = "44444444-4444-4444-8444-444444444444";
+const SALON = "11111111-1111-4111-8111-111111111111";
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -99,5 +105,65 @@ describe("owner reads", () => {
       `${API_URL}/stylists/a%2F..%2Fb/availability`,
     );
     expect((error as ApiError).status).toBe(403);
+  });
+
+  it.each([
+    ["getOwnerSalonServices", getOwnerSalonServices, "services"],
+    ["getOwnerSalonStylists", getOwnerSalonStylists, "stylists"],
+  ] as const)(
+    "%s forwards the token and is never cached",
+    async (_name, read, list) => {
+      const fetchMock = vi.fn().mockResolvedValue(jsonResponse([{ id: "x" }]));
+      vi.stubGlobal("fetch", fetchMock);
+
+      const result = await read(SALON);
+
+      expect(String(fetchMock.mock.calls[0][0])).toBe(
+        `${API_URL}/salons/${SALON}/${list}?limit=100`,
+      );
+      const init = fetchMock.mock.calls[0][1] as {
+        headers: Headers;
+        cache: string;
+      };
+      expect(init.headers.get("authorization")).toBe("Bearer token-123");
+      expect(init.cache).toBe("no-store");
+      expect(result).toEqual([{ id: "x" }]);
+    },
+  );
+
+  it("retries an owner read once when the server is waking up (503)", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse({ detail: "waking" }, 503))
+      .mockResolvedValueOnce(jsonResponse([{ id: "x" }]));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(getOwnerSalonStylists(SALON)).resolves.toEqual([{ id: "x" }]);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const retry = fetchMock.mock.calls[1][1] as { headers: Headers };
+    expect(retry.headers.get("authorization")).toBe("Bearer token-123");
+  });
+
+  it("gives up after one retry and throws the API's status", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(jsonResponse({ detail: "Bad gateway" }, 502));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const error = await getMySalons().catch((e: unknown) => e);
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect((error as ApiError).status).toBe(502);
+  });
+
+  it("getOwnerSalonServices throws ApiError 401 without a token", async () => {
+    cookieGet.mockReturnValue(undefined);
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const error = await getOwnerSalonServices(SALON).catch((e: unknown) => e);
+
+    expect((error as ApiError).status).toBe(401);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

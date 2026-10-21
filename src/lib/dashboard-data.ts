@@ -1,7 +1,7 @@
-import type { Salon } from "@/lib/api";
+import type { OwnerSalon } from "@/lib/api";
 import {
-  getSalonServices,
-  getSalonStylists,
+  getOwnerSalonServices,
+  getOwnerSalonStylists,
   getStylistAvailability,
 } from "@/lib/api-server";
 import type { ChecklistInput } from "@/lib/setup-checklist";
@@ -16,11 +16,11 @@ export const MAX_AVAILABILITY_READS = 20;
  * lies past the limit, is counted as unchecked and never guessed.
  */
 export async function loadChecklistInput(
-  salon: Salon,
+  salon: OwnerSalon,
 ): Promise<ChecklistInput> {
   const [services, stylists] = await Promise.all([
-    getSalonServices(salon.id),
-    getSalonStylists(salon.id),
+    getOwnerSalonServices(salon.id),
+    getOwnerSalonStylists(salon.id),
   ]);
 
   const results = await Promise.allSettled(

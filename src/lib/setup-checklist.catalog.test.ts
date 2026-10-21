@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
-import type { Salon, Service, Stylist } from "@/lib/api";
+import type { OwnerSalon, Service, Stylist } from "@/lib/api";
 import { buildChecklist } from "./setup-checklist";
 
-const SALON = { id: "salon-1", name: "Pink Studio" } as Salon;
+const SALON = {
+  id: "salon-1",
+  name: "Pink Studio",
+  status: "approved",
+} as OwnerSalon;
 const SERVICE = { id: "s1", name: "Braids" } as Service;
 const STYLIST: Stylist = {
   id: "st1",

@@ -3,11 +3,11 @@ import { isValidElement, type ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Salon, Service, Stylist } from "@/lib/api";
 
-const getSalonServices = vi.fn();
-const getSalonStylists = vi.fn();
+const getOwnerSalonServices = vi.fn();
+const getOwnerSalonStylists = vi.fn();
 vi.mock("@/lib/api-server", () => ({
-  getSalonServices: (id: string) => getSalonServices(id),
-  getSalonStylists: (id: string) => getSalonStylists(id),
+  getOwnerSalonServices: (id: string) => getOwnerSalonServices(id),
+  getOwnerSalonStylists: (id: string) => getOwnerSalonStylists(id),
 }));
 
 vi.mock("@/components/features/dashboard/OwnerSalonPage", () => ({
@@ -36,8 +36,8 @@ type FrameProps = {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  getSalonServices.mockResolvedValue(SERVICES);
-  getSalonStylists.mockResolvedValue(STYLISTS);
+  getOwnerSalonServices.mockResolvedValue(SERVICES);
+  getOwnerSalonStylists.mockResolvedValue(STYLISTS);
 });
 
 describe("StylistsPage", () => {
@@ -57,8 +57,8 @@ describe("StylistsPage", () => {
     const frame = (StylistsPage() as { props: FrameProps }).props;
     const body = await frame.children(SALON);
     render(<>{body}</>);
-    expect(getSalonServices).toHaveBeenCalledWith("salon-1");
-    expect(getSalonStylists).toHaveBeenCalledWith("salon-1");
+    expect(getOwnerSalonServices).toHaveBeenCalledWith("salon-1");
+    expect(getOwnerSalonStylists).toHaveBeenCalledWith("salon-1");
     expect(screen.getByText("stylists section")).toBeInTheDocument();
     expect(sectionProps).toHaveBeenCalledWith({
       salonId: "salon-1",
@@ -68,7 +68,7 @@ describe("StylistsPage", () => {
   });
 
   it("lets a failed read reach the error page", async () => {
-    getSalonStylists.mockRejectedValue(new Error("boom"));
+    getOwnerSalonStylists.mockRejectedValue(new Error("boom"));
     const frame = (StylistsPage() as { props: FrameProps }).props;
     await expect(frame.children(SALON)).rejects.toThrow("boom");
   });

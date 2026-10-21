@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { OwnerBookingsSection } from "@/components/features/dashboard/bookings/OwnerBookingsSection";
 import { OwnerSalonPage } from "@/components/features/dashboard/OwnerSalonPage";
-import { getSalonServices, getSalonStylists } from "@/lib/api-server";
+import { getOwnerSalonServices, getOwnerSalonStylists } from "@/lib/api-server";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -24,8 +24,8 @@ export default function OwnerBookingsPage() {
         // Services give the prices and stylists fill the filter. If either
         // read fails the dashboard error page offers Retry.
         const [services, stylists] = await Promise.all([
-          getSalonServices(salon.id),
-          getSalonStylists(salon.id),
+          getOwnerSalonServices(salon.id),
+          getOwnerSalonStylists(salon.id),
         ]);
         return (
           <OwnerBookingsSection

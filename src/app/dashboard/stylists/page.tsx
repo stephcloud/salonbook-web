@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { OwnerSalonPage } from "@/components/features/dashboard/OwnerSalonPage";
 import { StylistsSection } from "@/components/features/dashboard/StylistsSection";
-import { getSalonServices, getSalonStylists } from "@/lib/api-server";
+import { getOwnerSalonServices, getOwnerSalonStylists } from "@/lib/api-server";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -22,8 +22,8 @@ export default function StylistsPage() {
     >
       {async (salon) => {
         const [services, stylists] = await Promise.all([
-          getSalonServices(salon.id),
-          getSalonStylists(salon.id),
+          getOwnerSalonServices(salon.id),
+          getOwnerSalonStylists(salon.id),
         ]);
         return (
           <StylistsSection
