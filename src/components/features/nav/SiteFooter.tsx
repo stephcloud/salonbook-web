@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
+import { ArrowUpRight } from "lucide-react";
 import {
   ROLE_COOKIE,
   TOKEN_COOKIE,
@@ -7,6 +8,13 @@ import {
   type DisplayRole,
 } from "@/lib/auth/cookie";
 import { HOME_ANCHORS } from "@/lib/landing-content";
+
+// Placeholders until the accounts exist: replace "#" with the real profile URLs.
+const SOCIAL_LINKS = [
+  { href: "#", label: "Facebook" },
+  { href: "#", label: "LinkedIn" },
+  { href: "#", label: "Instagram" },
+];
 
 type FooterLink = { href: string; label: string };
 type FooterColumn = { title: string; links: FooterLink[] };
@@ -88,7 +96,7 @@ export async function SiteFooter() {
             Book your salon appointment and pay the deposit online.
           </p>
         </div>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {columns.map(({ title, links }) => (
             <nav key={title} aria-label={title}>
               <h2 className="text-sm font-semibold text-foreground">{title}</h2>
@@ -103,6 +111,27 @@ export async function SiteFooter() {
               </ul>
             </nav>
           ))}
+          <nav aria-label="Find us on social">
+            <h2 className="text-sm font-semibold text-foreground">
+              Find us on social
+            </h2>
+            <ul className="mt-2 -ml-3 flex flex-col">
+              {SOCIAL_LINKS.map(({ href, label }) => (
+                <li key={label}>
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`SalonBook on ${label}`}
+                    className={`${LINK_CLASS} gap-1.5`}
+                  >
+                    <ArrowUpRight aria-hidden="true" className="size-4" />
+                    {label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
         </div>
       </div>
       <div className="border-t border-border">
