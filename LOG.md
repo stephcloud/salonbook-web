@@ -176,8 +176,11 @@
 
 ## 2026-10-22 (footer)
 
-- Built on `feat/footer`: `SiteFooter` is now a brand block (SalonBook link and tagline), three link columns (For clients, For salon owners, Company), each a `<nav aria-label>` with an `<h2>`, and a bottom bar "© 2026 SalonBook". One column on phones, three link columns from `sm`, brand on the left from `lg`. Only real routes and the landing anchors; the anchors come from `HOME_ANCHORS`, so header and footer stay in step. No social links, app badges or legal links.
+- Built on `feat/footer`: `SiteFooter` is now a brand block (SalonBook link and tagline), four link columns (For clients, For salon owners, Company, Find us on social), each a `<nav aria-label>` with a bold `<h2>`, and a bottom bar "© 2026 SalonBook". One column on phones, two from `sm`, four from `lg` with the brand on the left. The first three columns use only real routes and the landing anchors; the anchors come from `HOME_ANCHORS`, so header and footer stay in step. No app badges or legal links.
 - Still a server component reading cookies, with no API call. Sign in and Register are for guests only. Signed-in people get role links from the display-only `sb_role` cookie: owners get Dashboard, Weekly hours and Bookings; clients (and a missing or edited role) get My bookings. `/register` is linked once, since the page cannot preselect the owner role.
+- Social column added at the owner's request: Facebook, LinkedIn and Instagram, each with a ↗ icon (`ArrowUpRight` from `lucide-react`, already a dependency), opening in a new tab (`rel="noopener noreferrer"`) with an `aria-label` such as "SalonBook on Instagram". The URLs are `"#"` placeholders in `SOCIAL_LINKS` at the top of `SiteFooter.tsx`; no real accounts were invented. Lint, typecheck and the build pass.
 - ui-reviewer run and its findings applied, except one footer `<nav>` (a nav per column was asked for) and renaming "Company". Lint, typecheck, the full test suite (1355 tests) and the build pass. No new dependencies.
 - Later:
+  - Replace the three `"#"` social URLs in `SOCIAL_LINKS` with the real profile links. Until then each one opens the current page in a new tab.
+  - The social column has no tests yet.
   - The footer year is fixed text ("© 2026"). Change it in January, or derive it from the current date.
