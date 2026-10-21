@@ -3,10 +3,10 @@ import { isValidElement, type ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Salon, Stylist } from "@/lib/api";
 
-const getSalonStylists = vi.fn();
+const getOwnerSalonStylists = vi.fn();
 const getStylistAvailability = vi.fn();
 vi.mock("@/lib/api-server", () => ({
-  getSalonStylists: (id: string) => getSalonStylists(id),
+  getOwnerSalonStylists: (id: string) => getOwnerSalonStylists(id),
   getStylistAvailability: (id: string) => getStylistAvailability(id),
 }));
 
@@ -44,7 +44,7 @@ function frame() {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  getSalonStylists.mockResolvedValue([ADA, BEA]);
+  getOwnerSalonStylists.mockResolvedValue([ADA, BEA]);
   getStylistAvailability.mockResolvedValue(RULES);
 });
 
@@ -62,7 +62,7 @@ describe("AvailabilityPage", () => {
 
   it("reads the stylists and the first stylist's hours on the server", async () => {
     render(<>{await frame().children(SALON)}</>);
-    expect(getSalonStylists).toHaveBeenCalledWith("salon-1");
+    expect(getOwnerSalonStylists).toHaveBeenCalledWith("salon-1");
     expect(getStylistAvailability).toHaveBeenCalledTimes(1);
     expect(getStylistAvailability).toHaveBeenCalledWith("sty-1");
     expect(sectionProps).toHaveBeenCalledWith({
@@ -82,7 +82,7 @@ describe("AvailabilityPage", () => {
   });
 
   it("reads no hours for a salon without stylists", async () => {
-    getSalonStylists.mockResolvedValue([]);
+    getOwnerSalonStylists.mockResolvedValue([]);
     render(<>{await frame().children(SALON)}</>);
     expect(getStylistAvailability).not.toHaveBeenCalled();
     expect(sectionProps).toHaveBeenCalledWith({
@@ -92,7 +92,7 @@ describe("AvailabilityPage", () => {
   });
 
   it("lets a failing stylist list reach the error page", async () => {
-    getSalonStylists.mockRejectedValue(new Error("down"));
+    getOwnerSalonStylists.mockRejectedValue(new Error("down"));
     await expect(frame().children(SALON)).rejects.toThrow("down");
   });
 });

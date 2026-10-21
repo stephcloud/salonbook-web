@@ -3,9 +3,9 @@ import { isValidElement, type ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Salon, Service } from "@/lib/api";
 
-const getSalonServices = vi.fn();
+const getOwnerSalonServices = vi.fn();
 vi.mock("@/lib/api-server", () => ({
-  getSalonServices: (id: string) => getSalonServices(id),
+  getOwnerSalonServices: (id: string) => getOwnerSalonServices(id),
 }));
 
 vi.mock("@/components/features/dashboard/OwnerSalonPage", () => ({
@@ -33,7 +33,7 @@ type FrameProps = {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  getSalonServices.mockResolvedValue(SERVICES);
+  getOwnerSalonServices.mockResolvedValue(SERVICES);
 });
 
 describe("ServicesPage", () => {
@@ -53,7 +53,7 @@ describe("ServicesPage", () => {
     const frame = (ServicesPage() as { props: FrameProps }).props;
     const body = await frame.children(SALON);
     render(<>{body}</>);
-    expect(getSalonServices).toHaveBeenCalledWith("salon-1");
+    expect(getOwnerSalonServices).toHaveBeenCalledWith("salon-1");
     expect(screen.getByText("services section")).toBeInTheDocument();
     expect(sectionProps).toHaveBeenCalledWith({
       salonId: "salon-1",
@@ -62,7 +62,7 @@ describe("ServicesPage", () => {
   });
 
   it("lets a failed read reach the error page instead of showing an empty list", async () => {
-    getSalonServices.mockRejectedValue(new Error("boom"));
+    getOwnerSalonServices.mockRejectedValue(new Error("boom"));
     const frame = (ServicesPage() as { props: FrameProps }).props;
     await expect(frame.children(SALON)).rejects.toThrow("boom");
   });

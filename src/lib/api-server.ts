@@ -8,6 +8,7 @@ import {
   messageFrom,
   type BookingDetail,
   type BookingListItem,
+  type OwnerSalon,
   type Salon,
   type Service,
   type Stylist,
@@ -179,7 +180,8 @@ const UPSTREAM_DOWN_MESSAGE =
   "The server is not responding right now. It may be waking up, please try again in a moment.";
 
 /**
- * GET with the signed-in user's token from the cookie. Throws ApiError on
+ * GET with the signed-in user's token from the cookie. Like publicGet, a
+ * 502/503/504 answer (the free tier waking up) is retried once. Throws ApiError on
  * failure. `receivedAt` is our clock the moment the API's answer arrived (before
  * the body is read), the closest we can get to the API's own clock for working
  * out how much of a booking's hold is left.
@@ -192,13 +194,17 @@ async function authedGet<T>(
   if (!token) throw new ApiError(401, "Please sign in again.");
   if (!base) throw new Error("API_URL is not set");
 
-  const result = await fetchUpstream(`${base}${path}`, {
+  const init = {
     method: "GET",
     headers: new Headers({
       accept: "application/json",
       authorization: `Bearer ${token}`,
     }),
-  });
+  };
+  let result = await fetchUpstream(`${base}${path}`, init);
+  if (result.ok && WAKING_STATUSES.has(result.response.status)) {
+    result = await fetchUpstream(`${base}${path}`, init);
+  }
   if (!result.ok) {
     throw new ApiError(
       result.reason === "timeout" ? 504 : 502,
@@ -220,12 +226,31 @@ async function authedGet<T>(
 export type StylistAvailability = components["schemas"]["AvailabilityResponse"];
 
 /**
- * The owner's salons, newest first as the API returns them (up to 100).
- * Throws ApiError: 403 (not an owner), 401 (signed out).
+ * The owner's salons with their moderation status, newest first as the API
+ * returns them (up to 100). Throws ApiError: 403 (not an owner), 401 (signed out).
  */
-export async function getMySalons(): Promise<Salon[]> {
-  const { data } = await authedGet<Salon[]>(
+export async function getMySalons(): Promise<OwnerSalon[]> {
+  const { data } = await authedGet<OwnerSalon[]>(
     `/salons/mine?limit=${MAX_LIST_LIMIT}`,
+  );
+  return data;
+}
+
+/**
+ * The owner's own salon services, read with their token. The public read is a
+ * 404 while the salon is pending or suspended; the owner still sees theirs.
+ */
+export async function getOwnerSalonServices(id: string): Promise<Service[]> {
+  const { data } = await authedGet<Service[]>(
+    `/salons/${encodeURIComponent(id)}/services?limit=${MAX_LIST_LIMIT}`,
+  );
+  return data;
+}
+
+/** The owner's own salon stylists, read with their token (see above). */
+export async function getOwnerSalonStylists(id: string): Promise<Stylist[]> {
+  const { data } = await authedGet<Stylist[]>(
+    `/salons/${encodeURIComponent(id)}/stylists?limit=${MAX_LIST_LIMIT}`,
   );
   return data;
 }

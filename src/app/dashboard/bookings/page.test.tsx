@@ -2,11 +2,11 @@ import { isValidElement, type ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Salon, Service, Stylist } from "@/lib/api";
 
-const getSalonServices = vi.fn();
-const getSalonStylists = vi.fn();
+const getOwnerSalonServices = vi.fn();
+const getOwnerSalonStylists = vi.fn();
 vi.mock("@/lib/api-server", () => ({
-  getSalonServices: (id: string) => getSalonServices(id),
-  getSalonStylists: (id: string) => getSalonStylists(id),
+  getOwnerSalonServices: (id: string) => getOwnerSalonServices(id),
+  getOwnerSalonStylists: (id: string) => getOwnerSalonStylists(id),
 }));
 
 vi.mock("@/components/features/dashboard/OwnerSalonPage", () => ({
@@ -33,8 +33,8 @@ type FrameProps = {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  getSalonServices.mockResolvedValue(SERVICES);
-  getSalonStylists.mockResolvedValue(STYLISTS);
+  getOwnerSalonServices.mockResolvedValue(SERVICES);
+  getOwnerSalonStylists.mockResolvedValue(STYLISTS);
 });
 
 describe("owner bookings page", () => {
@@ -62,7 +62,7 @@ describe("owner bookings page", () => {
   });
 
   it("lets a failed read reach the error page instead of showing a wrong list", async () => {
-    getSalonServices.mockRejectedValue(new Error("down"));
+    getOwnerSalonServices.mockRejectedValue(new Error("down"));
     const frame = (OwnerBookingsPage() as unknown as { props: FrameProps })
       .props;
     await expect(frame.children(SALON)).rejects.toThrow("down");

@@ -5,7 +5,7 @@ import { OwnersOnlyNotice } from "@/components/features/auth/OwnersOnlyNotice";
 import { QueryProvider } from "@/components/features/booking/QueryProvider";
 import { DashboardNav } from "@/components/features/dashboard/DashboardNav";
 import { buttonVariants } from "@/components/ui/button";
-import { ApiError, type Salon } from "@/lib/api";
+import { ApiError, type OwnerSalon } from "@/lib/api";
 import { getMySalons, loginRedirectUrl, requireUser } from "@/lib/api-server";
 
 type OwnerSalonPageProps = {
@@ -14,7 +14,7 @@ type OwnerSalonPageProps = {
   title: string;
   description: string;
   /** Renders the page body for the owner's salon; it may read data first. */
-  children: (salon: Salon) => ReactNode | Promise<ReactNode>;
+  children: (salon: OwnerSalon) => ReactNode | Promise<ReactNode>;
 };
 
 const MAIN_CLASS =
@@ -42,7 +42,7 @@ export async function OwnerSalonPage({
     );
   }
 
-  let salons: Salon[];
+  let salons: OwnerSalon[];
   try {
     salons = await getMySalons();
   } catch (error) {

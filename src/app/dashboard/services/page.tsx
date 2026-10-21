@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { OwnerSalonPage } from "@/components/features/dashboard/OwnerSalonPage";
 import { ServicesSection } from "@/components/features/dashboard/ServicesSection";
-import { getSalonServices } from "@/lib/api-server";
+import { getOwnerSalonServices } from "@/lib/api-server";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -22,7 +22,7 @@ export default function ServicesPage() {
       {async (salon) => (
         <ServicesSection
           salonId={salon.id}
-          initialServices={await getSalonServices(salon.id)}
+          initialServices={await getOwnerSalonServices(salon.id)}
         />
       )}
     </OwnerSalonPage>
