@@ -173,3 +173,11 @@
 - `/dashboard` shows the status as a badge with a sentence under the salon name (waiting amber, approved green, suspended grey; copy in `src/lib/salon-status.ts`). The checklist has a fifth counted step, "Salon approval", shown as "Waiting for approval" or "Suspended" rather than a to-do the owner cannot act on, and the share step stays blocked until the salon is approved. The share link keeps Copy but notes customers will see "not found" until then.
 - The API's 409 "salon is not accepting bookings" (slots, booking create, pay) now reads "This salon isn't taking bookings right now." instead of "That time was just taken". On review it stays put, disables Confirm (focus moves to the message) and links to `/salons`; the slot step shows it with no Retry and the same link. On the pay page Pay stays available, since the salon may be re-approved within the hold. The API gives no code for it, so it is matched on the message text, like the pending limit.
 - Lint, typecheck, the full test suite (1346 tests) and the build pass. No new dependencies.
+
+## 2026-10-22 (footer)
+
+- Built on `feat/footer`: `SiteFooter` is now a brand block (SalonBook link and tagline), three link columns (For clients, For salon owners, Company), each a `<nav aria-label>` with an `<h2>`, and a bottom bar "© 2026 SalonBook". One column on phones, three link columns from `sm`, brand on the left from `lg`. Only real routes and the landing anchors; the anchors come from `HOME_ANCHORS`, so header and footer stay in step. No social links, app badges or legal links.
+- Still a server component reading cookies, with no API call. Sign in and Register are for guests only. Signed-in people get role links from the display-only `sb_role` cookie: owners get Dashboard, Weekly hours and Bookings; clients (and a missing or edited role) get My bookings. `/register` is linked once, since the page cannot preselect the owner role.
+- ui-reviewer run and its findings applied, except one footer `<nav>` (a nav per column was asked for) and renaming "Company". Lint, typecheck, the full test suite (1355 tests) and the build pass. No new dependencies.
+- Later:
+  - The footer year is fixed text ("© 2026"). Change it in January, or derive it from the current date.
