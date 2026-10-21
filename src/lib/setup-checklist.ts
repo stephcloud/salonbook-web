@@ -1,13 +1,18 @@
-import type { Salon, Service, Stylist } from "@/lib/api";
+import type { OwnerSalon, Service, Stylist } from "@/lib/api";
 import type { StylistAvailability } from "@/lib/api-server";
+import { SALON_STATUS } from "@/lib/salon-status";
 
-export type StepId = "salon" | "service" | "stylist" | "hours" | "share";
+export type StepId =
+  "salon" | "service" | "stylist" | "hours" | "approval" | "share";
 
 /**
  * done: finished (from real data). todo: still to do. blocked: cannot start
- * yet. unknown: we could not check. ready: the share step once 1 to 4 are done.
+ * yet. unknown: we could not check. ready: the share step once 1 to 5 are done.
+ * waiting and paused: the salon is pending or suspended, which only an admin
+ * can change, so it is not shown as a task for the owner.
  */
-export type StepStatus = "done" | "todo" | "blocked" | "unknown" | "ready";
+export type StepStatus =
+  "done" | "todo" | "blocked" | "unknown" | "ready" | "waiting" | "paused";
 
 export type ChecklistStep = {
   id: StepId;
@@ -22,16 +27,16 @@ export type ChecklistStep = {
 
 export type Checklist = {
   steps: ChecklistStep[];
-  /** How many of the four setup steps are done (the share step is not counted). */
+  /** How many of the five setup steps are done (the share step is not counted). */
   doneCount: number;
   totalCount: number;
   progressText: string;
-  /** Salon, a service, a stylist and weekly hours are all in place. */
+  /** Salon, a service, a stylist and weekly hours are in place, and the salon is approved. */
   readyForCustomers: boolean;
 };
 
 export type ChecklistInput = {
-  salon: Salon;
+  salon: OwnerSalon;
   services: Service[];
   stylists: Stylist[];
   availability: {
@@ -42,15 +47,13 @@ export type ChecklistInput = {
   };
 };
 
-const SETUP_STEPS = 4;
-
 function plural(count: number, one: string, many: string): string {
   return `${count} ${count === 1 ? one : many}`;
 }
 
 /** Works out the owner's setup steps from what is really stored. Nothing is guessed. */
 export function buildChecklist(input: ChecklistInput): Checklist {
-  const { services, stylists, availability } = input;
+  const { salon, services, stylists, availability } = input;
 
   const hasService = services.length > 0;
   const hasStylist = stylists.length > 0;
@@ -88,7 +91,7 @@ export function buildChecklist(input: ChecklistInput): Checklist {
     {
       id: "salon",
       title: "Salon details",
-      detail: `${input.salon.name} is set up.`,
+      detail: `${salon.name} is set up.`,
       status: "done",
       href: null,
       actionLabel: null,
@@ -119,17 +122,38 @@ export function buildChecklist(input: ChecklistInput): Checklist {
       ...hours,
       href: "/dashboard/availability",
     },
+    {
+      id: "approval",
+      title: "Salon approval",
+      detail: SALON_STATUS[salon.status].message,
+      status:
+        salon.status === "approved"
+          ? "done"
+          : salon.status === "suspended"
+            ? "paused"
+            : "waiting",
+      href: null,
+      actionLabel: null,
+    },
   ];
 
+  const setupSteps = steps.length;
   const doneCount = steps.filter((step) => step.status === "done").length;
-  const readyForCustomers = doneCount === SETUP_STEPS;
+  const readyForCustomers = doneCount === setupSteps;
+  const setupDone = steps.every(
+    (step) => step.id === "approval" || step.status === "done",
+  );
 
   steps.push({
     id: "share",
     title: "Share your link",
     detail: readyForCustomers
       ? "Send this link to your customers so they can book."
-      : "Customers cannot book yet. Finish the steps above first.",
+      : !setupDone
+        ? "Customers cannot book yet. Finish the steps above first."
+        : salon.status === "suspended"
+          ? "Customers cannot book while your salon is suspended."
+          : "Customers cannot book until your salon is approved.",
     status: readyForCustomers ? "ready" : "blocked",
     href: null,
     actionLabel: null,
@@ -138,8 +162,8 @@ export function buildChecklist(input: ChecklistInput): Checklist {
   return {
     steps,
     doneCount,
-    totalCount: SETUP_STEPS,
-    progressText: `${doneCount} of ${SETUP_STEPS} set up`,
+    totalCount: setupSteps,
+    progressText: `${doneCount} of ${setupSteps} set up`,
     readyForCustomers,
   };
 }

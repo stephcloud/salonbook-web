@@ -1,11 +1,15 @@
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import type { Salon, Service, Stylist } from "@/lib/api";
+import type { OwnerSalon, Service, Stylist } from "@/lib/api";
 import { buildChecklist } from "@/lib/setup-checklist";
 import { SetupChecklist } from "./SetupChecklist";
 
 const SALON_ID = "11111111-1111-4111-8111-111111111111";
-const SALON = { id: SALON_ID, name: "Pink Studio" } as Salon;
+const SALON = {
+  id: SALON_ID,
+  name: "Pink Studio",
+  status: "approved",
+} as OwnerSalon;
 const SERVICE = { id: "s" } as Service;
 const STYLIST = { id: "st" } as Stylist;
 
@@ -33,18 +37,24 @@ function renderChecklist(
     availability: { read: [], unchecked: 0 },
     ...overrides,
   });
-  render(<SetupChecklist checklist={checklist} salonId={SALON_ID} />);
+  render(
+    <SetupChecklist
+      checklist={checklist}
+      salonId={SALON_ID}
+      salonStatus={overrides.salon?.status ?? SALON.status}
+    />,
+  );
 }
 
 describe("SetupChecklist", () => {
-  it("shows five steps in an ordered list under a heading, with progress", () => {
+  it("shows six steps in an ordered list under a heading, with progress", () => {
     renderChecklist();
     expect(
       screen.getByRole("heading", { level: 2, name: "Set up your salon" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("1 of 4 set up")).toBeInTheDocument();
+    expect(screen.getByText("2 of 5 set up")).toBeInTheDocument();
     const list = screen.getByRole("list");
-    expect(within(list).getAllByRole("listitem")).toHaveLength(5);
+    expect(within(list).getAllByRole("listitem")).toHaveLength(6);
     expect(
       screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent),
     ).toEqual([
@@ -52,7 +62,8 @@ describe("SetupChecklist", () => {
       "Step 2: Add a service",
       "Step 3: Add a stylist",
       "Step 4: Set weekly hours",
-      "Step 5: Share your link",
+      "Step 5: Salon approval",
+      "Step 6: Share your link",
     ]);
   });
 
@@ -63,7 +74,8 @@ describe("SetupChecklist", () => {
     expect(items[1]).toHaveTextContent("Done. 1 service added.");
     expect(items[2]).toHaveTextContent("To do.");
     expect(items[3]).toHaveTextContent("Not yet. Add a stylist first");
-    expect(items[4]).toHaveTextContent("Not yet. Customers cannot book yet");
+    expect(items[4]).toHaveTextContent("Done. Your salon is live");
+    expect(items[5]).toHaveTextContent("Not yet. Customers cannot book yet");
   });
 
   it("links steps 2 to 4 to the owner pages", () => {
@@ -83,7 +95,7 @@ describe("SetupChecklist", () => {
 
   it("shows the public link, Copy and Preview in the share step even before the salon is ready", () => {
     renderChecklist();
-    const share = screen.getAllByRole("listitem")[4];
+    const share = screen.getAllByRole("listitem")[5];
     expect(within(share).getByText(`/salons/${SALON_ID}`)).toBeInTheDocument();
     expect(
       within(share).getByRole("button", { name: "Copy salon link" }),
@@ -99,9 +111,29 @@ describe("SetupChecklist", () => {
       stylists: [STYLIST],
       availability: { read: [WORKING], unchecked: 0 },
     });
-    expect(screen.getByText("4 of 4 set up")).toBeInTheDocument();
-    expect(screen.getAllByRole("listitem")[4]).toHaveTextContent(
+    expect(screen.getByText("5 of 5 set up")).toBeInTheDocument();
+    expect(screen.getAllByRole("listitem")[5]).toHaveTextContent(
       "Ready to share.",
+    );
+  });
+
+  it("shows the approval wait and a note on the link while pending", () => {
+    renderChecklist({
+      salon: { ...SALON, status: "pending" },
+      services: [SERVICE],
+      stylists: [STYLIST],
+      availability: { read: [WORKING], unchecked: 0 },
+    });
+    expect(screen.getByText("4 of 5 set up")).toBeInTheDocument();
+    const items = screen.getAllByRole("listitem");
+    expect(items[4]).toHaveTextContent("Step 5: Salon approval");
+    expect(items[4]).toHaveTextContent("Waiting for approval.");
+    expect(items[4]).not.toHaveTextContent("To do.");
+    expect(items[5]).toHaveTextContent(
+      "Customers cannot book until your salon is approved.",
+    );
+    expect(items[5]).toHaveTextContent(
+      "Customers who open this link will see “not found” until your salon is approved.",
     );
   });
 

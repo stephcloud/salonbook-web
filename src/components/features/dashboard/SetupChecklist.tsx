@@ -1,7 +1,15 @@
 import Link from "next/link";
-import { Check, Circle, CircleAlert, Lock } from "lucide-react";
+import {
+  Check,
+  Circle,
+  CircleAlert,
+  Hourglass,
+  Lock,
+  Pause,
+} from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { ShareSalonLink } from "@/components/features/dashboard/ShareSalonLink";
+import type { SalonStatus } from "@/lib/api";
 import type { Checklist, StepStatus } from "@/lib/setup-checklist";
 
 const STATUS: Record<StepStatus, { label: string; icon: typeof Check }> = {
@@ -10,15 +18,19 @@ const STATUS: Record<StepStatus, { label: string; icon: typeof Check }> = {
   blocked: { label: "Not yet", icon: Lock },
   unknown: { label: "Could not check", icon: CircleAlert },
   ready: { label: "Ready to share", icon: Check },
+  waiting: { label: "Waiting for approval", icon: Hourglass },
+  paused: { label: "Suspended", icon: Pause },
 };
 
 /** The owner's setup steps. State is always written out, never shown by colour alone. */
 export function SetupChecklist({
   checklist,
   salonId,
+  salonStatus,
 }: {
   checklist: Checklist;
   salonId: string;
+  salonStatus: SalonStatus;
 }) {
   return (
     <section
@@ -72,7 +84,7 @@ export function SetupChecklist({
                   </div>
                 ) : null}
                 {step.id === "share" ? (
-                  <ShareSalonLink salonId={salonId} />
+                  <ShareSalonLink salonId={salonId} status={salonStatus} />
                 ) : null}
               </div>
             </li>

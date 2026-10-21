@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
-import type { Salon, Service, Stylist } from "@/lib/api";
+import type { OwnerSalon, Service, Stylist } from "@/lib/api";
 import { buildChecklist } from "@/lib/setup-checklist";
 import { draftToRules } from "./convert";
 import { emptyDraft } from "./draft";
 
-const SALON = { id: "salon-1", name: "Pink Studio" } as Salon;
+const SALON = {
+  id: "salon-1",
+  name: "Pink Studio",
+  status: "approved",
+} as OwnerSalon;
 const SERVICE = { id: "service-1" } as Service;
 const STYLIST = { id: "stylist-1", name: "Ada" } as Stylist;
 

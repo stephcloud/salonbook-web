@@ -23,10 +23,10 @@ vi.mock("@/lib/dashboard-data", () => ({
   loadChecklistInput: (salon: unknown) => loadChecklistInput(salon),
 }));
 
-import { ApiError, type Salon } from "@/lib/api";
+import { ApiError, type OwnerSalon } from "@/lib/api";
 import DashboardPage from "./page";
 
-const SALON: Salon = {
+const SALON: OwnerSalon = {
   id: "11111111-1111-4111-8111-111111111111",
   owner_id: "22222222-2222-4222-8222-222222222222",
   name: "Pink Studio",
@@ -36,6 +36,7 @@ const SALON: Salon = {
   cancellation_hours: 24,
   deposit_amount: 500000,
   created_at: "2026-10-01T10:00:00Z",
+  status: "approved",
 };
 
 const WORKING = {
@@ -181,11 +182,31 @@ describe("DashboardPage: an owner with a salon", () => {
 
     render(await DashboardPage());
 
-    expect(screen.getByText("4 of 4 set up")).toBeInTheDocument();
+    expect(screen.getByText("5 of 5 set up")).toBeInTheDocument();
     const items = within(
       screen.getByRole("region", { name: /set up your salon/i }),
     ).getAllByRole("listitem");
-    expect(items[4]).toHaveTextContent("Ready to share.");
+    expect(items[5]).toHaveTextContent("Ready to share.");
+  });
+
+  it("shows a pending salon's status, the approval step and the link note", async () => {
+    const pending = { ...SALON, status: "pending" as const };
+    getMySalons.mockResolvedValue([pending]);
+    loadChecklistInput.mockResolvedValue(checklistInput({ salon: pending }));
+
+    render(await DashboardPage());
+
+    const overview = screen.getByRole("region", { name: "Pink Studio" });
+    expect(
+      within(overview).getByText("Waiting for approval"),
+    ).toBeInTheDocument();
+    const items = within(
+      screen.getByRole("region", { name: /set up your salon/i }),
+    ).getAllByRole("listitem");
+    expect(items[4]).toHaveTextContent("Waiting for approval");
+    expect(items[5]).toHaveTextContent(
+      /will see “not found” until your salon is approved/,
+    );
   });
 
   it("shows the public link, Copy and Preview for the salon", async () => {

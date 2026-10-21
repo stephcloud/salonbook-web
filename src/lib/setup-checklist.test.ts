@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
-import type { Salon, Service, Stylist } from "@/lib/api";
+import type { OwnerSalon, Service, Stylist } from "@/lib/api";
 import type { StylistAvailability } from "@/lib/api-server";
 import { buildChecklist, type ChecklistInput } from "./setup-checklist";
 
-const SALON = { id: "salon-1", name: "Pink Studio" } as Salon;
+const SALON = {
+  id: "salon-1",
+  name: "Pink Studio",
+  status: "approved",
+} as OwnerSalon;
 const SERVICE = { id: "service-1" } as Service;
 const STYLIST = { id: "stylist-1", name: "Ada" } as Stylist;
 
@@ -39,12 +43,13 @@ function statuses(checklist: ReturnType<typeof buildChecklist>) {
 }
 
 describe("buildChecklist", () => {
-  it("lists the five steps in order", () => {
+  it("lists the six steps in order", () => {
     expect(buildChecklist(input()).steps.map((s) => s.id)).toEqual([
       "salon",
       "service",
       "stylist",
       "hours",
+      "approval",
       "share",
     ]);
   });
@@ -56,9 +61,10 @@ describe("buildChecklist", () => {
       service: "todo",
       stylist: "todo",
       hours: "blocked",
+      approval: "done",
       share: "blocked",
     });
-    expect(checklist.progressText).toBe("1 of 4 set up");
+    expect(checklist.progressText).toBe("2 of 5 set up");
     expect(checklist.readyForCustomers).toBe(false);
   });
 
@@ -131,7 +137,8 @@ describe("buildChecklist", () => {
       );
       expect(statuses(checklist).hours).toBe("unknown");
       expect(checklist.steps[3].detail).toMatch(/could not check/i);
-      expect(checklist.doneCount).toBe(2);
+      // Salon details, the stylist and the (approved) salon status.
+      expect(checklist.doneCount).toBe(3);
     });
 
     it("is unknown when only some stylists could be read and none of those work", () => {
@@ -156,7 +163,7 @@ describe("buildChecklist", () => {
   });
 
   describe("share your link", () => {
-    it("is never done, and is ready only once steps 1 to 4 are done", () => {
+    it("is never done, and is ready only once steps 1 to 5 are done", () => {
       const checklist = buildChecklist(
         input({
           services: [SERVICE],
@@ -169,9 +176,10 @@ describe("buildChecklist", () => {
         service: "done",
         stylist: "done",
         hours: "done",
+        approval: "done",
         share: "ready",
       });
-      expect(checklist.progressText).toBe("4 of 4 set up");
+      expect(checklist.progressText).toBe("5 of 5 set up");
       expect(checklist.readyForCustomers).toBe(true);
     });
 
@@ -180,7 +188,7 @@ describe("buildChecklist", () => {
       ["no stylist", { services: [SERVICE] }],
     ])("says customers cannot book yet with %s", (_name, overrides) => {
       const checklist = buildChecklist(input(overrides));
-      const share = checklist.steps[4];
+      const share = checklist.steps[5];
       expect(share.status).toBe("blocked");
       expect(share.detail).toMatch(/cannot book yet/i);
       expect(checklist.readyForCustomers).toBe(false);
@@ -194,12 +202,12 @@ describe("buildChecklist", () => {
           availability: { read: [], unchecked: 1 },
         }),
       );
-      expect(checklist.steps[4].status).toBe("blocked");
-      expect(checklist.progressText).toBe("3 of 4 set up");
+      expect(checklist.steps[5].status).toBe("blocked");
+      expect(checklist.progressText).toBe("4 of 5 set up");
     });
   });
 
-  it("links steps 2 to 4 to the owner pages and leaves 1 and 5 without a link", () => {
+  it("links steps 2 to 4 to the owner pages and leaves 1, 5 and 6 without a link", () => {
     const hrefs = Object.fromEntries(
       buildChecklist(input()).steps.map((s) => [s.id, s.href]),
     );
@@ -208,7 +216,64 @@ describe("buildChecklist", () => {
       service: "/dashboard/services",
       stylist: "/dashboard/stylists",
       hours: "/dashboard/availability",
+      approval: null,
       share: null,
+    });
+  });
+
+  describe("approval", () => {
+    const allSetUp = {
+      services: [SERVICE],
+      stylists: [STYLIST],
+      availability: { read: [availability(["working"])], unchecked: 0 },
+    };
+
+    it.each([
+      ["pending", "waiting", /until it's approved/],
+      ["suspended", "paused", /bookings are paused/],
+      ["approved", "done", /Your salon is live/],
+    ] as const)(
+      "a %s salon's approval step is %s",
+      (status, stepStatus, detail) => {
+        const checklist = buildChecklist(
+          input({ ...allSetUp, salon: { ...SALON, status } }),
+        );
+        const step = checklist.steps[4];
+        expect(step.id).toBe("approval");
+        expect(step.title).toBe("Salon approval");
+        expect(step.status).toBe(stepStatus);
+        expect(step.detail).toMatch(detail);
+        expect(step.href).toBeNull();
+      },
+    );
+
+    it("keeps the share step blocked until the salon is approved", () => {
+      const pending = buildChecklist(
+        input({ ...allSetUp, salon: { ...SALON, status: "pending" } }),
+      );
+      expect(pending.progressText).toBe("4 of 5 set up");
+      expect(pending.readyForCustomers).toBe(false);
+      expect(pending.steps[5].status).toBe("blocked");
+      expect(pending.steps[5].detail).toBe(
+        "Customers cannot book until your salon is approved.",
+      );
+    });
+
+    it("says customers cannot book while suspended", () => {
+      const suspended = buildChecklist(
+        input({ ...allSetUp, salon: { ...SALON, status: "suspended" } }),
+      );
+      expect(suspended.steps[5].detail).toBe(
+        "Customers cannot book while your salon is suspended.",
+      );
+    });
+
+    it("asks for the setup steps first when those are missing too", () => {
+      const pending = buildChecklist(
+        input({ salon: { ...SALON, status: "pending" } }),
+      );
+      expect(pending.progressText).toBe("1 of 5 set up");
+      expect(pending.steps[5].detail).toMatch(/Finish the steps above first/);
     });
   });
 

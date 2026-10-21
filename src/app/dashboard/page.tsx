@@ -92,7 +92,11 @@ export default async function DashboardPage() {
           <EditSalonSection salon={salon} />
         </div>
         <div className="order-first md:order-none">
-          <SetupChecklist checklist={checklist} salonId={salon.id} />
+          <SetupChecklist
+            checklist={checklist}
+            salonId={salon.id}
+            salonStatus={salon.status}
+          />
         </div>
       </div>
     </main>
