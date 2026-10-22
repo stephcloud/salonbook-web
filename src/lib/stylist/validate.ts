@@ -1,4 +1,4 @@
-import type { FieldErrors } from "@/lib/api";
+import type { FieldErrors, Stylist, StylistUpdate } from "@/lib/api";
 
 /** The API's limits for a stylist (openapi, checked against the live API). */
 export const STYLIST_LIMITS = { nameMax: 100, imageMax: 500 } as const;
@@ -55,6 +55,28 @@ export function toStylistPayload(
     name: values.name.trim(),
     ...(image ? { image_url: image } : {}),
   };
+}
+
+/** The edit form's starting values; no photo becomes an empty field. */
+export function valuesFromStylist(stylist: Stylist): StylistFormValues {
+  return { name: stylist.name, image_url: stylist.image_url ?? "" };
+}
+
+/**
+ * The body for editing a stylist: only what changed. An emptied photo link
+ * sends `image_url: null`, which the API reads as "clear the photo". Returns
+ * an empty object when nothing changed. Call only after `validateStylist`.
+ */
+export function changedStylistFields(
+  stylist: Stylist,
+  values: StylistFormValues,
+): StylistUpdate {
+  const changes: StylistUpdate = {};
+  const name = values.name.trim();
+  if (name !== stylist.name) changes.name = name;
+  const image = values.image_url.trim() || null;
+  if (image !== stylist.image_url) changes.image_url = image;
+  return changes;
 }
 
 /** Puts the server's 422 field errors on the form; other fields go to `general`. */
