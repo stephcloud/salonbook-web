@@ -17,7 +17,7 @@ export function ImagePlaceholder({ slot, className }: ImagePlaceholderProps) {
       aria-hidden="true"
       data-placeholder={file}
       className={cn(
-        "flex w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-secondary via-blush to-secondary p-4",
+        "flex w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-secondary via-rose/30 to-secondary p-4",
         ratio,
         className,
       )}

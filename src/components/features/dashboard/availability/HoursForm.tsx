@@ -198,7 +198,7 @@ export function HoursForm({
   return (
     <div className="flex flex-col gap-6">
       {parsed.issues.length > 0 ? (
-        <div className="flex flex-col gap-3 rounded-2xl bg-amber-100 p-4 text-amber-900">
+        <div className="flex flex-col gap-3 rounded-2xl bg-status-pending-bg p-4 text-status-pending-fg">
           <p className="font-semibold">
             Some saved hours cannot be shown on this page
           </p>
@@ -223,7 +223,7 @@ export function HoursForm({
           ref={alertRef}
           role="alert"
           tabIndex={-1}
-          className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive outline-none"
+          className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive ring-1 ring-destructive/30 outline-none"
         >
           {pageMessage}
         </p>
@@ -297,13 +297,15 @@ export function HoursForm({
             role="status"
             aria-live="polite"
             className={
-              notice ? "text-sm font-medium text-green-900" : "sr-only"
+              notice
+                ? "text-sm font-medium text-status-confirmed-fg"
+                : "sr-only"
             }
           >
             {notice}
           </p>
           {dirty ? (
-            <p className="text-sm font-medium text-amber-900">
+            <p className="text-sm font-medium text-status-pending-fg">
               You have unsaved changes.
             </p>
           ) : null}

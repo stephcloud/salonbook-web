@@ -12,7 +12,7 @@ export function SalonImage({ src, alt, className }: SalonImageProps) {
   return (
     <div
       className={cn(
-        "relative aspect-[16/10] w-full overflow-hidden bg-gradient-to-br from-secondary via-secondary to-primary/30",
+        "relative aspect-[16/10] w-full overflow-hidden bg-gradient-to-br from-secondary via-rose/40 to-primary/25",
         className,
       )}
     >
