@@ -95,6 +95,7 @@ describe("landing page", () => {
     expect(photo).toHaveClass(
       "object-cover",
       "object-[50%_30%]",
+      "sm:object-[50%_20%]",
       "lg:object-center",
     );
     expect(photo).toHaveAttribute("sizes", expect.stringContaining("440px"));
@@ -105,6 +106,10 @@ describe("landing page", () => {
       "bg-gradient-to-br",
       "lg:aspect-[4/5]",
     );
+    // The frame must fill its grid cell: a max-width here left a pale band
+    // beside the photo between `sm` and `lg`.
+    expect(frame.className).not.toMatch(/(^|\s)(\w+:)?max-w-/);
+    expect(frame).toHaveClass("w-full", "aspect-[4/3]", "sm:aspect-[16/9]");
     expect(frame.querySelector("[data-placeholder]")).toBeNull();
   });
 
