@@ -10,6 +10,13 @@ describe("LandingActions", () => {
     expect(names()).toEqual(["Find a salon", "Register your salon"]);
   });
 
+  it("gives the outline button a plum border, not a transparent one", () => {
+    render(<LandingActions viewer="guest" />);
+    const register = screen.getByRole("link", { name: "Register your salon" });
+    expect(register).toHaveClass("border", "border-primary");
+    expect(register).not.toHaveClass("border-transparent");
+  });
+
   it("gives owners Find a salon and their dashboard", () => {
     render(<LandingActions viewer="owner" />);
     expect(names()).toEqual(["Find a salon", "Go to your dashboard"]);

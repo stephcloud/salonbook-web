@@ -36,21 +36,22 @@ export function Hero({ viewer }: { viewer: Viewer }) {
       </div>
       {/* The gradient shows while the photo loads; `preload` (Next 16's name
           for `priority`) fetches it early, as it is the largest thing on
-          screen. Under the text (4:3, at most 576px wide) below `lg`; in
-          the 440px right column from `lg`, where the portrait shape fits.
-          Below `lg` the crop sits a little high so the chandelier stays in
+          screen. The frame always fills its grid cell (a width cap here left
+          a pale band beside the photo between `sm` and `lg`): 4:3 on phones,
+          16:9 under the text from `sm`, and 4:5 in the 440px right column
+          from `lg`. Below `lg` the crop sits high so the chandelier stays in
           view. */}
       <div
         data-testid="hero-photo"
-        className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-secondary via-rose/30 to-secondary sm:max-w-xl lg:aspect-[4/5] lg:max-w-none"
+        className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-secondary via-rose/30 to-secondary sm:aspect-[16/9] lg:aspect-[4/5]"
       >
         <Image
           src="/landing/hero.jpg"
           alt={HERO_PHOTO_ALT}
           fill
           preload
-          sizes="(min-width: 1024px) 440px, (min-width: 648px) 576px, calc(100vw - 72px)"
-          className="object-cover object-[50%_30%] lg:object-center"
+          sizes="(min-width: 1024px) 440px, (min-width: 768px) calc(100vw - 112px), calc(100vw - 72px)"
+          className="object-cover object-[50%_30%] sm:object-[50%_20%] lg:object-center"
         />
       </div>
     </section>
