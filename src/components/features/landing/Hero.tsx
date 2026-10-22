@@ -1,8 +1,11 @@
-import { ImagePlaceholder } from "@/components/features/landing/ImagePlaceholder";
+import Image from "next/image";
 import {
   LandingActions,
   type Viewer,
 } from "@/components/features/landing/LandingActions";
+
+export const HERO_PHOTO_ALT =
+  "A salon with pink walls, gold-framed lit mirrors and a crystal chandelier";
 
 export function Hero({ viewer }: { viewer: Viewer }) {
   return (
@@ -31,8 +34,22 @@ export function Hero({ viewer }: { viewer: Viewer }) {
         </p>
         <LandingActions viewer={viewer} />
       </div>
-      <div className="hidden lg:block" data-testid="hero-tile">
-        <ImagePlaceholder slot="heroDashboard" />
+      {/* The gradient shows while the photo loads; `preload` (Next 16's name
+          for `priority`) fetches it early, as it is the largest thing on
+          screen. Under the text (4:3, at most 576px wide) below `lg`; in
+          the 440px right column from `lg`, where the portrait shape fits. */}
+      <div
+        data-testid="hero-photo"
+        className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-secondary via-rose/30 to-secondary sm:max-w-xl lg:aspect-[4/5] lg:max-w-none"
+      >
+        <Image
+          src="/landing/hero.webp"
+          alt={HERO_PHOTO_ALT}
+          fill
+          preload
+          sizes="(min-width: 1024px) 440px, (min-width: 648px) 576px, calc(100vw - 72px)"
+          className="object-cover object-center"
+        />
       </div>
     </section>
   );
