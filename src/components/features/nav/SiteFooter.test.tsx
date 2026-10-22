@@ -38,8 +38,21 @@ async function columns() {
   );
 }
 
+/** Renders the footer and returns the `sm:` column class of the link grid. */
+async function smColumns() {
+  render(await SiteFooter());
+  const grid = screen.getByRole("navigation", {
+    name: "For clients",
+  }).parentElement;
+  return grid?.className.match(/\bsm:grid-cols-\d\b/g);
+}
+
 describe("SiteFooter", () => {
   beforeEach(() => jar.clear());
+
+  it("puts three columns in one row from sm", async () => {
+    expect(await smColumns()).toEqual(["sm:grid-cols-3"]);
+  });
 
   it("shows the brand, tagline and bottom bar", async () => {
     render(await SiteFooter());
@@ -166,6 +179,10 @@ describe("SiteFooter", () => {
       ).toBeInTheDocument();
     });
 
+    it("makes a pair of the two columns that are left from sm", async () => {
+      expect(await smColumns()).toEqual(["sm:grid-cols-2"]);
+    });
+
     it("keeps the column for an owner, who still has dashboard links", async () => {
       jar.set("sb_token", "t");
       jar.set("sb_role", "owner");
@@ -249,6 +266,36 @@ describe("SiteFooter", () => {
       ).toBeNull();
     });
 
+    it("skips IP addresses, user names and odd host names", async () => {
+      for (const href of [
+        "https://127.0.0.1/salonbook",
+        "https://192.168.0.1/salonbook",
+        "https://[::1]/salonbook",
+        "https://user:pw@example.com/salonbook",
+        "https://user@example.com/salonbook",
+        "https://localhost./salonbook",
+        "https://.example.com/salonbook",
+      ]) {
+        setSocial({ Facebook: href, LinkedIn: "#", Instagram: "#" });
+        const { unmount } = render(await SiteFooter());
+        expect(
+          screen.queryByRole("navigation", { name: "Find us on social" }),
+        ).toBeNull();
+        unmount();
+      }
+    });
+
+    it("accepts an https URL written in capitals", async () => {
+      setSocial({
+        Facebook: "HTTPS://www.example.com/salonbook",
+        LinkedIn: "#",
+        Instagram: "#",
+      });
+      render(await SiteFooter());
+      const nav = screen.getByRole("navigation", { name: "Find us on social" });
+      expect(within(nav).getAllByRole("link")).toHaveLength(1);
+    });
+
     it("shows only the entries with a real URL, opening in a new tab", async () => {
       setSocial({
         Facebook: "#",
@@ -280,6 +327,16 @@ describe("SiteFooter", () => {
         "aria-hidden",
         "true",
       );
+    });
+
+    it("makes two pairs of the four columns from sm", async () => {
+      setSocial({
+        Facebook: "https://example.com/fb",
+        LinkedIn: "#",
+        Instagram: "#",
+      });
+      expect(await smColumns()).toEqual(["sm:grid-cols-2"]);
+      expect(screen.getAllByRole("navigation")).toHaveLength(4);
     });
 
     it("shows every entry once all have real URLs", async () => {

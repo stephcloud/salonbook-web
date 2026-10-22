@@ -78,15 +78,18 @@ function footerColumns(
 
 /**
  * True only for an absolute https URL with a real host name, so "#", "",
- * relative paths, `http:` and `javascript:` are skipped.
+ * relative paths, `http:`, `javascript:`, `localhost`, IP addresses and URLs
+ * with a user name or password are skipped.
  */
 function isRealUrl(href: string): boolean {
+  if (!/^https:\/\//i.test(href)) return false;
   try {
-    const url = new URL(href);
+    const { hostname, username, password } = new URL(href);
     return (
-      href.startsWith("https://") &&
-      url.protocol === "https:" &&
-      url.hostname.includes(".")
+      !username &&
+      !password &&
+      /^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(hostname) &&
+      !/^[\d.]+$/.test(hostname)
     );
   } catch {
     return false;
