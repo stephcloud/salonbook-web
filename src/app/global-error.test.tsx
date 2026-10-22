@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next/font/google", () => ({
   Plus_Jakarta_Sans: () => ({ variable: "font-var" }),
+  Playfair_Display: () => ({ variable: "heading-font-var" }),
 }));
 vi.mock("./globals.css", () => ({}));
 
