@@ -194,3 +194,7 @@
 
 - The landing hero now shows `public/landing/hero.jpg` (a pink salon with pink chairs, lit gold mirrors and a chandelier; renamed from `hero.webp` because the file is JPEG data) with `next/image` instead of the hero placeholder tile: under the text on phones, in the right column from `lg`, on the same gradient tile while it loads. The other landing placeholders are unchanged.
 - The hero photo is a placeholder whose licence must be confirmed before a public launch.
+
+## 2026-10-22 (next security update)
+
+- Upgraded `next` from 16.4.0 to 16.4.2 (still pinned exactly) to fix GHSA-2464-fhr4-w9xw (critical, image optimizer) and GHSA-p3m5-59mp-jv5r (Server Actions DoS), which failed CI's `npm audit --omit=dev --audit-level=high`. Only `next` and its own `@next/*` packages changed in the lockfile; `sharp` was already 0.35.5, the patched version. `eslint-config-next` stays at 16.4.0 (no peer dependency on `next`). The 16.4.1 and 16.4.2 release notes list no breaking changes or deprecations for `next/image`, Server Actions (none in this app) or route handlers. Audit, lint, typecheck, tests and build pass.
