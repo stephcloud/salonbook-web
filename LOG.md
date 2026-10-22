@@ -195,3 +195,7 @@
 - The landing hero now shows `public/landing/hero.jpg` (a pink salon with pink chairs, lit gold mirrors and a chandelier; renamed from `hero.webp` because the file is JPEG data) with `next/image` instead of the hero placeholder tile: under the text on phones, in the right column from `lg`, on the same gradient tile while it loads. The other landing placeholders are unchanged.
 - The hero photo is a placeholder whose licence must be confirmed before a public launch.
 - Fix on `fix/hero-frame`: the photo frame had a `max-w-xl` cap, so between `sm` and `lg` (for example a 1000px desktop window) a pale band of the hero background showed beside the photo. The cap is gone and the frame fills its column: 4:3 on phones, 16:9 from `sm`, 4:5 from `lg`, with the crop set high below `lg` so the chandelier stays in view. Checked in Chrome from 375px to 1440px; a test now fails if a width cap returns.
+
+## 2026-10-22 (outline button border)
+
+- Fix on `fix/outline-button-border`: outline links built with `buttonVariants()` (such as "Register your salon") showed no border. The base classes had `border-transparent`, which beat the outline variant's `border-primary` in CSS order because `cva` does not merge classes. The base now sets only the border width and each variant sets one border colour; a test fails if any variant gets two.
