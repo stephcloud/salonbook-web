@@ -192,5 +192,5 @@
 
 ## 2026-10-22 (hero photo)
 
-- The landing hero now shows `public/landing/hero.webp` (a pink salon with lit gold mirrors and a chandelier) with `next/image` instead of the hero placeholder tile: under the text on phones, in the right column from `lg`, on the same gradient tile while it loads. The other landing placeholders are unchanged.
+- The landing hero now shows `public/landing/hero.jpg` (a pink salon with pink chairs, lit gold mirrors and a chandelier; renamed from `hero.webp` because the file is JPEG data) with `next/image` instead of the hero placeholder tile: under the text on phones, in the right column from `lg`, on the same gradient tile while it loads. The other landing placeholders are unchanged.
 - The hero photo is a placeholder whose licence must be confirmed before a public launch.

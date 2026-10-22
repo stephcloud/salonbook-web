@@ -88,8 +88,15 @@ describe("landing page", () => {
   it("shows the hero photo with its alt text on every screen size", async () => {
     await show();
     const photo = hero().getByRole("img", { name: HERO_PHOTO_ALT });
-    expect(photo.getAttribute("src")).toContain("hero.webp");
-    expect(photo).toHaveClass("object-cover", "object-center");
+    expect(HERO_PHOTO_ALT).toBe(
+      "A salon with pink walls, pink chairs, gold-framed lit mirrors and a crystal chandelier",
+    );
+    expect(photo.getAttribute("src")).toContain("hero.jpg");
+    expect(photo).toHaveClass(
+      "object-cover",
+      "object-[50%_30%]",
+      "lg:object-center",
+    );
     expect(photo).toHaveAttribute("sizes", expect.stringContaining("440px"));
     const frame = screen.getByTestId("hero-photo");
     expect(frame).not.toHaveClass("hidden");
