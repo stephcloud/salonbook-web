@@ -210,3 +210,7 @@
 - Fix in the shared `AlertDialogContent` (`src/components/ui/alert-dialog.tsx`), with the owner's approval: the popup is now at most the screen height minus 2rem and scrolls, and keeps a 1rem margin on each side on narrow phones, as `DialogContent` already does. Before, on a phone in landscape or with large text, the buttons could fall off screen. This applies to the service delete dialog too.
 - Later:
   - After a save or delete, the old card stays until the list reloads, on both the stylists and services pages (a shared follow-up).
+
+## 2026-10-22 (next security update)
+
+- Upgraded `next` from 16.4.0 to 16.4.2 (still pinned exactly) to fix GHSA-2464-fhr4-w9xw (critical, image optimizer) and GHSA-p3m5-59mp-jv5r (Server Actions DoS), which failed CI's `npm audit --omit=dev --audit-level=high`. Only `next` and its own `@next/*` packages changed in the lockfile; `sharp` was already 0.35.5, the patched version. `eslint-config-next` stays at 16.4.0 (no peer dependency on `next`). The 16.4.1 and 16.4.2 release notes list no breaking changes or deprecations for `next/image`, Server Actions (none in this app) or route handlers. Audit, lint, typecheck, tests and build pass.
