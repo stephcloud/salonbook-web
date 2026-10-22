@@ -8,11 +8,11 @@ export function SalonCard({ salon }: { salon: Salon }) {
     <li>
       <Link
         href={`/salons/${salon.id}`}
-        className="group block overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/10 outline-none transition-shadow hover:shadow-md focus-visible:ring-3 focus-visible:ring-ring"
+        className="group block overflow-hidden rounded-2xl bg-card shadow-sm shadow-primary/5 ring-1 ring-border outline-none transition motion-reduce:transition-none hover:-translate-y-0.5 hover:shadow-md hover:shadow-primary/10 motion-reduce:hover:translate-y-0 focus-visible:ring-3 focus-visible:ring-ring"
       >
         <SalonImage src={salon.image_url} alt="" />
         <div className="flex min-h-11 flex-col gap-1 p-4">
-          <h2 className="text-lg font-bold group-hover:underline group-focus-visible:underline">
+          <h2 className="text-xl font-bold group-hover:underline group-focus-visible:underline">
             {salon.name}
           </h2>
           <p className="flex items-start gap-1.5 text-sm text-muted-foreground">

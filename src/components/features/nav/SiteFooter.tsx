@@ -26,7 +26,7 @@ export const SOCIAL_LINKS: FooterLink[] = [
 const PRICING = "/#pricing";
 
 const LINK_CLASS =
-  "inline-flex min-h-11 items-center rounded-full px-3 text-sm font-medium outline-none hover:bg-secondary focus-visible:ring-3 focus-visible:ring-ring";
+  "inline-flex min-h-11 items-center rounded-full px-3 text-sm font-medium outline-none hover:bg-card hover:text-primary-dark focus-visible:ring-3 focus-visible:ring-ring";
 
 /**
  * The footer columns for this visitor. Only guests get Sign in and Register
@@ -110,12 +110,12 @@ export async function SiteFooter() {
   const count = columns.length + (social.length > 0 ? 1 : 0);
 
   return (
-    <footer className="border-t border-border bg-card">
-      <div className="mx-auto grid w-full max-w-5xl gap-8 px-4 py-10 lg:grid-cols-[1fr_2fr]">
+    <footer className="border-t border-primary/15 bg-secondary">
+      <div className="mx-auto grid w-full max-w-5xl gap-8 px-4 py-12 lg:grid-cols-[1fr_2fr]">
         <div className="flex flex-col items-start gap-2">
           <Link
             href="/"
-            className="-ml-1 inline-flex min-h-11 items-center rounded-full px-1 text-lg font-bold text-primary-dark outline-none focus-visible:ring-3 focus-visible:ring-ring"
+            className="-ml-1 inline-flex min-h-11 items-center rounded-full px-1 font-heading text-2xl font-bold text-primary outline-none focus-visible:ring-3 focus-visible:ring-ring"
           >
             SalonBook
           </Link>
@@ -128,7 +128,9 @@ export async function SiteFooter() {
         >
           {columns.map(({ title, links }) => (
             <nav key={title} aria-label={title}>
-              <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+              <h2 className="font-sans text-sm font-semibold text-foreground">
+                {title}
+              </h2>
               <ul className="mt-2 -ml-3 flex flex-col">
                 {links.map(({ href, label }) => (
                   <li key={href}>
@@ -142,7 +144,7 @@ export async function SiteFooter() {
           ))}
           {social.length > 0 && (
             <nav aria-label="Find us on social">
-              <h2 className="text-sm font-semibold text-foreground">
+              <h2 className="font-sans text-sm font-semibold text-foreground">
                 Find us on social
               </h2>
               <ul className="mt-2 -ml-3 flex flex-col">
@@ -165,7 +167,7 @@ export async function SiteFooter() {
           )}
         </div>
       </div>
-      <div className="border-t border-border">
+      <div className="border-t border-primary/15">
         <p className="mx-auto w-full max-w-5xl px-4 py-4 text-sm text-muted-foreground">
           © 2026 SalonBook
         </p>

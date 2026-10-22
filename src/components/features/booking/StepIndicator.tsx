@@ -23,7 +23,7 @@ export function StepIndicator({ current }: { current: WizardStep }) {
               step.id === current
                 ? "rounded-full bg-primary px-3 py-1 text-sm font-semibold text-primary-foreground"
                 : i < index
-                  ? "rounded-full bg-secondary px-3 py-1 text-sm font-medium"
+                  ? "rounded-full bg-secondary px-3 py-1 text-sm font-medium ring-1 ring-primary/30"
                   : "rounded-full px-3 py-1 text-sm text-muted-foreground ring-1 ring-border"
             }
           >

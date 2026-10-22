@@ -13,7 +13,7 @@ export function StylistAvatar({ name, src, className }: StylistAvatarProps) {
   return (
     <div
       className={cn(
-        "relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary text-lg font-bold text-primary-dark",
+        "relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary font-heading text-xl font-bold text-primary-dark",
         className,
       )}
     >

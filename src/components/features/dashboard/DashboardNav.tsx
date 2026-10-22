@@ -26,7 +26,7 @@ export function DashboardNav() {
                 href={href}
                 aria-current={current ? "page" : undefined}
                 className={cn(
-                  "inline-flex min-h-11 items-center rounded-full px-4 text-sm font-medium outline-none hover:bg-secondary focus-visible:ring-3 focus-visible:ring-ring",
+                  "inline-flex min-h-11 items-center rounded-full px-4 text-sm font-medium outline-none hover:bg-secondary hover:text-primary-dark focus-visible:ring-3 focus-visible:ring-ring",
                   current && "bg-secondary font-semibold",
                 )}
               >
