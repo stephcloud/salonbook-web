@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, TriangleAlert } from "lucide-react";
+import { useRef, useState } from "react";
+import { Pencil, Plus, Trash2, TriangleAlert } from "lucide-react";
 import { AddStylistDialog } from "@/components/features/dashboard/AddStylistDialog";
 import { AssignServicesDialog } from "@/components/features/dashboard/AssignServicesDialog";
+import { DeleteStylistDialog } from "@/components/features/dashboard/DeleteStylistDialog";
+import { EditStylistDialog } from "@/components/features/dashboard/EditStylistDialog";
 import { NoServicesNotice } from "@/components/features/dashboard/NoServicesNotice";
 import { StylistAvatar } from "@/components/features/salons/StylistAvatar";
 import { Button } from "@/components/ui/button";
@@ -20,6 +22,15 @@ type StylistsSectionProps = {
   initialStylists: Stylist[];
 };
 
+type Dialog =
+  | { kind: "none" }
+  | { kind: "add" }
+  | { kind: "assign"; stylist: Stylist }
+  | { kind: "edit"; stylist: Stylist }
+  | { kind: "delete"; stylist: Stylist };
+
+const editButtonId = (stylistId: string) => `edit-stylist-${stylistId}`;
+
 /** Names of the services a stylist offers, skipping ids that no longer exist. */
 function serviceNames(stylist: Stylist, services: Service[]): string[] {
   return services
@@ -27,10 +38,7 @@ function serviceNames(stylist: Stylist, services: Service[]): string[] {
     .map((service) => service.name);
 }
 
-/**
- * The owner's stylists: list, add (with services) and assign services. The API
- * has no edit or delete for stylists yet, so there are none here.
- */
+/** The owner's stylists: list, add (with services), assign services, edit and delete. */
 export function StylistsSection({
   salonId,
   initialServices,
@@ -39,29 +47,63 @@ export function StylistsSection({
   const stylists = useSalonStylists(salonId, initialStylists);
   const services = useSalonServices(salonId, initialServices);
   const refresh = useCatalogRefresh(salonId);
-  const [adding, setAdding] = useState(false);
-  const [assigning, setAssigning] = useState<Stylist | null>(null);
+  const [dialog, setDialog] = useState<Dialog>({ kind: "none" });
   const [notice, showNotice] = useNotice();
+  const headingRef = useRef<HTMLHeadingElement>(null);
 
   const list = stylists.data;
   const serviceList = services.data;
   const failed = stylists.isError || services.isError;
   const fetching = stylists.isFetching || services.isFetching;
 
+  const close = () => setDialog({ kind: "none" });
+  // An Edit opened from the delete dialog (after a 409) has no button of its
+  // own to return to, so focus goes back to that stylist's Edit button.
+  const returnTo = useRef<string | null>(null);
+  function open(next: Dialog) {
+    returnTo.current = null;
+    setDialog(next);
+  }
+  function editInstead(stylist: Stylist) {
+    returnTo.current = editButtonId(stylist.id);
+    setDialog({ kind: "edit", stylist });
+  }
+
   async function done(message: string) {
     showNotice(message);
-    setAdding(false);
-    setAssigning(null);
+    close();
     await refresh();
+  }
+
+  // After a delete, or when the stylist turns out to be gone already (404), their
+  // card no longer exists, so focus goes to the heading as the dialog closes,
+  // without waiting for the lists to reload.
+  const focusHeadingOnClose = useRef(false);
+  function finalFocus() {
+    if (focusHeadingOnClose.current) {
+      focusHeadingOnClose.current = false;
+      return headingRef.current;
+    }
+    if (returnTo.current) return document.getElementById(returnTo.current);
+    return true; // the dialog's default
+  }
+  async function removed(message: string) {
+    focusHeadingOnClose.current = true;
+    await done(message);
   }
 
   return (
     <section aria-labelledby="stylists-heading" className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="stylists-heading" className="text-xl font-bold">
+        <h2
+          id="stylists-heading"
+          ref={headingRef}
+          tabIndex={-1}
+          className="rounded-md text-xl font-bold outline-none focus-visible:ring-3 focus-visible:ring-ring"
+        >
           Your stylists
         </h2>
-        <Button size="lg" onClick={() => setAdding(true)}>
+        <Button size="lg" onClick={() => open({ kind: "add" })}>
           <Plus aria-hidden="true" />
           Add a stylist
         </Button>
@@ -115,7 +157,7 @@ export function StylistsSection({
                 key={stylist.id}
                 className="flex flex-col gap-3 rounded-2xl bg-card p-4 ring-1 ring-border sm:flex-row sm:items-center sm:justify-between"
               >
-                <div className="flex items-center gap-3">
+                <div className="flex min-w-0 items-center gap-3">
                   <StylistAvatar name={stylist.name} src={stylist.image_url} />
                   <div className="flex min-w-0 flex-col gap-1">
                     <h3 className="font-semibold break-words">
@@ -137,13 +179,32 @@ export function StylistsSection({
                     )}
                   </div>
                 </div>
-                <Button
-                  variant="outline"
-                  aria-label={`Services for ${stylist.name}`}
-                  onClick={() => setAssigning(stylist)}
-                >
-                  Services
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    aria-label={`Services for ${stylist.name}`}
+                    onClick={() => open({ kind: "assign", stylist })}
+                  >
+                    Services
+                  </Button>
+                  <Button
+                    variant="outline"
+                    id={editButtonId(stylist.id)}
+                    aria-label={`Edit ${stylist.name}`}
+                    onClick={() => open({ kind: "edit", stylist })}
+                  >
+                    <Pencil aria-hidden="true" />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    aria-label={`Delete ${stylist.name}`}
+                    onClick={() => open({ kind: "delete", stylist })}
+                  >
+                    <Trash2 aria-hidden="true" />
+                    Delete
+                  </Button>
+                </div>
               </li>
             );
           })}
@@ -153,16 +214,31 @@ export function StylistsSection({
       <AddStylistDialog
         salonId={salonId}
         services={serviceList}
-        open={adding}
-        onClose={() => setAdding(false)}
+        open={dialog.kind === "add"}
+        onClose={close}
         onCreated={() => void refresh()}
         onDone={done}
       />
       <AssignServicesDialog
-        stylist={assigning}
+        stylist={dialog.kind === "assign" ? dialog.stylist : null}
         services={serviceList}
-        onClose={() => setAssigning(null)}
+        onClose={close}
         onSaved={done}
+      />
+      <EditStylistDialog
+        stylist={dialog.kind === "edit" ? dialog.stylist : null}
+        onClose={close}
+        onSaved={done}
+        onGone={removed}
+        finalFocus={finalFocus}
+      />
+      <DeleteStylistDialog
+        stylist={dialog.kind === "delete" ? dialog.stylist : null}
+        onClose={close}
+        onDeleted={removed}
+        onGone={removed}
+        onEditInstead={editInstead}
+        finalFocus={finalFocus}
       />
     </section>
   );

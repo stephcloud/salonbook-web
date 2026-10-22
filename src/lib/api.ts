@@ -325,6 +325,31 @@ export function setStylistServices(
   );
 }
 
+export type StylistUpdate = components["schemas"]["StylistUpdate"];
+/** The owner's view of a stylist, as the API answers an edit. */
+export type OwnerStylist = components["schemas"]["StylistResponse"];
+
+/**
+ * Edits one of the owner's stylists (browser). Send only what changed; an
+ * explicit `image_url: null` clears the photo.
+ */
+export function updateStylist(
+  id: string,
+  input: StylistUpdate,
+): Promise<OwnerStylist> {
+  return apiFetch<OwnerStylist>(`stylists/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: input,
+  });
+}
+
+/** Deletes a stylist (browser). The API refuses (409) when they have bookings. */
+export function deleteStylist(id: string): Promise<void> {
+  return apiFetch<void>(`stylists/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+}
+
 export type AvailabilityRule =
   components["schemas"]["AvailabilityRuleResponse"];
 export type AvailabilityRuleInput =

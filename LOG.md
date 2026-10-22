@@ -200,6 +200,17 @@
 
 - Fix on `fix/outline-button-border`: outline links built with `buttonVariants()` (such as "Register your salon") showed no border. The base classes had `border-transparent`, which beat the outline variant's `border-primary` in CSS order because `cva` does not merge classes. The base now sets only the border width and each variant sets one border colour; a test fails if any variant gets two.
 
+## 2026-10-22 (stylist edit and delete)
+
+- Built on `feat/edit-delete-stylists`, after the backend added `PATCH` and `DELETE /stylists/{stylist_id}` (salonbook-api #17). `npm run types` regenerated `api-types.ts`; `StylistUpdate` has only `name` and `image_url` (no speciality, by the owner's decision). Each card on `/dashboard/stylists` now has Edit and Delete next to Services.
+- Edit opens a dialog with the name and photo link, checked in the browser with the API's limits, and the server's 422 errors land on the fields. Only changed fields are sent; an emptied photo link sends `image_url: null`, which the API reads as "clear the photo". Delete opens a confirm dialog; a 409 (the stylist has bookings) explains that and offers "Edit {name}" instead. A 404 on either says the stylist no longer exists, closes the dialog and refreshes the list. 401 goes to `/login?next=`; 403 shows the own-salon message with no "Try again". Lists refresh through TanStack Query (`useCatalogRefresh`).
+- The live openapi lists only 200/204 and 422 for these endpoints. The 403, 404 and 409 handling follows `salonbook-api/app/services/stylists.py`, noted in a comment in `src/lib/stylist/save-error.ts`.
+- Services already had edit and delete, so they were not changed.
+- code-reviewer and ui-reviewer run and their findings applied: focus returns to the card's Edit button after the 409 "Edit {name}" path, long names wrap, the "cannot be undone" text is hidden after a 409, and the section heading shows a focus ring when it receives focus. Tests added (23 component tests plus helper tests). Lint, typecheck, the full test suite (1447 tests) and the build pass. No new dependencies.
+- Fix in the shared `AlertDialogContent` (`src/components/ui/alert-dialog.tsx`), with the owner's approval: the popup is now at most the screen height minus 2rem and scrolls, and keeps a 1rem margin on each side on narrow phones, as `DialogContent` already does. Before, on a phone in landscape or with large text, the buttons could fall off screen. This applies to the service delete dialog too.
+- Later:
+  - After a save or delete, the old card stays until the list reloads, on both the stylists and services pages (a shared follow-up).
+
 ## 2026-10-22 (next security update)
 
 - Upgraded `next` from 16.4.0 to 16.4.2 (still pinned exactly) to fix GHSA-2464-fhr4-w9xw (critical, image optimizer) and GHSA-p3m5-59mp-jv5r (Server Actions DoS), which failed CI's `npm audit --omit=dev --audit-level=high`. Only `next` and its own `@next/*` packages changed in the lockfile; `sharp` was already 0.35.5, the patched version. `eslint-config-next` stays at 16.4.0 (no peer dependency on `next`). The 16.4.1 and 16.4.2 release notes list no breaking changes or deprecations for `next/image`, Server Actions (none in this app) or route handlers. Audit, lint, typecheck, tests and build pass.
