@@ -34,7 +34,7 @@ export async function SiteHeader() {
       >
         <Link
           href="/"
-          className="inline-flex min-h-11 basis-full items-center rounded-full px-1 text-lg font-bold text-primary-dark outline-none focus-visible:ring-3 focus-visible:ring-ring sm:mr-auto sm:basis-auto"
+          className="inline-flex min-h-11 basis-full items-center rounded-full px-1 font-heading text-2xl font-bold text-primary outline-none focus-visible:ring-3 focus-visible:ring-ring sm:mr-auto sm:basis-auto"
         >
           SalonBook
         </Link>

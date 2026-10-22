@@ -28,7 +28,7 @@ export function ProductPreview() {
               {step.label}
             </li>
           ))}
-          <li className="flex items-center rounded-full bg-blush px-3 py-1.5 text-sm font-medium">
+          <li className="flex items-center rounded-full bg-card px-3 py-1.5 text-sm font-medium text-primary-dark ring-1 ring-primary">
             Pay the deposit
           </li>
         </ol>

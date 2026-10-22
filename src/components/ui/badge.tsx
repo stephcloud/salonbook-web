@@ -17,10 +17,14 @@ const badgeVariants = cva(
           "border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
         ghost: "hover:bg-muted hover:text-muted-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        pending: "border-amber-200 bg-amber-100 text-amber-900",
-        confirmed: "border-green-200 bg-green-100 text-green-900",
-        cancelled: "border-gray-300 bg-gray-100 text-gray-700",
-        refunded: "border-blue-200 bg-blue-100 text-blue-900",
+        pending:
+          "border-status-pending-border bg-status-pending-bg text-status-pending-fg",
+        confirmed:
+          "border-status-confirmed-border bg-status-confirmed-bg text-status-confirmed-fg",
+        cancelled:
+          "border-status-cancelled-border bg-status-cancelled-bg text-status-cancelled-fg",
+        refunded:
+          "border-status-refunded-border bg-status-refunded-bg text-status-refunded-fg",
       },
     },
     defaultVariants: {

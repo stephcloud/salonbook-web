@@ -189,3 +189,8 @@
 - Social links are optional: an entry is shown only with a real URL (absolute `https://` with a dotted host name, so `"#"`, `""`, relative, `http:`, `javascript:`, `localhost`, IP addresses and URLs with a user name or password are skipped), and the column is hidden while none has one. With today's placeholders the column does not render. Tests cover the placeholder, mixed, invalid and all-real cases. ui-reviewer run again: new-tab warning, test restore and URL edge cases applied; the icon stays before the name and the "SalonBook on" label stays, as the owner asked.
 - Later:
   - Put the real profile URLs in `SOCIAL_LINKS`; each link (and the column) appears once its URL is set.
+
+## 2026-10-22 (hero photo)
+
+- The landing hero now shows `public/landing/hero.jpg` (a pink salon with pink chairs, lit gold mirrors and a chandelier; renamed from `hero.webp` because the file is JPEG data) with `next/image` instead of the hero placeholder tile: under the text on phones, in the right column from `lg`, on the same gradient tile while it loads. The other landing placeholders are unchanged.
+- The hero photo is a placeholder whose licence must be confirmed before a public launch.

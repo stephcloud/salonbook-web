@@ -25,7 +25,7 @@ export function NavLink({ href, children }: NavLinkProps) {
       href={href}
       aria-current={exact ? "page" : inSection ? "true" : undefined}
       className={cn(
-        "inline-flex min-h-11 items-center rounded-full px-3 text-sm font-medium outline-none hover:bg-secondary focus-visible:ring-3 focus-visible:ring-ring",
+        "inline-flex min-h-11 items-center rounded-full px-3 text-sm font-medium outline-none hover:bg-secondary hover:text-primary-dark focus-visible:ring-3 focus-visible:ring-ring",
         (exact || inSection) &&
           "bg-secondary font-semibold text-primary-dark underline decoration-2 underline-offset-8",
       )}

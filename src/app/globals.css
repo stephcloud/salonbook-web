@@ -6,7 +6,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-plus-jakarta);
-  --font-heading: var(--font-plus-jakarta);
+  --font-heading: var(--font-playfair);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -19,7 +19,19 @@
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-dark: var(--primary-dark);
-  --color-blush: var(--blush);
+  --color-rose: var(--rose);
+  --color-status-pending-bg: var(--status-pending-bg);
+  --color-status-pending-fg: var(--status-pending-fg);
+  --color-status-pending-border: var(--status-pending-border);
+  --color-status-confirmed-bg: var(--status-confirmed-bg);
+  --color-status-confirmed-fg: var(--status-confirmed-fg);
+  --color-status-confirmed-border: var(--status-confirmed-border);
+  --color-status-cancelled-bg: var(--status-cancelled-bg);
+  --color-status-cancelled-fg: var(--status-cancelled-fg);
+  --color-status-cancelled-border: var(--status-cancelled-border);
+  --color-status-refunded-bg: var(--status-refunded-bg);
+  --color-status-refunded-fg: var(--status-refunded-fg);
+  --color-status-refunded-border: var(--status-refunded-border);
   --color-primary: var(--primary);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
@@ -32,27 +44,43 @@
 }
 
 :root {
-  --background: #fffbf7;
-  --foreground: #292033;
+  /* Plum theme (CLAUDE.md, 2026-10-22). Every text/background pair is 4.5:1
+     or better; rose is decoration only and never sits behind text. */
+  --background: #f8f6f4;
+  --foreground: #2d1b28;
   --card: #ffffff;
-  --card-foreground: #292033;
+  --card-foreground: #2d1b28;
   --popover: #ffffff;
-  --popover-foreground: #292033;
-  --primary: #6d28d9;
+  --popover-foreground: #2d1b28;
+  --primary: #882e5b;
   --primary-foreground: #ffffff;
-  --primary-dark: #5b21b6;
-  --secondary: #ede9fe;
-  --secondary-foreground: #292033;
-  --muted: #ede9fe;
-  --muted-foreground: #6b6475;
-  --accent: #ede9fe;
-  --accent-foreground: #292033;
+  --primary-dark: #6e2449;
+  --secondary: #fcecef;
+  --secondary-foreground: #2d1b28;
+  --muted: #fcecef;
+  --muted-foreground: #6b5862;
+  --accent: #fcecef;
+  --accent-foreground: #2d1b28;
   --destructive: #b3261e;
-  --border: #e8e1ec;
-  --input: #8a7f96;
-  --ring: #6d28d9;
-  --blush: #fdf2f8;
+  --border: #ede3e6;
+  --input: #8c7884;
+  --ring: #882e5b;
+  --rose: #e89887;
   --radius: 0.75rem;
+
+  /* Status badges: pending amber, confirmed green, cancelled grey, refunded blue. */
+  --status-pending-bg: #fef3c6;
+  --status-pending-fg: #7b3306;
+  --status-pending-border: #fde68a;
+  --status-confirmed-bg: #dcfce7;
+  --status-confirmed-fg: #0d542b;
+  --status-confirmed-border: #b9f8cf;
+  --status-cancelled-bg: #f3f4f6;
+  --status-cancelled-fg: #364153;
+  --status-cancelled-border: #d1d5dc;
+  --status-refunded-bg: #dbeafe;
+  --status-refunded-fg: #1c398e;
+  --status-refunded-border: #bedbff;
 }
 
 @layer base {
@@ -64,6 +92,12 @@
   }
   html {
     @apply font-sans;
+  }
+  /* Playfair reads well from about 18px; card and dialog titles opt back
+     into the body font. */
+  h1,
+  h2 {
+    @apply font-heading;
   }
 }
 

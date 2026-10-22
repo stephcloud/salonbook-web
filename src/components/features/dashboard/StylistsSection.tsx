@@ -79,7 +79,7 @@ export function StylistsSection({
       {failed ? (
         <div
           role="alert"
-          className="flex flex-col items-start gap-3 rounded-2xl bg-destructive/10 p-4"
+          className="flex flex-col items-start gap-3 rounded-2xl bg-destructive/10 p-4 ring-1 ring-destructive/30"
         >
           <p className="text-sm font-medium text-destructive">
             We could not refresh your stylists. What you see may be out of date.
@@ -126,7 +126,7 @@ export function StylistsSection({
                         {names.join(", ")}
                       </p>
                     ) : (
-                      <p className="flex items-start gap-1.5 text-sm font-medium text-amber-900">
+                      <p className="flex items-start gap-1.5 text-sm font-medium text-status-pending-fg">
                         <TriangleAlert
                           aria-hidden="true"
                           className="mt-0.5 size-4 shrink-0"

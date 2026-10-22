@@ -12,6 +12,7 @@ vi.mock("next/headers", () => ({
 }));
 
 import Home, { metadata } from "./page";
+import { HERO_PHOTO_ALT } from "@/components/features/landing/Hero";
 import { FAQS } from "@/lib/landing-content";
 
 function hero() {
@@ -84,14 +85,27 @@ describe("landing page", () => {
     ).toBeNull();
   });
 
-  it("shows the hero picture slot only from large screens, as a placeholder hidden from assistive tech", async () => {
+  it("shows the hero photo with its alt text on every screen size", async () => {
     await show();
-    const tile = screen.getByTestId("hero-tile");
-    expect(tile).toHaveClass("hidden", "lg:block");
-    expect(tile.querySelector("[data-placeholder]")).toHaveAttribute(
-      "data-placeholder",
-      "hero-salon-dashboard-placeholder.webp",
+    const photo = hero().getByRole("img", { name: HERO_PHOTO_ALT });
+    expect(HERO_PHOTO_ALT).toBe(
+      "A salon with pink walls, pink chairs, gold-framed lit mirrors and a crystal chandelier",
     );
+    expect(photo.getAttribute("src")).toContain("hero.jpg");
+    expect(photo).toHaveClass(
+      "object-cover",
+      "object-[50%_30%]",
+      "lg:object-center",
+    );
+    expect(photo).toHaveAttribute("sizes", expect.stringContaining("440px"));
+    const frame = screen.getByTestId("hero-photo");
+    expect(frame).not.toHaveClass("hidden");
+    expect(frame).toHaveClass(
+      "rounded-2xl",
+      "bg-gradient-to-br",
+      "lg:aspect-[4/5]",
+    );
+    expect(frame.querySelector("[data-placeholder]")).toBeNull();
   });
 
   it("gives the anchored sections the ids the header links to", async () => {

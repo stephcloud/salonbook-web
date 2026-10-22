@@ -7,7 +7,7 @@ import { Menu, X } from "lucide-react";
 import { HOME_ANCHORS } from "@/lib/landing-content";
 
 const LINK_CLASS =
-  "inline-flex min-h-11 items-center rounded-full px-3 text-sm font-medium outline-none hover:bg-secondary focus-visible:ring-3 focus-visible:ring-ring";
+  "inline-flex min-h-11 items-center rounded-full px-3 text-sm font-medium outline-none hover:bg-secondary hover:text-primary-dark focus-visible:ring-3 focus-visible:ring-ring";
 
 /**
  * Section links for the landing page, shown only on `/`. From `md` up they sit
