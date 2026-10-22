@@ -181,3 +181,11 @@
 - ui-reviewer run and its findings applied, except one footer `<nav>` (a nav per column was asked for) and renaming "Company". Lint, typecheck, the full test suite (1355 tests) and the build pass. No new dependencies.
 - Later:
   - The footer year is fixed text ("© 2026"). Change it in January, or derive it from the current date.
+
+## 2026-10-22 (footer follow-up)
+
+- Follow-up on `feat/footer` after #24. The footer now has four link columns (For clients, For salon owners, Company, Find us on social), each a `<nav aria-label>` with a bold `<h2>`. Link columns are 1 per row on phones; from `sm` three columns share one row and two or four make pairs; from `lg` they fill one row evenly with the brand on the left. The first three columns use only real routes and the landing anchors. A column with no links is left out.
+- Social column added at the owner's request: Facebook, LinkedIn and Instagram, each with a ↗ icon (`ArrowUpRight` from `lucide-react`, already a dependency), opening in a new tab (`rel="noopener noreferrer"`) with an `aria-label` such as "SalonBook on Instagram (opens in a new tab)". The URLs are `"#"` placeholders in `SOCIAL_LINKS` at the top of `SiteFooter.tsx`; no real accounts were invented.
+- Social links are optional: an entry is shown only with a real URL (absolute `https://` with a dotted host name, so `"#"`, `""`, relative, `http:`, `javascript:` and `localhost` are skipped), and the column is hidden while none has one. With today's placeholders the column does not render. Tests cover the placeholder, mixed, invalid and all-real cases. ui-reviewer run again: new-tab warning, test restore and URL edge cases applied; the icon stays before the name and the "SalonBook on" label stays, as the owner asked.
+- Later:
+  - Put the real profile URLs in `SOCIAL_LINKS`; each link (and the column) appears once its URL is set.
