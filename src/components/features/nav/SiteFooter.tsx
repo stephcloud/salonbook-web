@@ -7,6 +7,7 @@ import {
   parseRole,
   type DisplayRole,
 } from "@/lib/auth/cookie";
+import { Wordmark } from "@/components/features/nav/Wordmark";
 import { HOME_ANCHORS } from "@/lib/landing-content";
 
 type FooterLink = { href: string; label: string };
@@ -113,12 +114,7 @@ export async function SiteFooter() {
     <footer className="border-t border-primary/15 bg-secondary">
       <div className="mx-auto grid w-full max-w-5xl gap-8 px-4 py-12 lg:grid-cols-[1fr_2fr]">
         <div className="flex flex-col items-start gap-2">
-          <Link
-            href="/"
-            className="-ml-1 inline-flex min-h-11 items-center rounded-full px-1 font-heading text-2xl font-bold text-primary outline-none focus-visible:ring-3 focus-visible:ring-ring"
-          >
-            SalonBook
-          </Link>
+          <Wordmark className="-ml-1" />
           <p className="max-w-xs text-sm text-muted-foreground">
             Book your salon appointment and pay the deposit online.
           </p>

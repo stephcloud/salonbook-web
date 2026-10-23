@@ -20,6 +20,7 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-dark: var(--primary-dark);
   --color-rose: var(--rose);
+  --color-brand-accent: var(--brand-accent);
   --color-status-pending-bg: var(--status-pending-bg);
   --color-status-pending-fg: var(--status-pending-fg);
   --color-status-pending-border: var(--status-pending-border);
@@ -66,6 +67,8 @@
   --input: #8c7884;
   --ring: #882e5b;
   --rose: #e89887;
+  /* Wordmark only: the S and B of "SalonBook" (large bold text). */
+  --brand-accent: #b93f66;
   --radius: 0.75rem;
 
   /* Status badges: pending amber, confirmed green, cancelled grey, refunded blue. */

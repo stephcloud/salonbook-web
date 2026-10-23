@@ -11,10 +11,12 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   display: "swap",
 });
 
-// Headings only (h1 and h2, `font-heading`); a variable font, so no weight list.
+// Headings only (h1 and h2, `font-heading`) and the Wordmark, whose S and B are
+// italic; a variable font, so no weight list.
 const playfairDisplay = Playfair_Display({
   variable: "--font-playfair",
   subsets: ["latin"],
+  style: ["normal", "italic"],
   display: "swap",
 });
 

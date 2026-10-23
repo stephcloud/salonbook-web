@@ -37,10 +37,11 @@ describe("SiteHeader", () => {
     expect(
       screen.getByRole("navigation", { name: "Main" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "SalonBook" })).toHaveAttribute(
-      "href",
-      "/",
-    );
+    const logo = screen.getByRole("link", { name: "SalonBook" });
+    expect(logo).toHaveAttribute("href", "/");
+    // S and B are the accent letters, inside the one link text.
+    const accents = logo.querySelectorAll("span.text-brand-accent.italic");
+    expect([...accents].map((el) => el.textContent)).toEqual(["S", "B"]);
     expect(screen.getByRole("link", { name: "Salons" })).toHaveAttribute(
       "href",
       "/salons",
