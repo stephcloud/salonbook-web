@@ -224,3 +224,7 @@
 - code-reviewer and ui-reviewer run and their findings applied (photo width cap, shorter fades, `sizes` in rem, text stacked above the photo, headline width cap kept below `lg`). Lint, typecheck, the full test suite (1449 tests) and the build pass. No new dependencies.
 - Later:
   - On phones the photo may look slightly soft, because `sizes` describes the frame width while the photo is scaled up to cover the frame. Check on the preview before raising `sizes`.
+
+## 2026-10-23 (hero photo swapped)
+
+- Hero image swapped for a new one with the same scene and framing. It is also AI-generated (Gemini), used as illustration only. It was mirrored so the stylist stands on the right, like the previous photo, so the crop, alt text and tests are unchanged. Compressed from 700 KB to a 1264x848 JPEG of 91,518 bytes (about 89 KB), no upscaling; both faces checked clear of the fade at 375, 768, 1024, 1440 and 1920px.
