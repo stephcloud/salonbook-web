@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { cookies } from "next/headers";
 import { LogoutButton } from "@/components/features/auth/LogoutButton";
 import { HomeAnchors } from "@/components/features/nav/HomeAnchors";
 import { NavLink } from "@/components/features/nav/NavLink";
+import { Wordmark } from "@/components/features/nav/Wordmark";
 import { ROLE_COOKIE, TOKEN_COOKIE, parseRole } from "@/lib/auth/cookie";
 
 /**
@@ -37,12 +37,11 @@ export async function SiteHeader() {
         aria-label="Main"
         className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-2 gap-y-1 px-4 py-2"
       >
-        <Link
-          href="/"
-          className="inline-flex min-h-11 basis-full items-center rounded-full px-1 font-heading text-2xl font-bold text-primary outline-none focus-visible:ring-3 focus-visible:ring-ring sm:mr-auto sm:basis-auto"
-        >
-          SalonBook
-        </Link>
+        {/* The wrapper takes the phone row, so the link (and its focus ring
+            and tap area) is only as wide as the word. */}
+        <div className="basis-full sm:mr-auto sm:basis-auto">
+          <Wordmark />
+        </div>
         <HomeAnchors />
         <ul className="flex flex-wrap items-center gap-1">
           <li>
