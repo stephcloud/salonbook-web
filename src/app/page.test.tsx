@@ -95,12 +95,12 @@ describe("landing page", () => {
     expect(photo).toHaveClass("object-cover");
     expect(photo).toHaveAttribute(
       "sizes",
-      "(min-width: 64rem) min(calc(50vw + 48px), 1000px), 100vw",
+      "(min-width: 64rem) min(calc(50vw + 16px), 1000px), 100vw",
     );
     const frame = screen.getByTestId("hero-photo");
     expect(frame).not.toHaveClass("hidden");
-    // No box: the photo melts into the page through a mask instead of
-    // sitting in a rounded, bordered frame.
+    // No box: no rounded, bordered frame. Below `lg` the class fades the
+    // photo's top edge; from `lg` it is shown with no fade.
     expect(frame).toHaveClass("hero-photo-fade", "w-full");
     expect(frame.className).not.toMatch(
       /(^|\s)(\w+:)?(rounded|border)(-|\s|$)/,
@@ -111,7 +111,7 @@ describe("landing page", () => {
     expect(frame).toHaveClass(
       "lg:absolute",
       "lg:right-0",
-      "lg:w-[calc(50%+48px)]",
+      "lg:w-[calc(50%+16px)]",
       "lg:max-w-[1000px]",
     );
     expect(frame.querySelector("[data-placeholder]")).toBeNull();
@@ -119,8 +119,8 @@ describe("landing page", () => {
 
   it("keeps the hero text clear of the photo on desktop", async () => {
     await show();
-    // The text column ends 56px left of centre; the photo starts 48px left
-    // at most. The text paints above the photo, focus rings included.
+    // The text column ends 56px left of centre; the photo starts 16px left
+    // at most, leaving a 40px gap. The text paints above the photo, focus rings included.
     const heading = screen.getByRole("heading", { level: 1 });
     expect(heading.parentElement).toHaveClass("lg:max-w-[440px]");
     expect(heading.parentElement?.parentElement).toHaveClass(

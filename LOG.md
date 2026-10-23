@@ -228,3 +228,7 @@
 ## 2026-10-23 (hero photo swapped)
 
 - Hero image swapped for a new one with the same scene and framing. It is also AI-generated (Gemini), used as illustration only. It was mirrored so the stylist stands on the right, like the previous photo, so the crop, alt text and tests are unchanged. Compressed from 700 KB to a 1264x848 JPEG of 91,518 bytes (about 89 KB), no upscaling; both faces checked clear of the fade at 375, 768, 1024, 1440 and 1920px.
+
+## 2026-10-23 (hero photo without wash)
+
+- On `fix/hero-no-fade`, by the owner's request: removed the white fade under the hero and the left-edge fade on desktop, which washed the photo out. From `lg` the photo now has hard edges and starts 16px left of centre (was 48px), leaving a 40px gap after the text column. Below `lg` the photo keeps its top fade into the blush. Lint, typecheck, the page tests and the build pass.
