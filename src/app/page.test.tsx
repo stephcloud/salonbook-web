@@ -89,7 +89,7 @@ describe("landing page", () => {
     await show();
     const photo = hero().getByRole("img", { name: HERO_PHOTO_ALT });
     expect(HERO_PHOTO_ALT).toBe(
-      "A salon with pink walls, pink chairs, gold-framed lit mirrors and a crystal chandelier",
+      "A smiling stylist braiding a seated client's hair in a pink salon",
     );
     expect(photo.getAttribute("src")).toContain("hero.jpg");
     expect(photo).toHaveClass("object-cover");
@@ -107,7 +107,7 @@ describe("landing page", () => {
     );
     // Under the text below `lg`; from `lg` it fills the right side and
     // bleeds to the viewport edge, starting just left of centre, capped so
-    // a very wide screen doesn't crop the portrait photo to a thin band.
+    // a very wide screen doesn't crop the photo to a thin band.
     expect(frame).toHaveClass(
       "lg:absolute",
       "lg:right-0",

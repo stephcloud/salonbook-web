@@ -5,7 +5,7 @@ import {
 } from "@/components/features/landing/LandingActions";
 
 export const HERO_PHOTO_ALT =
-  "A salon with pink walls, pink chairs, gold-framed lit mirrors and a crystal chandelier";
+  "A smiling stylist braiding a seated client's hair in a pink salon";
 
 // Full-bleed: the page renders this outside its max-width wrapper so the
 // photo can reach the viewport edge on desktop. The blush tint behind it
@@ -42,8 +42,11 @@ export function Hero({ viewer }: { viewer: Viewer }) {
       {/* No frame: `hero-photo-fade` (globals.css) masks the top edge below
           `lg` and the left edge from `lg`. `preload` (Next 16's name for
           `priority`) fetches it early, as it is the largest thing on screen.
-          The width cap stops a very wide screen cropping the portrait photo
-          down to a thin band (and scaling it up). */}
+          The width cap stops a very wide screen cropping the photo down to
+          a thin band (and scaling it up). The photo is mirrored so the
+          stylist stands on the right; the crop keeps both faces clear of
+          the fade: centred on the pair below `lg`, shifted left from `lg`
+          so the client's face sits past the left fade. */}
       <div
         data-testid="hero-photo"
         className="hero-photo-fade relative aspect-[4/5] w-full sm:aspect-[4/3] lg:absolute lg:inset-y-0 lg:right-0 lg:aspect-auto lg:w-[calc(50%+48px)] lg:max-w-[1000px]"
@@ -54,7 +57,7 @@ export function Hero({ viewer }: { viewer: Viewer }) {
           fill
           preload
           sizes="(min-width: 64rem) min(calc(50vw + 48px), 1000px), 100vw"
-          className="object-cover object-[50%_10%] sm:object-[50%_12%] lg:object-[50%_20%]"
+          className="object-cover object-[57%_50%] lg:object-[33%_50%]"
         />
       </div>
       {/* Melts the bottom of the hero (photo included) into the page. */}
