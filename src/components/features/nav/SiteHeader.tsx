@@ -20,6 +20,11 @@ import { ROLE_COOKIE, TOKEN_COOKIE, parseRole } from "@/lib/auth/cookie";
  *
  * On a phone the logo has its own row and the links sit below it, so a long
  * row of links never wraps in an uneven way.
+ *
+ * From `lg` it is sticky: there it is one row (61px), and `scroll-padding-top`
+ * on `html` (globals.css) keeps scrolled-to content below it. Below `lg` it is
+ * two or three rows, too tall to keep on screen, so it scrolls away. If you
+ * make it taller from `lg`, raise that padding too.
  */
 export async function SiteHeader() {
   const store = await cookies();
@@ -27,7 +32,7 @@ export async function SiteHeader() {
   const role = parseRole(store.get(ROLE_COOKIE)?.value);
 
   return (
-    <header className="relative border-b border-border bg-card">
+    <header className="relative z-40 border-b border-border bg-card lg:sticky lg:top-0">
       <nav
         aria-label="Main"
         className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-2 gap-y-1 px-4 py-2"

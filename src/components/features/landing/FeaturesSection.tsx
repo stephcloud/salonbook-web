@@ -7,7 +7,7 @@ export function FeaturesSection() {
     <section
       id="features"
       aria-labelledby="features-heading"
-      className="flex scroll-mt-4 flex-col gap-6"
+      className="flex flex-col gap-6"
     >
       <SectionHeading
         id="features-heading"

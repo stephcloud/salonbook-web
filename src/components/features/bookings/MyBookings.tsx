@@ -152,7 +152,7 @@ export function MyBookings({ initialBookings, serverNow }: MyBookingsProps) {
       tabIndex={-1}
       className={
         notice
-          ? "flex scroll-mt-4 flex-col items-start gap-2 rounded-2xl bg-secondary p-4 text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring"
+          ? "flex flex-col items-start gap-2 rounded-2xl bg-secondary p-4 text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring"
           : "sr-only"
       }
     >
