@@ -43,4 +43,40 @@ describe("HomeAnchors", () => {
     expect(button).toHaveAttribute("aria-expanded", "false");
     expect(button).toHaveFocus();
   });
+
+  it("closes when focus moves past the menu", async () => {
+    render(
+      <>
+        <HomeAnchors />
+        <button type="button">After</button>
+      </>,
+    );
+    const button = screen.getByRole("button", { name: "Menu" });
+    await userEvent.click(button);
+    await userEvent.tab();
+    expect(screen.getByRole("link", { name: "Features" })).toHaveFocus();
+    expect(button).toHaveAttribute("aria-expanded", "true");
+    // Past How it works, Pricing and FAQ to the link after the menu.
+    for (let i = 0; i < 4; i++) await userEvent.tab();
+    expect(screen.getByRole("button", { name: "After" })).toHaveFocus();
+    expect(button).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("closes on a tap outside, but not on a tap inside", async () => {
+    render(
+      <>
+        <HomeAnchors />
+        <p>Page</p>
+      </>,
+    );
+    const button = screen.getByRole("button", { name: "Menu" });
+    await userEvent.click(button);
+    await userEvent.pointer({
+      keys: "[MouseLeft>]",
+      target: screen.getByRole("list", { name: "Sections" }),
+    });
+    expect(button).toHaveAttribute("aria-expanded", "true");
+    await userEvent.click(screen.getByText("Page"));
+    expect(button).toHaveAttribute("aria-expanded", "false");
+  });
 });

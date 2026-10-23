@@ -7,7 +7,7 @@ export function FAQSection() {
     <section
       id="faq"
       aria-labelledby="faq-heading"
-      className="flex scroll-mt-header flex-col gap-6"
+      className="flex flex-col gap-6"
     >
       <SectionHeading
         id="faq-heading"

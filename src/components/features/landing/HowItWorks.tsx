@@ -8,7 +8,7 @@ export function HowItWorks() {
     <section
       id="how-it-works"
       aria-labelledby="how-heading"
-      className="flex scroll-mt-header flex-col gap-6"
+      className="flex flex-col gap-6"
     >
       <SectionHeading
         id="how-heading"

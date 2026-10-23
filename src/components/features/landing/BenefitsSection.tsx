@@ -8,7 +8,7 @@ export function BenefitsSection() {
     <section
       id="benefits"
       aria-labelledby="benefits-heading"
-      className="grid scroll-mt-header items-center gap-8 md:grid-cols-2"
+      className="grid items-center gap-8 md:grid-cols-2"
     >
       <div className="flex flex-col gap-6">
         <SectionHeading

@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -45,19 +47,26 @@ describe("SiteHeader", () => {
     );
   });
 
-  it("sticks to the top above the page, on a near-opaque background", async () => {
+  it("sticks to the top only from lg, on an opaque background above the page", async () => {
     render(await SiteHeader());
     const header = screen.getByRole("banner");
     for (const name of [
-      "sticky",
-      "top-0",
+      "relative",
       "z-40",
-      "bg-card/95",
-      "backdrop-blur-sm",
+      "lg:sticky",
+      "lg:top-0",
+      "bg-card",
       "border-b",
     ]) {
       expect(header).toHaveClass(name);
     }
+    expect(header).not.toHaveClass("sticky");
+  });
+
+  it("has a page-wide scroll offset so scrolled-to content clears it", () => {
+    // jsdom has no layout, so check the rule exists rather than its effect.
+    const css = readFileSync(resolve("src/app/globals.css"), "utf8");
+    expect(css).toMatch(/html \{[^}]*scroll-padding-top/);
   });
 
   it("reads only the two cookies and calls no API", async () => {

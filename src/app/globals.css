@@ -90,8 +90,18 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Anything scrolled into view (anchor links, the skip link, focus,
+     scrollIntoView) stops a little below the top. From `lg` the SiteHeader is
+     sticky and one row (61px), so the gap clears it; below `lg` it scrolls
+     away with the page. */
   html {
     @apply font-sans;
+    scroll-padding-top: 1rem;
+  }
+  @media (width >= 64rem) {
+    html {
+      scroll-padding-top: 5.5rem;
+    }
   }
   /* Playfair reads well from about 18px; card and dialog titles opt back
      into the body font. */
@@ -106,20 +116,6 @@
 @keyframes reveal-late {
   to {
     visibility: visible;
-  }
-}
-
-/* Anchor targets stop just below the sticky SiteHeader. Its height depends on
-   how its links wrap: on a phone up to three rows (157px, signed-in owner on
-   `/`), up to two rows until `lg` (109px), one row from `lg` (61px). Each
-   value is the tallest case plus a little space. */
-@utility scroll-mt-header {
-  scroll-margin-top: 10.5rem;
-  @media (width >= 40rem) {
-    scroll-margin-top: 8rem;
-  }
-  @media (width >= 64rem) {
-    scroll-margin-top: 5rem;
   }
 }
 

@@ -228,3 +228,10 @@
 ## 2026-10-23 (hero photo swapped)
 
 - Hero image swapped for a new one with the same scene and framing. It is also AI-generated (Gemini), used as illustration only. It was mirrored so the stylist stands on the right, like the previous photo, so the crop, alt text and tests are unchanged. Compressed from 700 KB to a 1264x848 JPEG of 91,518 bytes (about 89 KB), no upscaling; both faces checked clear of the fade at 375, 768, 1024, 1440 and 1920px.
+
+## 2026-10-23 (sticky header)
+
+- The site header is sticky from `lg` (1024px) up, where it is one row (61px): `relative z-40 bg-card lg:sticky lg:top-0`, solid white with the bottom border. Below `lg` it is two or three rows (109px, or 157px for a signed-in owner on a phone on `/`), which would hide a quarter of a phone screen, so it scrolls away there (owner's choice after the ui-reviewer flagged it).
+- Scroll offset is page-wide: `scroll-padding-top` on `html` (1rem, 5.5rem from `lg`) so anchor links, the skip link, `focus()` and `scrollIntoView` all stop below the header. It replaced per-section `scroll-margin`, which only covered the landing anchors. Tailwind dropped the declarations when the `@media` was nested inside the `html` rule next to `@apply`, so the media query sits beside it. If the header gets taller from `lg`, raise the padding.
+- The landing phone menu now also closes when focus moves outside it or on a tap outside it (not on a blur with no new focus, since Safari does not focus a clicked link). The skip link is `focus:fixed`.
+- Checked in headless Edge at 375, 640, 768, 820, 1024 and 1440px, signed out and as an owner: no horizontal scroll, anchors land 16px (below `lg`) or 27px below the header (from `lg`), menu closes on an outside tap. code-reviewer and ui-reviewer run and their findings applied. No new dependencies.
