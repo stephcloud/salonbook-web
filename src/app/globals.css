@@ -109,6 +109,20 @@
   }
 }
 
+/* Anchor targets stop just below the sticky SiteHeader. Its height depends on
+   how its links wrap: on a phone up to three rows (157px, signed-in owner on
+   `/`), up to two rows until `lg` (109px), one row from `lg` (61px). Each
+   value is the tallest case plus a little space. */
+@utility scroll-mt-header {
+  scroll-margin-top: 10.5rem;
+  @media (width >= 40rem) {
+    scroll-margin-top: 8rem;
+  }
+  @media (width >= 64rem) {
+    scroll-margin-top: 5rem;
+  }
+}
+
 /* Landing hero photo: no frame. The edge nearest the text fades into the
    page with an eased mask: the top edge while the photo sits under the
    text, the left edge from `lg` where it fills the right-hand side. */

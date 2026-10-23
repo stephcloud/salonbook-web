@@ -27,7 +27,7 @@ export async function SiteHeader() {
   const role = parseRole(store.get(ROLE_COOKIE)?.value);
 
   return (
-    <header className="relative border-b border-border bg-card">
+    <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-sm">
       <nav
         aria-label="Main"
         className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-2 gap-y-1 px-4 py-2"

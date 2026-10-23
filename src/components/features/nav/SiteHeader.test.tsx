@@ -45,6 +45,21 @@ describe("SiteHeader", () => {
     );
   });
 
+  it("sticks to the top above the page, on a near-opaque background", async () => {
+    render(await SiteHeader());
+    const header = screen.getByRole("banner");
+    for (const name of [
+      "sticky",
+      "top-0",
+      "z-40",
+      "bg-card/95",
+      "backdrop-blur-sm",
+      "border-b",
+    ]) {
+      expect(header).toHaveClass(name);
+    }
+  });
+
   it("reads only the two cookies and calls no API", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);

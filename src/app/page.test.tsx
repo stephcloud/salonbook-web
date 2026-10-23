@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -145,6 +147,28 @@ describe("landing page", () => {
     for (const id of ["features", "how-it-works", "pricing", "faq"]) {
       expect(document.getElementById(id)).not.toBeNull();
     }
+  });
+
+  it("stops every anchored section below the sticky header", async () => {
+    await show();
+    for (const id of [
+      "features",
+      "how-it-works",
+      "benefits",
+      "pricing",
+      "faq",
+    ]) {
+      expect(document.getElementById(id)).toHaveClass("scroll-mt-header");
+    }
+    // The class is ours, so check it is defined with an offset at each size.
+    const css = readFileSync(resolve("src/app/globals.css"), "utf8");
+    const utility = css.match(/@utility scroll-mt-header \{([\s\S]*?)\n\}/);
+    expect(utility).not.toBeNull();
+    expect(utility![1].match(/scroll-margin-top: [\d.]+rem;/g)).toEqual([
+      "scroll-margin-top: 10.5rem;",
+      "scroll-margin-top: 8rem;",
+      "scroll-margin-top: 5rem;",
+    ]);
   });
 
   it("lists the features and the answers a visitor can open", async () => {
