@@ -20,11 +20,8 @@ export function Hero({ viewer }: { viewer: Viewer }) {
           56px left of centre, and the photo starts 48px left of centre (or
           further right once it hits its 1000px cap): the two never overlap.
           `relative z-10` keeps text and focus rings above the photo. */}
-      <div className="relative z-10 mx-auto w-full max-w-5xl px-4 pt-10 pb-6 lg:py-24">
+      <div className="relative z-10 mx-auto w-full max-w-5xl px-4 pt-6 pb-6 lg:pt-16 lg:pb-24">
         <div className="flex flex-col items-start gap-6 lg:max-w-[440px]">
-          <p className="rounded-full bg-card px-3 py-1 text-sm font-semibold text-primary ring-1 ring-border">
-            Salon booking with deposits
-          </p>
           <h1
             id="hero-heading"
             className="max-w-2xl text-3xl leading-tight font-bold text-foreground sm:text-4xl md:text-5xl lg:text-[2.625rem]"
