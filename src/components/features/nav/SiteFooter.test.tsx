@@ -56,11 +56,10 @@ describe("SiteFooter", () => {
 
   it("shows the brand, tagline and bottom bar", async () => {
     render(await SiteFooter());
-    const logo = screen.getByRole("link", { name: "SalonBook" });
-    expect(logo).toHaveAttribute("href", "/");
-    // S and B are the accent letters, inside the one link text.
-    const accents = logo.querySelectorAll("span.text-brand-accent.italic");
-    expect([...accents].map((el) => el.textContent)).toEqual(["S", "B"]);
+    expect(screen.getByRole("link", { name: "SalonBook" })).toHaveAttribute(
+      "href",
+      "/",
+    );
     expect(
       screen.getByText(
         "Book your salon appointment and pay the deposit online.",

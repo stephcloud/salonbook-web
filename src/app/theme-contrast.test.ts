@@ -41,6 +41,9 @@ const TEXT_PAIRS: [text: string, background: string][] = [
   ["primary-dark", "background"],
   ["primary-dark", "card"],
   ["primary-dark", "secondary"],
+  ["brand-accent", "background"],
+  ["brand-accent", "card"],
+  ["brand-accent", "secondary"],
   ["destructive", "card"],
   ["destructive", "secondary"],
   ["status-pending-fg", "status-pending-bg"],
@@ -72,16 +75,6 @@ describe("theme contrast", () => {
       contrast(token("input"), token("background")),
     ).toBeGreaterThanOrEqual(3);
   });
-
-  // Large bold text (WCAG large-text threshold), and it passes 4.5:1 today too.
-  it.each(["card", "secondary", "background"])(
-    "the wordmark accent is at least 3:1 on %s",
-    (background) => {
-      expect(
-        contrast(token("brand-accent"), token(background)),
-      ).toBeGreaterThanOrEqual(3);
-    },
-  );
 
   it("the focus ring is at least 3:1 on the page", () => {
     expect(contrast(token("ring"), token("background"))).toBeGreaterThanOrEqual(

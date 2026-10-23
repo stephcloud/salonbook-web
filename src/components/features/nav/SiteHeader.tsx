@@ -37,7 +37,11 @@ export async function SiteHeader() {
         aria-label="Main"
         className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-2 gap-y-1 px-4 py-2"
       >
-        <Wordmark className="basis-full sm:mr-auto sm:basis-auto" />
+        {/* The wrapper takes the phone row, so the link (and its focus ring
+            and tap area) is only as wide as the word. */}
+        <div className="basis-full sm:mr-auto sm:basis-auto">
+          <Wordmark />
+        </div>
         <HomeAnchors />
         <ul className="flex flex-wrap items-center gap-1">
           <li>

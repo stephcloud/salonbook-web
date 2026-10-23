@@ -114,7 +114,7 @@ export async function SiteFooter() {
     <footer className="border-t border-primary/15 bg-secondary">
       <div className="mx-auto grid w-full max-w-5xl gap-8 px-4 py-12 lg:grid-cols-[1fr_2fr]">
         <div className="flex flex-col items-start gap-2">
-          <Wordmark className="-ml-1" />
+          <Wordmark className="-ml-2" />
           <p className="max-w-xs text-sm text-muted-foreground">
             Book your salon appointment and pay the deposit online.
           </p>
