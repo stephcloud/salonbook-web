@@ -37,18 +37,22 @@ export default async function Home() {
   return (
     <main
       id="main-content"
-      className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-16 px-4 py-8 md:gap-20"
+      className="flex w-full flex-1 flex-col gap-16 pb-8 md:gap-20"
     >
+      {/* The hero spans the full width (its photo bleeds to the edge); the
+          rest of the page keeps the usual max-width column. */}
       <Hero viewer={viewer} />
-      <ProductPreview />
-      <ProblemSection />
-      <FeaturesSection />
-      <AudienceSection />
-      <HowItWorks />
-      <BenefitsSection />
-      <PricingNote />
-      <FAQSection />
-      <FinalCTASection viewer={viewer} />
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-16 px-4 md:gap-20">
+        <ProductPreview />
+        <ProblemSection />
+        <FeaturesSection />
+        <AudienceSection />
+        <HowItWorks />
+        <BenefitsSection />
+        <PricingNote />
+        <FAQSection />
+        <FinalCTASection viewer={viewer} />
+      </div>
     </main>
   );
 }

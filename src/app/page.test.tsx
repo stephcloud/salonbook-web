@@ -92,25 +92,52 @@ describe("landing page", () => {
       "A salon with pink walls, pink chairs, gold-framed lit mirrors and a crystal chandelier",
     );
     expect(photo.getAttribute("src")).toContain("hero.jpg");
-    expect(photo).toHaveClass(
-      "object-cover",
-      "object-[50%_30%]",
-      "sm:object-[50%_20%]",
-      "lg:object-center",
+    expect(photo).toHaveClass("object-cover");
+    expect(photo).toHaveAttribute(
+      "sizes",
+      "(min-width: 64rem) min(calc(50vw + 48px), 1000px), 100vw",
     );
-    expect(photo).toHaveAttribute("sizes", expect.stringContaining("440px"));
     const frame = screen.getByTestId("hero-photo");
     expect(frame).not.toHaveClass("hidden");
-    expect(frame).toHaveClass(
-      "rounded-2xl",
-      "bg-gradient-to-br",
-      "lg:aspect-[4/5]",
+    // No box: the photo melts into the page through a mask instead of
+    // sitting in a rounded, bordered frame.
+    expect(frame).toHaveClass("hero-photo-fade", "w-full");
+    expect(frame.className).not.toMatch(
+      /(^|\s)(\w+:)?(rounded|border)(-|\s|$)/,
     );
-    // The frame must fill its grid cell: a max-width here left a pale band
-    // beside the photo between `sm` and `lg`.
-    expect(frame.className).not.toMatch(/(^|\s)(\w+:)?max-w-/);
-    expect(frame).toHaveClass("w-full", "aspect-[4/3]", "sm:aspect-[16/9]");
+    // Under the text below `lg`; from `lg` it fills the right side and
+    // bleeds to the viewport edge, starting just left of centre, capped so
+    // a very wide screen doesn't crop the portrait photo to a thin band.
+    expect(frame).toHaveClass(
+      "lg:absolute",
+      "lg:right-0",
+      "lg:w-[calc(50%+48px)]",
+      "lg:max-w-[1000px]",
+    );
     expect(frame.querySelector("[data-placeholder]")).toBeNull();
+  });
+
+  it("keeps the hero text clear of the photo on desktop", async () => {
+    await show();
+    // The text column ends 56px left of centre; the photo starts 48px left
+    // at most. The text paints above the photo, focus rings included.
+    const heading = screen.getByRole("heading", { level: 1 });
+    expect(heading.parentElement).toHaveClass("lg:max-w-[440px]");
+    expect(heading.parentElement?.parentElement).toHaveClass(
+      "max-w-5xl",
+      "px-4",
+      "relative",
+      "z-10",
+    );
+  });
+
+  it("renders the hero outside the max-width column so it can bleed", async () => {
+    await show();
+    const section = screen.getByRole("region", {
+      name: /Online booking for your salon/,
+    });
+    expect(section.parentElement).toBe(screen.getByRole("main"));
+    expect(screen.getByRole("main").className).not.toMatch(/max-w-/);
   });
 
   it("gives the anchored sections the ids the header links to", async () => {

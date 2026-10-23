@@ -7,53 +7,61 @@ import {
 export const HERO_PHOTO_ALT =
   "A salon with pink walls, pink chairs, gold-framed lit mirrors and a crystal chandelier";
 
+// Full-bleed: the page renders this outside its max-width wrapper so the
+// photo can reach the viewport edge on desktop. The blush tint behind it
+// picks up the photo's pink walls; text only ever sits on the plain part.
 export function Hero({ viewer }: { viewer: Viewer }) {
   return (
     <section
       aria-labelledby="hero-heading"
-      className="relative isolate grid items-center gap-8 overflow-hidden rounded-3xl bg-gradient-to-br from-secondary via-background to-background px-5 py-10 md:px-10 lg:grid-cols-2 lg:py-16"
+      className="relative isolate overflow-hidden bg-gradient-to-b from-background via-secondary to-secondary lg:bg-gradient-to-r lg:from-background lg:via-background lg:to-secondary"
     >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute hidden lg:block -top-24 -right-24 -z-10 size-72 rounded-full bg-rose/25 blur-3xl"
-      />
-      <div className="flex flex-col items-start gap-6">
-        <p className="rounded-full bg-card px-3 py-1 text-sm font-semibold text-primary ring-1 ring-border">
-          Salon booking with deposits
-        </p>
-        <h1
-          id="hero-heading"
-          className="max-w-2xl text-3xl leading-tight font-bold text-foreground sm:text-4xl md:text-5xl"
-        >
-          Online booking for your salon, with a deposit to protect your time.
-        </h1>
-        <p className="max-w-xl text-base text-muted-foreground sm:text-lg">
-          Clients pick a service and a stylist, see real free times, and keep
-          their spot with a deposit. Salon owners set up their own page and
-          share one link.
-        </p>
-        <LandingActions viewer={viewer} />
+      {/* From `lg` the text column is capped at 440px, so it always ends
+          56px left of centre, and the photo starts 48px left of centre (or
+          further right once it hits its 1000px cap): the two never overlap.
+          `relative z-10` keeps text and focus rings above the photo. */}
+      <div className="relative z-10 mx-auto w-full max-w-5xl px-4 pt-10 pb-6 lg:py-24">
+        <div className="flex flex-col items-start gap-6 lg:max-w-[440px]">
+          <p className="rounded-full bg-card px-3 py-1 text-sm font-semibold text-primary ring-1 ring-border">
+            Salon booking with deposits
+          </p>
+          <h1
+            id="hero-heading"
+            className="text-3xl leading-tight font-bold text-foreground sm:text-4xl md:text-5xl lg:text-[2.625rem]"
+          >
+            Online booking for your salon, with a deposit to protect your time.
+          </h1>
+          <p className="max-w-xl text-base text-muted-foreground sm:text-lg">
+            Clients pick a service and a stylist, see real free times, and keep
+            their spot with a deposit. Salon owners set up their own page and
+            share one link.
+          </p>
+          <LandingActions viewer={viewer} />
+        </div>
       </div>
-      {/* The gradient shows while the photo loads; `preload` (Next 16's name
-          for `priority`) fetches it early, as it is the largest thing on
-          screen. The frame always fills its grid cell (a width cap here left
-          a pale band beside the photo between `sm` and `lg`): 4:3 on phones,
-          16:9 under the text from `sm`, and 4:5 in the 440px right column
-          from `lg`. Below `lg` the crop sits high so the chandelier stays in
-          view. */}
+      {/* No frame: `hero-photo-fade` (globals.css) masks the top edge below
+          `lg` and the left edge from `lg`. `preload` (Next 16's name for
+          `priority`) fetches it early, as it is the largest thing on screen.
+          The width cap stops a very wide screen cropping the portrait photo
+          down to a thin band (and scaling it up). */}
       <div
         data-testid="hero-photo"
-        className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-secondary via-rose/30 to-secondary sm:aspect-[16/9] lg:aspect-[4/5]"
+        className="hero-photo-fade relative aspect-[4/5] w-full sm:aspect-[4/3] lg:absolute lg:inset-y-0 lg:right-0 lg:aspect-auto lg:w-[calc(50%+48px)] lg:max-w-[1000px]"
       >
         <Image
           src="/landing/hero.jpg"
           alt={HERO_PHOTO_ALT}
           fill
           preload
-          sizes="(min-width: 1024px) 440px, (min-width: 768px) calc(100vw - 112px), calc(100vw - 72px)"
-          className="object-cover object-[50%_30%] sm:object-[50%_20%] lg:object-center"
+          sizes="(min-width: 64rem) min(calc(50vw + 48px), 1000px), 100vw"
+          className="object-cover object-[50%_10%] sm:object-[50%_12%] lg:object-[50%_20%]"
         />
       </div>
+      {/* Melts the bottom of the hero (photo included) into the page. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b from-transparent to-background"
+      />
     </section>
   );
 }
