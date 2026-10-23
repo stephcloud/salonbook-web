@@ -193,7 +193,7 @@
 ## 2026-10-22 (hero photo)
 
 - The landing hero now shows `public/landing/hero.jpg` (a pink salon with pink chairs, lit gold mirrors and a chandelier; renamed from `hero.webp` because the file is JPEG data) with `next/image` instead of the hero placeholder tile: under the text on phones, in the right column from `lg`, on the same gradient tile while it loads. The other landing placeholders are unchanged.
-- The hero photo is a placeholder whose licence must be confirmed before a public launch.
+- The hero photo is a placeholder whose licence must be confirmed before a public launch. (Resolved 2026-10-23: that photo was replaced; see below.)
 - Fix on `fix/hero-frame`: the photo frame had a `max-w-xl` cap, so between `sm` and `lg` (for example a 1000px desktop window) a pale band of the hero background showed beside the photo. The cap is gone and the frame fills its column: 4:3 on phones, 16:9 from `sm`, 4:5 from `lg`, with the crop set high below `lg` so the chandelier stays in view. Checked in Chrome from 375px to 1440px; a test now fails if a width cap returns.
 
 ## 2026-10-22 (outline button border)
@@ -218,3 +218,9 @@
 ## 2026-10-23 (hero photo replaced)
 
 - Hero image is AI-generated (Gemini), used as illustration only.
+- This replaces the pink-salon placeholder photo, so its licence caveat (2026-10-22) no longer applies.
+- On `feat/landing-polish` the hero was reworked: no framed box; the hero spans the full width outside the page column, on a blush gradient from the palette tokens. From `lg` the photo fills the right side up to the screen edge (width 50% + 48px, at most 1000px) and fades in from the left with a CSS mask (`.hero-photo-fade` in `globals.css`); below `lg` it sits under the text and fades in from the top. The text column is capped at 440px from `lg`, so it never overlaps the photo. The old 4:3 / 16:9 / 4:5 frame and the chandelier crop are gone.
+- The new photo was mirrored so the stylist stands on the right, cropped so both faces stay clear of the fade, and converted from a 1.5 MB PNG (saved with a `.jpg` name) to a real JPEG: 1264x848, 95,740 bytes (about 94 KB), no upscaling. The alt text now describes it.
+- code-reviewer and ui-reviewer run and their findings applied (photo width cap, shorter fades, `sizes` in rem, text stacked above the photo, headline width cap kept below `lg`). Lint, typecheck, the full test suite (1449 tests) and the build pass. No new dependencies.
+- Later:
+  - On phones the photo may look slightly soft, because `sizes` describes the frame width while the photo is scaled up to cover the frame. Check on the preview before raising `sizes`.

@@ -27,7 +27,7 @@ export function Hero({ viewer }: { viewer: Viewer }) {
           </p>
           <h1
             id="hero-heading"
-            className="text-3xl leading-tight font-bold text-foreground sm:text-4xl md:text-5xl lg:text-[2.625rem]"
+            className="max-w-2xl text-3xl leading-tight font-bold text-foreground sm:text-4xl md:text-5xl lg:text-[2.625rem]"
           >
             Online booking for your salon, with a deposit to protect your time.
           </h1>
