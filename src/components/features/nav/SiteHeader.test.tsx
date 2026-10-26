@@ -47,6 +47,28 @@ describe("SiteHeader", () => {
     );
   });
 
+  it("lines the wordmark's letters up with the page text", async () => {
+    render(await SiteHeader());
+    // `-ml-2` cancels the wordmark's `px-2` focus-pill padding.
+    expect(screen.getByRole("link", { name: "SalonBook" })).toHaveClass(
+      "-ml-2",
+      "px-2",
+    );
+  });
+
+  it("uses the same gap between the section links and the page links as inside each list", async () => {
+    render(await SiteHeader());
+    const nav = screen.getByRole("navigation", { name: "Main" });
+    expect(nav).toHaveClass("gap-x-1");
+    expect(nav).not.toHaveClass("gap-x-2");
+    expect(
+      screen.getByRole("link", { name: "Salons" }).closest("ul"),
+    ).toHaveClass("gap-1");
+    expect(screen.getByRole("list", { name: "Sections" })).toHaveClass(
+      "md:gap-1",
+    );
+  });
+
   it("sticks to the top only from lg, on an opaque background above the page", async () => {
     render(await SiteHeader());
     const header = screen.getByRole("banner");

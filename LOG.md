@@ -245,3 +245,10 @@
 - Later:
   - Chore, faster tests: the full Vitest run takes about 340s, over half of it creating jsdom 138 times (Vitest suggests `pool: 'vmThreads'` or `isolate: false`). Under that load `src/app/private-pages.test.ts` timed out once at 5s on the cold import of `/book/[salonId]` (1459 of 1460 passed); it passed on every rerun, with and without this branch's changes. Speed up the run or raise that test's timeout.
   - `src/components/ui/button.tsx` still uses `outline-none`, so the global button loses its focus ring in Windows high-contrast mode. Switch it to `outline-hidden` in its own change.
+
+## 2026-10-26 (hero desktop polish)
+
+- On `fix/hero-desktop-polish`: the hero text now has equal padding top and bottom from `lg` (`lg:py-16`, was `pt-16 pb-24`), so it is centred against the photo: 62px from the header to the headline and 64px below the buttons (was 96px). The hero is 474px tall at 1440x800 (was 506px).
+- The desktop photo crop is anchored at 15% from the top (was 50%). Up to about 1480px wide the photo fits the frame's height and nothing is cut, so it only matters on wider screens, where 50% clipped the stylist's hair under the header (about 14px at 1920). Now there is about 40px of headroom at 1920.
+- The header wordmark has `-ml-2` to cancel its focus-pill padding, so its letters line up with the hero headline (both at x=224 at 1440). The nav gap is now `gap-x-1`, so FAQ to Salons (was 8px) matches every other link gap (4px); on phones Menu to Salons is 4px too.
+- Checked in Chrome at 1440x800, 1024x768, 390x844 and 1920x1080: both buttons visible without scrolling on laptop and phone, no horizontal scroll. A stale optimised copy of the previous hero photo in the local `.next/cache/images` showed at 1920 on the first load; it is a local cache artefact (it refreshed on the next load), not a code issue.

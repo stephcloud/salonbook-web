@@ -131,6 +131,21 @@ describe("landing page", () => {
     );
   });
 
+  it("centres the hero text against the photo on desktop", async () => {
+    await show();
+    // The photo spans the section, whose height this block sets, so equal
+    // top and bottom padding from `lg` centres the text.
+    const text = screen.getByTestId("hero-text");
+    expect(text).toHaveClass("lg:py-16");
+    expect(text.className).not.toMatch(/lg:p[tb]-/);
+  });
+
+  it("anchors the desktop photo crop near the top for the stylist's headroom", async () => {
+    await show();
+    const photo = hero().getByRole("img", { name: HERO_PHOTO_ALT });
+    expect(photo).toHaveClass("lg:object-[33%_15%]", "object-[57%_50%]");
+  });
+
   it("renders the hero outside the max-width column so it can bleed", async () => {
     await show();
     const section = screen.getByRole("region", {
