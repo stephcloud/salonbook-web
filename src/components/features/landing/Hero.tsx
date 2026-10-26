@@ -20,8 +20,14 @@ export function Hero({ viewer }: { viewer: Viewer }) {
           hero buttons side by side, so it always ends 24px right of centre, and
           the photo starts 32px right of centre (or further right once it hits
           its 1000px cap): the two never overlap.
-          `relative z-10` keeps text and focus rings above the photo. */}
-      <div className="relative z-10 mx-auto w-full max-w-5xl px-4 pt-6 pb-6 lg:pt-16 lg:pb-24">
+          `relative z-10` keeps text and focus rings above the photo.
+          The photo spans the section's full height and this block sets that
+          height, so equal top and bottom padding from `lg` centres the text
+          against the photo. */}
+      <div
+        data-testid="hero-text"
+        className="relative z-10 mx-auto w-full max-w-5xl px-4 pt-6 pb-6 lg:py-16"
+      >
         <div className="flex flex-col items-start gap-6 lg:max-w-[520px]">
           <h1
             id="hero-heading"
@@ -44,7 +50,12 @@ export function Hero({ viewer }: { viewer: Viewer }) {
           a thin band (and scaling it up). The photo is mirrored so the
           stylist stands on the right; the crop keeps both faces clear of
           the fade: centred on the pair below `lg`, shifted left from `lg`
-          so the client's face sits past the left fade. */}
+          so the client's face sits past the left fade. From `lg` the crop is
+          anchored near the top (15%): when a wide screen makes the frame
+          wider than the photo's shape, it is cut top and bottom, and this
+          keeps the stylist's hair clear of the header. On narrower screens
+          (up to about 1500px, depending on the text block's height) the
+          photo fits the frame's height and nothing is cut. */}
       <div
         data-testid="hero-photo"
         className="hero-photo-fade relative aspect-[4/5] w-full sm:aspect-[4/3] lg:absolute lg:inset-y-0 lg:right-0 lg:aspect-auto lg:w-[calc(50%-32px)] lg:max-w-[1000px]"
@@ -55,7 +66,7 @@ export function Hero({ viewer }: { viewer: Viewer }) {
           fill
           preload
           sizes="(min-width: 64rem) min(calc(50vw - 32px), 1000px), 100vw"
-          className="object-cover object-[57%_50%] lg:object-[33%_50%]"
+          className="object-cover object-[57%_50%] lg:object-[33%_15%]"
         />
       </div>
       {/* Melts the bottom of the hero (photo included) into the page. */}

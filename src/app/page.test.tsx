@@ -123,12 +123,30 @@ describe("landing page", () => {
     // at most. The text paints above the photo, focus rings included.
     const heading = screen.getByRole("heading", { level: 1 });
     expect(heading.parentElement).toHaveClass("lg:max-w-[520px]");
-    expect(heading.parentElement?.parentElement).toHaveClass(
+    expect(heading.parentElement?.parentElement).toBe(
+      screen.getByTestId("hero-text"),
+    );
+    expect(screen.getByTestId("hero-text")).toHaveClass(
       "max-w-5xl",
       "px-4",
       "relative",
       "z-10",
     );
+  });
+
+  it("centres the hero text against the photo on desktop", async () => {
+    await show();
+    // The photo spans the section, whose height this block sets, so equal
+    // top and bottom padding from `lg` centres the text.
+    const text = screen.getByTestId("hero-text");
+    expect(text).toHaveClass("lg:py-16");
+    expect(text.className).not.toMatch(/lg:p[tb]-/);
+  });
+
+  it("anchors the desktop photo crop near the top for the stylist's headroom", async () => {
+    await show();
+    const photo = hero().getByRole("img", { name: HERO_PHOTO_ALT });
+    expect(photo).toHaveClass("lg:object-[33%_15%]", "object-[57%_50%]");
   });
 
   it("renders the hero outside the max-width column so it can bleed", async () => {

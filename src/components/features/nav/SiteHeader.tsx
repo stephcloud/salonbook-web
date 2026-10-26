@@ -35,12 +35,16 @@ export async function SiteHeader() {
     <header className="relative z-40 border-b border-border bg-card lg:sticky lg:top-0">
       <nav
         aria-label="Main"
-        className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-2 gap-y-1 px-4 py-2"
+        className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-1 gap-y-1 px-4 py-2"
       >
         {/* The wrapper takes the phone row, so the link (and its focus ring
-            and tap area) is only as wide as the word. */}
+            and tap area) is only as wide as the word. `-ml-2` cancels the
+            wordmark's `px-2`, so its letters line up with the page text
+            (the hero headline) below. The nav's `gap-x-1` matches the gap
+            inside each link list, so the gap between the section links and
+            Salons is the same as every other gap. */}
         <div className="basis-full sm:mr-auto sm:basis-auto">
-          <Wordmark />
+          <Wordmark className="-ml-2" />
         </div>
         <HomeAnchors />
         <ul className="flex flex-wrap items-center gap-1">
