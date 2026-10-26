@@ -8,13 +8,36 @@ describe("LandingActions", () => {
   it("gives guests Find a salon and Register your salon", () => {
     render(<LandingActions viewer="guest" />);
     expect(names()).toEqual(["Find a salon", "Register your salon"]);
+    expect(
+      screen.getByRole("link", { name: "Register your salon" }),
+    ).toHaveAttribute("href", "/register");
   });
 
-  it("gives the outline button a plum border, not a transparent one", () => {
+  it("makes Find a salon the solid pill and Register the outlined one", () => {
     render(<LandingActions viewer="guest" />);
+    expect(screen.getByRole("link", { name: "Find a salon" })).toHaveClass(
+      "bg-primary",
+    );
     const register = screen.getByRole("link", { name: "Register your salon" });
-    expect(register).toHaveClass("border", "border-primary");
+    expect(register).toHaveClass("border-2", "border-primary");
     expect(register).not.toHaveClass("border-transparent");
+  });
+
+  it("hides every icon from screen readers", () => {
+    render(<LandingActions viewer="guest" />);
+    const icons = document.querySelectorAll("svg");
+    expect(icons).toHaveLength(2);
+    for (const icon of icons) {
+      expect(icon).toHaveAttribute("aria-hidden", "true");
+    }
+  });
+
+  it("stacks on phones and sits side by side from sm", () => {
+    render(<LandingActions viewer="guest" />);
+    expect(screen.getAllByRole("link")[0].parentElement).toHaveClass(
+      "flex-col",
+      "sm:flex-row",
+    );
   });
 
   it("gives owners Find a salon and their dashboard", () => {

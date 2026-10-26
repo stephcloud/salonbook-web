@@ -1,33 +1,27 @@
-import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
+import { CtaButton } from "@/components/features/landing/CtaButton";
 
 export type Viewer = "guest" | "client" | "owner";
 
 /**
  * `/register` sends signed-in people away, so the second button changes with
  * the viewer: owners get their dashboard, clients get no second button.
+ * Full width and stacked on phones, side by side from `sm`.
  */
 export function LandingActions({ viewer }: { viewer: Viewer }) {
   return (
-    <div className="flex flex-wrap gap-3">
-      <Link href="/salons" className={buttonVariants({ size: "lg" })}>
+    <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
+      <CtaButton href="/salons" icon="search">
         Find a salon
-      </Link>
+      </CtaButton>
       {viewer === "guest" ? (
-        <Link
-          href="/register"
-          className={buttonVariants({ size: "lg", variant: "outline" })}
-        >
+        <CtaButton href="/register" variant="outline" icon="arrow">
           Register your salon
-        </Link>
+        </CtaButton>
       ) : null}
       {viewer === "owner" ? (
-        <Link
-          href="/dashboard"
-          className={buttonVariants({ size: "lg", variant: "outline" })}
-        >
+        <CtaButton href="/dashboard" variant="outline" icon="arrow">
           Go to your dashboard
-        </Link>
+        </CtaButton>
       ) : null}
     </div>
   );
