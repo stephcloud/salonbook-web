@@ -23,7 +23,7 @@ export function Hero({ viewer }: { viewer: Viewer }) {
           `relative z-10` keeps text and focus rings above the photo.
           The photo spans the section's full height and this block sets that
           height, so equal top and bottom padding from `lg` centres the text
-          against the photo (about 62px from the header to the headline). */}
+          against the photo. */}
       <div
         data-testid="hero-text"
         className="relative z-10 mx-auto w-full max-w-5xl px-4 pt-6 pb-6 lg:py-16"
@@ -53,8 +53,9 @@ export function Hero({ viewer }: { viewer: Viewer }) {
           so the client's face sits past the left fade. From `lg` the crop is
           anchored near the top (15%): when a wide screen makes the frame
           wider than the photo's shape, it is cut top and bottom, and this
-          keeps the stylist's hair clear of the header. Up to about 1480px
-          wide the photo fits the frame's height and nothing is cut. */}
+          keeps the stylist's hair clear of the header. On narrower screens
+          (up to about 1500px, depending on the text block's height) the
+          photo fits the frame's height and nothing is cut. */}
       <div
         data-testid="hero-photo"
         className="hero-photo-fade relative aspect-[4/5] w-full sm:aspect-[4/3] lg:absolute lg:inset-y-0 lg:right-0 lg:aspect-auto lg:w-[calc(50%-32px)] lg:max-w-[1000px]"

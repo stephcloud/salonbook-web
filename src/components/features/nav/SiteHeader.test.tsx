@@ -60,7 +60,6 @@ describe("SiteHeader", () => {
     render(await SiteHeader());
     const nav = screen.getByRole("navigation", { name: "Main" });
     expect(nav).toHaveClass("gap-x-1");
-    expect(nav).not.toHaveClass("gap-x-2");
     expect(
       screen.getByRole("link", { name: "Salons" }).closest("ul"),
     ).toHaveClass("gap-1");

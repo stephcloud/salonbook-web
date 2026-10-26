@@ -123,7 +123,10 @@ describe("landing page", () => {
     // at most. The text paints above the photo, focus rings included.
     const heading = screen.getByRole("heading", { level: 1 });
     expect(heading.parentElement).toHaveClass("lg:max-w-[520px]");
-    expect(heading.parentElement?.parentElement).toHaveClass(
+    expect(heading.parentElement?.parentElement).toBe(
+      screen.getByTestId("hero-text"),
+    );
+    expect(screen.getByTestId("hero-text")).toHaveClass(
       "max-w-5xl",
       "px-4",
       "relative",
