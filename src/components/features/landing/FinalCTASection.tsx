@@ -17,7 +17,9 @@ export function FinalCTASection({ viewer }: { viewer: Viewer }) {
         <p className="text-lg text-muted-foreground">
           Find a salon to book, or register yours and share your link.
         </p>
-        <LandingActions viewer={viewer} />
+        {/* From `md` the column is too narrow for two pills side by side, so
+            they stack and share the widest one's width. */}
+        <LandingActions viewer={viewer} className="md:w-fit md:flex-col" />
       </div>
       <ImagePlaceholder slot="salonInterior" className="hidden md:flex" />
     </section>

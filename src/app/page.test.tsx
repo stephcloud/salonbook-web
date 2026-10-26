@@ -174,6 +174,19 @@ describe("landing page", () => {
     ).toHaveAttribute("href", "/register");
   });
 
+  it("has no tagline pill above the hero heading", async () => {
+    await show();
+    expect(hero().queryByText("Salon booking with deposits")).toBeNull();
+  });
+
+  it("stacks the final call-to-action buttons in its narrow md column", async () => {
+    await show();
+    const group = finalCta().getByRole("link", {
+      name: "Find a salon",
+    }).parentElement;
+    expect(group).toHaveClass("sm:flex-row", "md:flex-col", "md:w-fit");
+  });
+
   it("sends a signed-in owner to the dashboard instead of register", async () => {
     jar.set("sb_token", "t");
     jar.set("sb_role", "owner");

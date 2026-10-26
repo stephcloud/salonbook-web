@@ -24,8 +24,8 @@ describe("LandingActions", () => {
   });
 
   it("hides every icon from screen readers", () => {
-    render(<LandingActions viewer="guest" />);
-    const icons = document.querySelectorAll("svg");
+    const { container } = render(<LandingActions viewer="guest" />);
+    const icons = container.querySelectorAll("svg");
     expect(icons).toHaveLength(2);
     for (const icon of icons) {
       expect(icon).toHaveAttribute("aria-hidden", "true");

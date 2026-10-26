@@ -5,9 +5,13 @@ import { cn } from "@/lib/utils";
 
 // Landing-only pill links (hero and final call to action) with a round icon
 // badge on the right. They set their own padding and size, so the global
-// `Button` look stays untouched. 52px tall: the 40px badge plus 6px each side.
+// `Button` look stays untouched; the focus ring copies `button.tsx`, keep the
+// two in step. 56px tall: 40px badge + 12px padding + 4px border, with a 44px
+// floor. `outline-hidden` (not `outline-none`) keeps a focus outline in
+// Windows high-contrast mode, which drops the box-shadow ring. Labels may wrap
+// on very narrow screens rather than run into the badge.
 const BASE =
-  "group inline-flex min-h-13 w-full items-center justify-between gap-4 rounded-full border-2 py-1.5 pr-1.5 pl-6 text-base font-semibold whitespace-nowrap transition-colors motion-reduce:transition-none outline-none focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:w-auto";
+  "group inline-flex min-h-11 w-full items-center justify-between gap-4 rounded-full border-2 py-1.5 pr-1.5 pl-6 text-left text-base leading-tight font-semibold transition-colors motion-reduce:transition-none outline-hidden focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:w-auto";
 
 const VARIANTS = {
   primary: {
@@ -22,7 +26,7 @@ const VARIANTS = {
 
 const ICONS = { search: Search, arrow: ArrowRight } as const;
 
-export type CtaButtonProps = {
+type CtaButtonProps = {
   href: string;
   children: ReactNode;
   variant?: keyof typeof VARIANTS;
@@ -47,11 +51,12 @@ export function CtaButton({
       >
         <Icon
           aria-hidden="true"
+          data-icon={icon}
           strokeWidth={2.2}
           className={cn(
             "size-5",
             icon === "arrow" &&
-              "transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0",
+              "transition-transform group-hover:translate-x-0.5 group-focus-visible:translate-x-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0 motion-reduce:group-focus-visible:translate-x-0",
           )}
         />
       </span>
