@@ -16,12 +16,13 @@ export function Hero({ viewer }: { viewer: Viewer }) {
       aria-labelledby="hero-heading"
       className="relative isolate overflow-hidden bg-gradient-to-b from-background via-secondary to-secondary lg:bg-gradient-to-r lg:from-background lg:via-background lg:to-secondary"
     >
-      {/* From `lg` the text column is capped at 440px, so it always ends
-          56px left of centre, and the photo starts 48px left of centre (or
-          further right once it hits its 1000px cap): the two never overlap.
+      {/* From `lg` the text column is capped at 520px, wide enough for the two
+          hero buttons side by side, so it always ends 24px right of centre, and
+          the photo starts 32px right of centre (or further right once it hits
+          its 1000px cap): the two never overlap.
           `relative z-10` keeps text and focus rings above the photo. */}
       <div className="relative z-10 mx-auto w-full max-w-5xl px-4 pt-6 pb-6 lg:pt-16 lg:pb-24">
-        <div className="flex flex-col items-start gap-6 lg:max-w-[440px]">
+        <div className="flex flex-col items-start gap-6 lg:max-w-[520px]">
           <h1
             id="hero-heading"
             className="max-w-2xl text-3xl leading-tight font-bold text-foreground sm:text-4xl md:text-5xl lg:text-[2.625rem]"
@@ -46,14 +47,14 @@ export function Hero({ viewer }: { viewer: Viewer }) {
           so the client's face sits past the left fade. */}
       <div
         data-testid="hero-photo"
-        className="hero-photo-fade relative aspect-[4/5] w-full sm:aspect-[4/3] lg:absolute lg:inset-y-0 lg:right-0 lg:aspect-auto lg:w-[calc(50%+48px)] lg:max-w-[1000px]"
+        className="hero-photo-fade relative aspect-[4/5] w-full sm:aspect-[4/3] lg:absolute lg:inset-y-0 lg:right-0 lg:aspect-auto lg:w-[calc(50%-32px)] lg:max-w-[1000px]"
       >
         <Image
           src="/landing/hero.jpg"
           alt={HERO_PHOTO_ALT}
           fill
           preload
-          sizes="(min-width: 64rem) min(calc(50vw + 48px), 1000px), 100vw"
+          sizes="(min-width: 64rem) min(calc(50vw - 32px), 1000px), 100vw"
           className="object-cover object-[57%_50%] lg:object-[33%_50%]"
         />
       </div>
