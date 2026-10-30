@@ -3,6 +3,7 @@ import {
   clockOptionMinutes,
   formatApiTime,
   formatClockMinutes,
+  lagosHour,
   formatLagosDate,
   formatLagosDateTime,
   formatLagosDay,
@@ -128,5 +129,14 @@ describe("wall-clock times from the availability API", () => {
     expect(options[0]).toBe(0);
     expect(options.at(-1)).toBe(1425);
     expect(clockOptionMinutes(30)).toHaveLength(48);
+  });
+});
+
+describe("lagosHour", () => {
+  it("gives the 24-hour Lagos hour, including midnight and noon", () => {
+    expect(lagosHour("2026-03-07T00:15:00+01:00")).toBe(0);
+    expect(lagosHour("2026-03-07T09:30:00+01:00")).toBe(9);
+    expect(lagosHour("2026-03-07T12:00:00+01:00")).toBe(12);
+    expect(lagosHour("2026-03-07T22:30:00Z")).toBe(23);
   });
 });

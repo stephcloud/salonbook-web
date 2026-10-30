@@ -27,7 +27,7 @@ export type ChecklistStep = {
 
 export type Checklist = {
   steps: ChecklistStep[];
-  /** How many of the five setup steps are done (the share step is not counted). */
+  /** How many of the shown steps are done, the share step counting once it is ready. */
   doneCount: number;
   totalCount: number;
   progressText: string;
@@ -137,9 +137,7 @@ export function buildChecklist(input: ChecklistInput): Checklist {
     },
   ];
 
-  const setupSteps = steps.length;
-  const doneCount = steps.filter((step) => step.status === "done").length;
-  const readyForCustomers = doneCount === setupSteps;
+  const readyForCustomers = steps.every((step) => step.status === "done");
   const setupDone = steps.every(
     (step) => step.id === "approval" || step.status === "done",
   );
@@ -159,11 +157,15 @@ export function buildChecklist(input: ChecklistInput): Checklist {
     actionLabel: null,
   });
 
+  // Count every step shown, so the text matches the list the owner sees.
+  const doneCount = steps.filter(
+    (step) => step.status === "done" || step.status === "ready",
+  ).length;
   return {
     steps,
     doneCount,
-    totalCount: setupSteps,
-    progressText: `${doneCount} of ${setupSteps} set up`,
+    totalCount: steps.length,
+    progressText: `${doneCount} of ${steps.length} set up`,
     readyForCustomers,
   };
 }

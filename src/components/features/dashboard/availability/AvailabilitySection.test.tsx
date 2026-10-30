@@ -115,6 +115,14 @@ describe("AvailabilitySection: the week", () => {
     expect(within(card("Sunday")).getByText("Open")).toBeInTheDocument();
   });
 
+  it("names the stylist in the hours heading instead of repeating the page title", () => {
+    renderSection([working(0)]);
+    expect(
+      screen.getByRole("heading", { level: 2, name: "Hours for Ada" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Weekly hours" })).toBeNull();
+  });
+
   it("shows times in 12-hour form (weekday 0 is Monday)", () => {
     renderSection([working(0), working(6, "10:30:00", "14:00:00")]);
     expect(shown("Monday opens")).toBe("9:00 AM");

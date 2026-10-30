@@ -68,7 +68,7 @@ export function OwnerBookingsSection({
   const noticeRef = useRef<HTMLParagraphElement>(null);
 
   // After Previous/Next the button may become disabled, so focus moves to the
-  // heading to keep keyboard users in place.
+  // results heading to keep keyboard users in place.
   const heading = useRef<HTMLHeadingElement>(null);
   const movedPage = useRef(false);
   const fetching = query.isFetching;
@@ -198,21 +198,21 @@ export function OwnerBookingsSection({
   }
 
   return (
-    <section aria-labelledby="bookings-heading" className="flex flex-col gap-4">
-      <h2
-        id="bookings-heading"
-        ref={heading}
-        tabIndex={-1}
-        className="text-lg font-semibold outline-none focus-visible:ring-3 focus-visible:ring-ring"
-      >
-        Bookings
-      </h2>
+    <div className="flex flex-col gap-4">
       <BookingFilters
         filters={filters}
         stylists={stylists}
         onChange={changeFilters}
         onClear={() => changeFilters(NO_OWNER_BOOKING_FILTERS)}
       />
+      {/* Not "Bookings": the page title already says that. */}
+      <h2
+        ref={heading}
+        tabIndex={-1}
+        className="font-sans text-lg font-semibold outline-none focus-visible:ring-3 focus-visible:ring-ring"
+      >
+        Results
+      </h2>
       {query.isError && data ? (
         <div
           role="alert"
@@ -280,6 +280,6 @@ export function OwnerBookingsSection({
           />
         </>
       ) : null}
-    </section>
+    </div>
   );
 }

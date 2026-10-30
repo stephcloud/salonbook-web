@@ -182,7 +182,7 @@ describe("DashboardPage: an owner with a salon", () => {
 
     render(await DashboardPage());
 
-    expect(screen.getByText("5 of 5 set up")).toBeInTheDocument();
+    expect(screen.getByText("6 of 6 set up")).toBeInTheDocument();
     const items = within(
       screen.getByRole("region", { name: /set up your salon/i }),
     ).getAllByRole("listitem");

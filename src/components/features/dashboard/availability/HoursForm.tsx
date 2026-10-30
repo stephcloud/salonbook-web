@@ -231,7 +231,7 @@ export function HoursForm({
 
       <section aria-labelledby="hours-heading" className="flex flex-col gap-4">
         <h2 id="hours-heading" className="text-xl font-bold">
-          Weekly hours
+          Hours for {stylist.name}
         </h2>
         <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {WEEKDAY_NAMES.map((name, index) => {

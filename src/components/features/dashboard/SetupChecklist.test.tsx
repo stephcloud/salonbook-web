@@ -52,7 +52,7 @@ describe("SetupChecklist", () => {
     expect(
       screen.getByRole("heading", { level: 2, name: "Set up your salon" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("2 of 5 set up")).toBeInTheDocument();
+    expect(screen.getByText("2 of 6 set up")).toBeInTheDocument();
     const list = screen.getByRole("list");
     expect(within(list).getAllByRole("listitem")).toHaveLength(6);
     expect(
@@ -111,7 +111,7 @@ describe("SetupChecklist", () => {
       stylists: [STYLIST],
       availability: { read: [WORKING], unchecked: 0 },
     });
-    expect(screen.getByText("5 of 5 set up")).toBeInTheDocument();
+    expect(screen.getByText("6 of 6 set up")).toBeInTheDocument();
     expect(screen.getAllByRole("listitem")[5]).toHaveTextContent(
       "Ready to share.",
     );
@@ -124,7 +124,7 @@ describe("SetupChecklist", () => {
       stylists: [STYLIST],
       availability: { read: [WORKING], unchecked: 0 },
     });
-    expect(screen.getByText("4 of 5 set up")).toBeInTheDocument();
+    expect(screen.getByText("4 of 6 set up")).toBeInTheDocument();
     const items = screen.getAllByRole("listitem");
     expect(items[4]).toHaveTextContent("Step 5: Salon approval");
     expect(items[4]).toHaveTextContent("Waiting for approval.");

@@ -91,6 +91,19 @@ describe("OwnerBookingsSection", () => {
     expect(document.body.textContent).not.toMatch(/@/);
   });
 
+  it("heads the list with Results after the filters, not a second Bookings title", async () => {
+    routeFetch({ [LIST]: () => json([booking(1)]) });
+    renderSection();
+
+    const results = await screen.findByRole("heading", { name: "Results" });
+    const filters = screen.getByRole("combobox", { name: "Status" });
+    expect(
+      filters.compareDocumentPosition(results) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Bookings" })).toBeNull();
+  });
+
   it("asks for one extra row and offers Next only when it comes back", async () => {
     const rows = Array.from({ length: 21 }, (_, i) => booking(i));
     const { mock } = routeFetch({ [LIST]: () => json(rows) });
