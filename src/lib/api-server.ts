@@ -128,6 +128,24 @@ export async function getSalonNames(): Promise<string[]> {
   return names.slice(0, MAX_LIST_LIMIT);
 }
 
+// The sitemap reads at most this many pages of 100 salons.
+const MAX_SITEMAP_SCAN = 5;
+
+/**
+ * Ids of public salons for the sitemap. GET /salons lists approved salons
+ * only, so pending and suspended ones (a 404 on their page) never appear.
+ * shortcut: stops after 500 salons, raise MAX_SITEMAP_SCAN or split the sitemap when that is close.
+ */
+export async function getSitemapSalonIds(): Promise<string[]> {
+  const ids: string[] = [];
+  for (let i = 0; i < MAX_SITEMAP_SCAN; i++) {
+    const batch = await getSalonBatch(i * MAX_LIST_LIMIT);
+    ids.push(...batch.map((salon) => salon.id));
+    if (batch.length < MAX_LIST_LIMIT) break;
+  }
+  return ids;
+}
+
 // The API has no name search, so a search scans up to this many pages of 100.
 const MAX_SEARCH_SCAN = 5;
 

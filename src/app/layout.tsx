@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Playfair_Display, Plus_Jakarta_Sans } from "next/font/google";
 import { SiteFooter } from "@/components/features/nav/SiteFooter";
 import { SiteHeader } from "@/components/features/nav/SiteHeader";
+import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -21,6 +22,7 @@ const playfairDisplay = Playfair_Display({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "SalonBook",
   description: "Book your salon appointment and pay the deposit online.",
 };
