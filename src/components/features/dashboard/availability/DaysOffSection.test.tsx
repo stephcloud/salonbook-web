@@ -1,10 +1,20 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  configure,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { QueryProvider } from "@/components/features/booking/QueryProvider";
 import type { Availability, AvailabilityRule } from "@/lib/api";
 import { json, routeFetch } from "@/tests/route-fetch";
 import { AvailabilitySection } from "./AvailabilitySection";
 import { DaysOffSection } from "./DaysOffSection";
+
+// These timed out under the full suite's load; this file only, not the suite.
+vi.setConfig({ testTimeout: 20_000 });
+configure({ asyncUtilTimeout: 5_000 });
 
 const refresh = vi.fn();
 vi.mock("next/navigation", () => ({

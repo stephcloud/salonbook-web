@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 
+// The cold page imports timed out at 5s under the full suite's load.
+vi.setConfig({ testTimeout: 20_000 });
+
 // Only the page metadata is read, so the server reads are stubbed out.
 vi.mock("@/lib/api-server", () => ({
   getCurrentUser: vi.fn(),
