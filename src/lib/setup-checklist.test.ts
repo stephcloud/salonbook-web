@@ -64,7 +64,7 @@ describe("buildChecklist", () => {
       approval: "done",
       share: "blocked",
     });
-    expect(checklist.progressText).toBe("2 of 5 set up");
+    expect(checklist.progressText).toBe("2 of 6 set up");
     expect(checklist.readyForCustomers).toBe(false);
   });
 
@@ -179,7 +179,7 @@ describe("buildChecklist", () => {
         approval: "done",
         share: "ready",
       });
-      expect(checklist.progressText).toBe("5 of 5 set up");
+      expect(checklist.progressText).toBe("6 of 6 set up");
       expect(checklist.readyForCustomers).toBe(true);
     });
 
@@ -203,7 +203,7 @@ describe("buildChecklist", () => {
         }),
       );
       expect(checklist.steps[5].status).toBe("blocked");
-      expect(checklist.progressText).toBe("4 of 5 set up");
+      expect(checklist.progressText).toBe("4 of 6 set up");
     });
   });
 
@@ -251,7 +251,7 @@ describe("buildChecklist", () => {
       const pending = buildChecklist(
         input({ ...allSetUp, salon: { ...SALON, status: "pending" } }),
       );
-      expect(pending.progressText).toBe("4 of 5 set up");
+      expect(pending.progressText).toBe("4 of 6 set up");
       expect(pending.readyForCustomers).toBe(false);
       expect(pending.steps[5].status).toBe("blocked");
       expect(pending.steps[5].detail).toBe(
@@ -272,7 +272,7 @@ describe("buildChecklist", () => {
       const pending = buildChecklist(
         input({ salon: { ...SALON, status: "pending" } }),
       );
-      expect(pending.progressText).toBe("1 of 5 set up");
+      expect(pending.progressText).toBe("1 of 6 set up");
       expect(pending.steps[5].detail).toMatch(/Finish the steps above first/);
     });
   });
