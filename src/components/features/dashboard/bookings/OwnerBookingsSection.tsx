@@ -207,7 +207,6 @@ export function OwnerBookingsSection({
       />
       {/* Not "Bookings": the page title already says that. */}
       <h2
-        id="bookings-heading"
         ref={heading}
         tabIndex={-1}
         className="font-sans text-lg font-semibold outline-none focus-visible:ring-3 focus-visible:ring-ring"

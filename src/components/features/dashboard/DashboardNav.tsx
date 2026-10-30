@@ -27,6 +27,7 @@ export function DashboardNav() {
     const current = row?.querySelector<HTMLElement>('[aria-current="page"]');
     if (!row || !current) return;
     // Scroll the row only, not the page (scrollIntoView could move both).
+    // `relative` on the row makes it the offsetParent, so offsetLeft is in its terms.
     row.scrollLeft =
       current.offsetLeft - (row.clientWidth - current.offsetWidth) / 2;
   }, [pathname]);
@@ -35,7 +36,7 @@ export function DashboardNav() {
     <nav aria-label="Dashboard" className="-mx-4 sm:mx-0">
       <ul
         ref={list}
-        className="flex gap-1 overflow-x-auto px-4 py-1 [scrollbar-width:none] sm:flex-wrap sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden"
+        className="relative flex gap-1 overflow-x-auto px-4 py-1 [scrollbar-width:none] sm:flex-wrap sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden"
       >
         {LINKS.map(({ href, label }) => {
           const current = pathname === href;
