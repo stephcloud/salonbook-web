@@ -24,11 +24,11 @@ export function ProblemSection() {
         eyebrow="The problem"
         title="Booking a salon should not be this hard"
       />
-      <ul className="grid gap-4 md:grid-cols-3">
+      <ul className="grid gap-4 lg:grid-cols-3">
         {PROBLEMS.map((problem) => (
           <li key={problem.title}>
             {/* Bar inset by the corner radius so the curve never clips it. */}
-            <Card className="relative h-full gap-2 rounded-3xl p-7 before:absolute before:inset-y-6 before:left-0 before:w-1 before:rounded-r-full before:bg-primary">
+            <Card className="relative h-full gap-2 rounded-3xl p-7 ring-rose/40 before:absolute before:inset-y-6 before:left-0 before:w-1 before:rounded-r-full before:bg-primary">
               <h3 className="text-xl font-semibold">{problem.title}</h3>
               <p className="text-base text-muted-foreground">{problem.text}</p>
             </Card>
