@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { Reveal } from "@/components/features/landing/Reveal";
 import { SectionHeading } from "@/components/features/landing/SectionHeading";
 import { StepList } from "@/components/features/landing/StepList";
 import { CLIENT_STEPS, OWNER_STEPS } from "@/lib/landing-content";
@@ -10,24 +11,30 @@ export function HowItWorks() {
       aria-labelledby="how-heading"
       className="flex flex-col gap-6"
     >
-      <SectionHeading
-        id="how-heading"
-        eyebrow="Three steps"
-        title="How it works"
-      />
+      <Reveal>
+        <SectionHeading
+          id="how-heading"
+          eyebrow="Three steps"
+          title="How it works"
+        />
+      </Reveal>
       <div className="grid gap-4 md:grid-cols-2">
-        <Card className="rounded-2xl">
-          <CardContent className="flex flex-col gap-4">
-            <h3 className="text-lg font-semibold">For clients</h3>
-            <StepList steps={CLIENT_STEPS} />
-          </CardContent>
-        </Card>
-        <Card className="rounded-2xl">
-          <CardContent className="flex flex-col gap-4">
-            <h3 className="text-lg font-semibold">For salon owners</h3>
-            <StepList steps={OWNER_STEPS} />
-          </CardContent>
-        </Card>
+        <Reveal className="h-full">
+          <Card className="h-full rounded-2xl">
+            <CardContent className="flex flex-col gap-4">
+              <h3 className="text-lg font-semibold">For clients</h3>
+              <StepList steps={CLIENT_STEPS} />
+            </CardContent>
+          </Card>
+        </Reveal>
+        <Reveal className="h-full" delay={80}>
+          <Card className="h-full rounded-2xl">
+            <CardContent className="flex flex-col gap-4">
+              <h3 className="text-lg font-semibold">For salon owners</h3>
+              <StepList steps={OWNER_STEPS} />
+            </CardContent>
+          </Card>
+        </Reveal>
       </div>
     </section>
   );

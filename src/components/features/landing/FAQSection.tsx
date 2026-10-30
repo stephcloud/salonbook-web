@@ -1,4 +1,5 @@
 import { ChevronDown } from "lucide-react";
+import { Reveal } from "@/components/features/landing/Reveal";
 import { SectionHeading } from "@/components/features/landing/SectionHeading";
 import { FAQS } from "@/lib/landing-content";
 
@@ -9,12 +10,14 @@ export function FAQSection() {
       aria-labelledby="faq-heading"
       className="flex flex-col gap-6"
     >
-      <SectionHeading
-        id="faq-heading"
-        eyebrow="FAQ"
-        title="Questions, answered"
-      />
-      <div className="flex flex-col gap-3">
+      <Reveal>
+        <SectionHeading
+          id="faq-heading"
+          eyebrow="FAQ"
+          title="Questions, answered"
+        />
+      </Reveal>
+      <Reveal className="flex flex-col gap-3">
         {FAQS.map(({ question, answer }) => (
           <details
             key={question}
@@ -32,7 +35,7 @@ export function FAQSection() {
             </p>
           </details>
         ))}
-      </div>
+      </Reveal>
     </section>
   );
 }
