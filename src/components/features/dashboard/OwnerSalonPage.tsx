@@ -18,7 +18,7 @@ type OwnerSalonPageProps = {
 };
 
 const MAIN_CLASS =
-  "mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-4 py-8";
+  "mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-8";
 
 /**
  * The shared frame of the owner pages under /dashboard: signed-out goes to

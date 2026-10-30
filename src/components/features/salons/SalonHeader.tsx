@@ -15,7 +15,7 @@ export function SalonHeader({
   actions?: ReactNode;
 }) {
   return (
-    <header className="overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/10 md:grid md:grid-cols-2">
+    <header className="overflow-hidden rounded-2xl bg-card ring-1 ring-border md:grid md:grid-cols-2">
       <SalonImage
         src={salon.image_url}
         alt={`Photo of ${salon.name}`}

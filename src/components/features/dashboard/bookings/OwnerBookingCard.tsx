@@ -32,7 +32,7 @@ export function OwnerBookingCard({
     booking.payment_status === "refunded";
 
   return (
-    <li className="flex flex-col gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
+    <li className="flex flex-col gap-3 rounded-2xl bg-card p-4 ring-1 ring-border">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="font-semibold break-words">{booking.client_name}</p>

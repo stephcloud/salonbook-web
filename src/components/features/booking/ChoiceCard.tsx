@@ -17,7 +17,7 @@ export function ChoiceCard({
   children,
 }: ChoiceCardProps) {
   return (
-    <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/10 has-[:checked]:bg-secondary has-[:checked]:ring-2 has-[:checked]:ring-primary has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring">
+    <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-2xl bg-card p-4 ring-1 ring-border has-[:checked]:bg-secondary has-[:checked]:ring-2 has-[:checked]:ring-primary has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring">
       <input
         type="radio"
         name={name}

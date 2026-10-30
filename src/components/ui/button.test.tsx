@@ -30,4 +30,16 @@ describe("buttonVariants", () => {
     expect(borderColours(classes)).toEqual(["border-primary"]);
     expect(classes.split(/\s+/)).toContain("border");
   });
+  // Same reason: a base text size would beat the size's own on links.
+  it.each([
+    ["default", "text-sm"],
+    ["lg", "text-base"],
+    ["icon", "text-sm"],
+    ["icon-lg", "text-base"],
+  ] as const)("%s sets exactly one text size, %s", (size, expected) => {
+    const sizes = buttonVariants({ size })
+      .split(/\s+/)
+      .filter((c) => /^text-(xs|sm|base|lg|xl)$/.test(c));
+    expect(sizes).toEqual([expected]);
+  });
 });

@@ -20,4 +20,4 @@ export function SummaryRow({
 }
 
 export const SUMMARY_LIST_CLASS =
-  "grid gap-4 rounded-2xl bg-card p-4 ring-1 ring-foreground/10 sm:grid-cols-[auto_1fr] sm:gap-x-6 sm:gap-y-3";
+  "grid gap-4 rounded-2xl bg-card p-4 ring-1 ring-border sm:grid-cols-[auto_1fr] sm:gap-x-6 sm:gap-y-3";

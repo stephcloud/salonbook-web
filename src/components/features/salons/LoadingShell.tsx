@@ -45,7 +45,7 @@ export function LoadingShell({
             <div
               key={i}
               aria-hidden="true"
-              className="flex flex-col gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/10"
+              className="flex flex-col gap-3 rounded-2xl bg-card p-4 ring-1 ring-border"
             >
               <div className="aspect-[16/10] animate-pulse motion-reduce:animate-none rounded-xl bg-secondary" />
               <Bar className="h-5 w-2/3" />
