@@ -222,6 +222,19 @@ describe("image fallbacks", () => {
     expect(screen.getByTestId("salon-image-fallback")).toBeInTheDocument();
     expect(screen.queryByRole("img")).toBeNull();
   });
+
+  it("keeps the empty tile short on phones but a photo at 16:10", () => {
+    const { container: empty } = render(
+      <SalonImage src={null} alt="Photo of Pink Studio" />,
+    );
+    expect(empty.firstChild).toHaveClass("aspect-[3/1]", "sm:aspect-[16/10]");
+
+    const { container: photo } = render(
+      <SalonImage src="https://img.test/s.jpg" alt="Photo of Pink Studio" />,
+    );
+    expect(photo.firstChild).toHaveClass("aspect-[16/10]");
+    expect(photo.firstChild).not.toHaveClass("aspect-[3/1]");
+  });
 });
 
 describe("CopySalonLinkButton", () => {

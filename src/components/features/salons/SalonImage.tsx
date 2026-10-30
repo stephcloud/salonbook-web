@@ -7,12 +7,16 @@ type SalonImageProps = {
   className?: string;
 };
 
-/** Owner photo, or a soft gradient tile when there is none. */
+/**
+ * Owner photo, or a soft gradient tile when there is none. The empty tile is
+ * shorter on phones (one card per row there, so heights need not match).
+ */
 export function SalonImage({ src, alt, className }: SalonImageProps) {
   return (
     <div
       className={cn(
-        "relative aspect-[16/10] w-full overflow-hidden bg-gradient-to-br from-secondary via-rose/40 to-primary/25",
+        "relative w-full overflow-hidden bg-gradient-to-br from-secondary via-rose/40 to-primary/25",
+        src ? "aspect-[16/10]" : "aspect-[3/1] sm:aspect-[16/10]",
         className,
       )}
     >
