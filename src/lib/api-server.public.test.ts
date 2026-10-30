@@ -12,6 +12,7 @@ import {
   getSalonServices,
   getSalonStylists,
   getSalons,
+  getSitemapSalonIds,
   searchSalons,
 } from "./api-server";
 
@@ -46,6 +47,51 @@ describe("public salon calls", () => {
     ]);
     const init = fetchMock.mock.calls[0][1] as { headers: Headers };
     expect(init.headers.has("authorization")).toBe(false);
+  });
+
+  describe("getSitemapSalonIds", () => {
+    function ids(count: number, prefix: string) {
+      return Array.from({ length: count }, (_, i) => ({
+        id: `${prefix}-${i}`,
+      }));
+    }
+
+    it("reads 100 at a time and stops at a short page", async () => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(jsonResponse(ids(100, "a")))
+        .mockResolvedValueOnce(jsonResponse(ids(1, "b")));
+      vi.stubGlobal("fetch", fetchMock);
+
+      const result = await getSitemapSalonIds();
+
+      expect(calledUrls(fetchMock)).toEqual([
+        `${API_URL}/salons?limit=100&offset=0`,
+        `${API_URL}/salons?limit=100&offset=100`,
+      ]);
+      expect(result).toHaveLength(101);
+      expect(result.at(-1)).toBe("b-0");
+    });
+
+    it("stops after 5 pages even when every page is full", async () => {
+      const fetchMock = vi
+        .fn()
+        .mockImplementation(async () => jsonResponse(ids(100, "x")));
+      vi.stubGlobal("fetch", fetchMock);
+
+      const result = await getSitemapSalonIds();
+
+      expect(fetchMock).toHaveBeenCalledTimes(5);
+      expect(result).toHaveLength(500);
+    });
+
+    it("throws when the API fails, so a failure is never cached", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue(jsonResponse({ detail: "boom" }, 500)),
+      );
+      await expect(getSitemapSalonIds()).rejects.toBeInstanceOf(ApiError);
+    });
   });
 
   describe("searchSalons", () => {
