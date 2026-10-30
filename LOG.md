@@ -289,3 +289,13 @@
   - `TabsTrigger` keeps shadcn's softer focus style (`ring-ring/50`); My bookings overrides it, but a new tabs use would not.
   - Alert dialogs are narrower (`sm:max-w-sm`) than form dialogs (`sm:max-w-md`).
   - The wizard and pay page use narrower centred columns (`max-w-3xl`, `max-w-2xl`) than the rest of the app. That looks intended for focused flows, so it is unchanged.
+
+## 2026-10-30 (app screens follow-ups)
+
+- On `fix/app-screens-followups`, five items from the app screens audit:
+  - The setup checklist counts every step it shows, with the share step counting once it is ready: "N of 6 set up" (it said "1 of 5" next to six steps).
+  - Below `sm` the dashboard tabs are one row that scrolls sideways, running to the screen edges, with the current tab scrolled to the middle on load. From `sm` up they wrap as before.
+  - On phones a salon with no photo shows a 3:1 gradient tile (about 120px tall at 390px, was about 224px). Photos stay 16:10, and from `sm` up both are 16:10 so grid cards line up.
+  - The slot step groups times as Morning (before 12:00), Afternoon (12:00 to 16:59) and Evening (from 17:00) in Lagos time, each a labelled group with a small heading, and skips empty groups. Three columns on phones (was two). `lagosHour` joined `src/lib/time.ts`.
+  - Weekly hours heads its form "Hours for <stylist>". On dashboard bookings the second heading moved below the filters and reads "Results"; it is still where focus goes after Previous/Next.
+- Checked at 390px and 1440px against the live API with the existing test accounts (nothing new created): no horizontal scroll, visible Tab focus on dashboard bookings.
