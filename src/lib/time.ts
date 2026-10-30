@@ -36,6 +36,12 @@ export function formatLagosTime(input: string | Date): string {
   return `${p.hour}:${p.minute} ${p.dayPeriod}`;
 }
 
+/** The hour in Africa/Lagos, 0 to 23. */
+export function lagosHour(input: string | Date): number {
+  const p = lagosParts(input);
+  return (Number(p.hour) % 12) + (p.dayPeriod === "PM" ? 12 : 0);
+}
+
 /** "Sat, 7 Mar 2026, 9:30 AM" in Africa/Lagos. */
 export function formatLagosDateTime(input: string | Date): string {
   return `${formatLagosDate(input)}, ${formatLagosTime(input)}`;

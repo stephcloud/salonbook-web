@@ -12,6 +12,7 @@ import {
   isSalonNotAccepting,
   SALON_NOT_ACCEPTING_MESSAGE,
 } from "@/lib/salon-status";
+import { groupSlotsByPartOfDay } from "@/lib/slot-groups";
 import { formatLagosDay, formatLagosTime, lagosToday } from "@/lib/time";
 
 type SlotStepProps = {
@@ -180,19 +181,34 @@ export function SlotStep({
             <legend className="mb-1 font-semibold">
               Free times on {formatLagosDay(date)}
             </legend>
-            <div className="grid grid-cols-2 gap-2 min-[400px]:grid-cols-3 sm:grid-cols-4">
-              {slots.map((value) => (
-                <Button
-                  key={value}
-                  variant={value === selected ? "default" : "outline"}
-                  aria-pressed={value === selected}
-                  className="px-2"
-                  onClick={() => onSlotChange(value)}
+            {groupSlotsByPartOfDay(slots).map((group) => (
+              <div
+                key={group.label}
+                role="group"
+                aria-labelledby={`slots-${group.label}`}
+                className="flex flex-col gap-2"
+              >
+                <h3
+                  id={`slots-${group.label}`}
+                  className="text-sm font-semibold text-muted-foreground"
                 >
-                  {formatLagosTime(value)}
-                </Button>
-              ))}
-            </div>
+                  {group.label}
+                </h3>
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                  {group.slots.map((value) => (
+                    <Button
+                      key={value}
+                      variant={value === selected ? "default" : "outline"}
+                      aria-pressed={value === selected}
+                      className="px-2"
+                      onClick={() => onSlotChange(value)}
+                    >
+                      {formatLagosTime(value)}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            ))}
           </fieldset>
         )}
       </div>

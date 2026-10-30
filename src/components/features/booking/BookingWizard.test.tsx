@@ -4,6 +4,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import userEvent from "@testing-library/user-event";
@@ -203,6 +204,25 @@ describe("BookingWizard", () => {
       const next = screen.getByRole("button", { name: "Continue" });
       expect(next).toBeDisabled();
       expect(next).toHaveAccessibleDescription("Choose a time to continue.");
+    });
+
+    it("groups the times as Morning and Afternoon, skipping an empty Evening", async () => {
+      getSlots.mockResolvedValue(
+        slotsResponse([SLOT_9, "2026-10-12T13:00:00+01:00"]),
+      );
+      const user = userEvent.setup();
+      renderWizard(BRAIDS);
+      await toSlotStep(user);
+
+      const morning = screen.getByRole("group", { name: "Morning" });
+      expect(
+        within(morning).getByRole("button", { name: "9:00 AM" }),
+      ).toBeInTheDocument();
+      const afternoon = screen.getByRole("group", { name: "Afternoon" });
+      expect(
+        within(afternoon).getByRole("button", { name: "1:00 PM" }),
+      ).toBeInTheDocument();
+      expect(screen.queryByRole("group", { name: "Evening" })).toBeNull();
     });
 
     it("announces the outcome in one small status line", async () => {
