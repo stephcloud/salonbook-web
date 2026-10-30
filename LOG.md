@@ -265,3 +265,27 @@
 - The sitemap is rendered per request (`connection()`), because a route-level `revalidate` would prerender it at build and the build must not call the API. The salon ids are cached for a day with `unstable_cache`. The scan is capped at 5 calls of 100 salons (the backup draft allowed up to 500 calls of 20). If the API fails, the error is not cached: the sitemap serves the home and `/salons` entries, logs a warning with only the status code (or the error name), and the next request tries again.
 - Later:
   - Past 500 approved salons the sitemap stops listing them (a `shortcut:` comment marks it). Raise the cap or split the sitemap before then.
+
+## 2026-10-30 (app screens polish)
+
+- On `fix/app-screens-polish`: an audit of `/salons`, `/salons/[id]`, the booking wizard (all four steps), the pay page, `/payment/callback`, `/bookings`, `/login`, `/register`, `/dashboard` and its four subpages, signed out, as a client and as an owner, at 390px (mobile emulation) and 1440px, against the live API. Each screen was checked for horizontal scroll, tap targets under 44px, `main#main-content`, heading fonts, and visible focus with real Tab presses. Empty and filled states were checked for the dashboard, services, stylists, hours and bookings.
+- Fixed:
+  - Card and small headings (salon card, booking card, salon overview card, the hours empty state) and the stylist avatar initial now use the body font. Playfair stays on page and section headings and the wordmark.
+  - Every card and dialog ring uses `ring-border` (the plum-tinted `--border`) instead of a neutral `ring-foreground/10`.
+  - The sign-in and register wordmark lines up with the card (`-ml-2`, like the header and footer).
+  - The owner subpages share `/dashboard`'s container (`max-w-5xl`, `gap-6`), so the dashboard tabs no longer jump sideways between pages, and the day cards on Weekly hours fall into two columns.
+  - Large link-buttons now have the same text size as large buttons. `buttonVariants()` on a link is not run through tailwind-merge, so the base `text-sm` beat `lg`'s `text-base`. The font size now lives in each size variant.
+  - The My bookings tab panel (focusable via Base UI) shows a focus ring.
+  - Alert dialogs (delete service, delete stylist) are `rounded-2xl` like every other card; the two cancel dialogs already overrode it.
+  - A test locks each button size to exactly one text size; it fails on the old `button.tsx`.
+- Later (not fixed, owner's call):
+  - The empty status line under each form's submit button (`min-h-5`, kept so the "waking up" message does not shift the layout) leaves about 60px of space before the next line on sign-in, register, review and the salon form.
+  - `/dashboard/bookings` and `/dashboard/availability` repeat the page title as a visible `h2` ("Bookings", "Weekly hours"). On bookings it is also the focus target after paging, so it cannot simply be hidden.
+  - The dashboard tab bar wraps onto two rows on phones; a horizontal scroller would keep it on one.
+  - Empty salon photos are full-size gradient tiles, so on phones about four salons fit per two screens. A shorter tile when there is no photo would help.
+  - The slot step lists up to 25 times in one grid on phones; grouping by morning and afternoon would shorten it.
+  - The checklist says "1 of 5 set up" next to six steps (salon approval is not counted).
+  - `DialogFooter` uses `-mx-4 -mb-4` inside a `p-5` dialog, so its tinted band would stop 4px short of the edges. Nothing renders it today.
+  - `TabsTrigger` keeps shadcn's softer focus style (`ring-ring/50`); My bookings overrides it, but a new tabs use would not.
+  - Alert dialogs are narrower (`sm:max-w-sm`) than form dialogs (`sm:max-w-md`).
+  - The wizard and pay page use narrower centred columns (`max-w-3xl`, `max-w-2xl`) than the rest of the app. That looks intended for focused flows, so it is unchanged.
