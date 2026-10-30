@@ -256,3 +256,12 @@
 - Later:
   - At 768px a signed-in client's header wraps to two rows (Salons, My bookings and Sign out drop below the section links); guests and owners fit on one row. This was already the case on `main` (its 8px gap needs even more room). Options: hide the section links when signed in, or show them inline only from `lg`. Owner's call.
   - `AuthShell` (login and register) still uses the wordmark without `-ml-2`, so its letters sit 8px inside the card edge; the header and footer now align to the content edge.
+
+## 2026-10-30 (SEO basics)
+
+- On `feat/seo-basics`: `robots.ts` (crawlers allowed everywhere except `/api/`, `/book`, `/bookings`, `/dashboard`, `/payment`; points to the sitemap) and `sitemap.ts` (home, `/salons`, one entry per public salon).
+- The production URL is one constant, `SITE_URL` in `src/lib/site.ts`, used by robots, the sitemap and `metadataBase` in the root layout. No environment variable. The home page now has `canonical: "/"`.
+- Only approved salons are listed: `GET /salons` filters on `status = approved` and `GET /salons/{id}` is a 404 for pending and suspended salons. The live `openapi.json` does not say this, so it was confirmed in the `salonbook-api` source (`app/services/salons.py`).
+- The sitemap is rendered per request (`connection()`), because a route-level `revalidate` would prerender it at build and the build must not call the API. The salon ids are cached for a day with `unstable_cache`. The scan is capped at 5 calls of 100 salons (the backup draft allowed up to 500 calls of 20). If the API fails, the error is not cached: the sitemap serves the home and `/salons` entries, logs a warning with only the status code (or the error name), and the next request tries again.
+- Later:
+  - Past 500 approved salons the sitemap stops listing them (a `shortcut:` comment marks it). Raise the cap or split the sitemap before then.
