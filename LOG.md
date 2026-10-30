@@ -299,3 +299,9 @@
   - The slot step groups times as Morning (before 12:00), Afternoon (12:00 to 16:59) and Evening (from 17:00) in Lagos time, each a labelled group with a small heading, and skips empty groups. Three columns on phones (was two). `lagosHour` joined `src/lib/time.ts`.
   - Weekly hours heads its form "Hours for <stylist>". On dashboard bookings the second heading moved below the filters and reads "Results"; it is still where focus goes after Previous/Next.
 - Checked at 390px and 1440px against the live API with the existing test accounts (nothing new created): no horizontal scroll, visible Tab focus on dashboard bookings.
+## 2026-10-30 (final cleanup)
+
+- On `chore/final-cleanup`: a `.gitattributes` with `* text=auto eol=lf`. The index was already LF everywhere; 168 working-tree files are CRLF from `core.autocrlf=true`, which caused the CRLF warnings and phantom "modified" files. Nothing was renormalised: `git add --renormalize .` would change nothing in the index, and those files switch to LF one by one as Git next writes them (a full re-checkout would convert them all at once).
+- The global `Button` focus indicator is now a 3px plum outline with a 2px transparent offset (`outline-3 outline-offset-2 outline-ring`), replacing the ring with an ivory offset, which showed as a pale halo on pink (`--secondary`) panels. Dropping `outline-none` also keeps it in Windows high-contrast mode (the follow-up noted in the hero entry). The destructive variant no longer fades it to 20%. A test checks every variant has the plum outline and no competing focus colour; it fails on the old `button.tsx`.
+- `private-pages.test.ts` and `DaysOffSection.test.tsx` now set a 20s test timeout (and `DaysOffSection` a 5s `findBy`/`waitFor` timeout) for their own file only. Neither is skipped. The full run is still about 360s; the jsdom speed-up noted in the hero entry remains open.
+- Lint, typecheck, the full test suite (1492 tests) and the build pass.
