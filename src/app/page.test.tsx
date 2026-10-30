@@ -56,8 +56,25 @@ describe("landing page", () => {
 
   it("names the problem and gives three steps to clients and owners", async () => {
     await show();
-    expect(screen.getByText("No-shows")).toBeInTheDocument();
-    expect(screen.getByText("No deposits")).toBeInTheDocument();
+    const problem = within(
+      screen.getByRole("region", {
+        name: "Booking a salon should not be this hard",
+      }),
+    );
+    expect(problem.getByText("The problem")).toBeInTheDocument();
+    expect(problem.getAllByRole("listitem")).toHaveLength(3);
+    expect(
+      problem
+        .getAllByRole("heading", { level: 3 })
+        .map((heading) => heading.textContent),
+    ).toEqual(["Booking by chat and phone", "No-shows", "No deposits"]);
+    for (const text of [
+      "Clients wait for a reply, owners juggle messages, and times get mixed up.",
+      "A chair sits empty when someone does not turn up, and the time is lost.",
+      "Without a deposit there is little reason to keep a booking or cancel in time.",
+    ]) {
+      expect(problem.getByText(text)).toBeInTheDocument();
+    }
     for (const name of ["For clients", "For salon owners"]) {
       const card = screen.getByRole("heading", {
         level: 3,
