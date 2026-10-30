@@ -17,7 +17,7 @@ export function StylistList({ stylists }: { stylists: Stylist[] }) {
           {stylists.map((stylist) => (
             <li
               key={stylist.id}
-              className="flex items-center gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/10"
+              className="flex items-center gap-3 rounded-2xl bg-card p-4 ring-1 ring-border"
             >
               <StylistAvatar name={stylist.name} src={stylist.image_url} />
               <p className="font-semibold">{stylist.name}</p>

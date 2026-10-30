@@ -14,7 +14,7 @@ export function SalonOverview({ salon }: { salon: OwnerSalon }) {
   return (
     <section
       aria-labelledby="salon-overview-heading"
-      className="overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/10"
+      className="overflow-hidden rounded-2xl bg-card ring-1 ring-border"
     >
       <SalonImage src={salon.image_url} alt={`Photo of ${salon.name}`} />
       <div className="flex flex-col gap-3 p-4">

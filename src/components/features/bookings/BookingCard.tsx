@@ -52,7 +52,7 @@ export function BookingCard({
   const label = `${service.name} at ${salon.name}`;
 
   return (
-    <li className="flex flex-col gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
+    <li className="flex flex-col gap-3 rounded-2xl bg-card p-4 ring-1 ring-border">
       <div className="flex items-start justify-between gap-3">
         <h2 className="min-w-0 font-sans text-lg font-bold break-words">
           {service.name}

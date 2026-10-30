@@ -15,7 +15,7 @@ export function SalonResultsFallback({ searching }: { searching: boolean }) {
         {[0, 1].map((i) => (
           <div
             key={i}
-            className="flex flex-col gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/10"
+            className="flex flex-col gap-3 rounded-2xl bg-card p-4 ring-1 ring-border"
           >
             <div className="aspect-[16/10] animate-pulse rounded-xl bg-secondary motion-reduce:animate-none" />
             <div className="h-5 w-2/3 animate-pulse rounded-full bg-secondary motion-reduce:animate-none" />
