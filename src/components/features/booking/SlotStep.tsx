@@ -188,12 +188,12 @@ export function SlotStep({
                 aria-labelledby={`slots-${group.label}`}
                 className="flex flex-col gap-2"
               >
-                <h3
+                <p
                   id={`slots-${group.label}`}
                   className="text-sm font-semibold text-muted-foreground"
                 >
                   {group.label}
-                </h3>
+                </p>
                 <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
                   {group.slots.map((value) => (
                     <Button
