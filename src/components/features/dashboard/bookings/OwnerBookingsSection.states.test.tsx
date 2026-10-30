@@ -103,7 +103,7 @@ describe("OwnerBookingsSection paging", () => {
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     await screen.findByText("Page 2");
     await waitFor(() =>
-      expect(screen.getByRole("heading", { name: "Bookings" })).toHaveFocus(),
+      expect(screen.getByRole("heading", { name: "Results" })).toHaveFocus(),
     );
   });
 });
