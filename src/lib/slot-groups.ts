@@ -17,7 +17,8 @@ export function groupSlotsByPartOfDay(slots: string[]): SlotGroup[] {
   }));
   for (const slot of slots) {
     const hour = lagosHour(slot);
-    const index = PARTS_OF_DAY.findLastIndex(({ from }) => hour >= from);
+    // Not findLastIndex: older iPhones (Safari before 15.4) do not have it.
+    const index = PARTS_OF_DAY.filter(({ from }) => hour >= from).length - 1;
     groups[index].slots.push(slot);
   }
   return groups.filter((group) => group.slots.length > 0);
