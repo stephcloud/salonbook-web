@@ -8,8 +8,10 @@ import { cn } from "@/lib/utils";
 // variant's `border-primary` (it comes later in the CSS) and hide the border.
 // Font size lives in each size for the same reason: a base `text-sm` beat the
 // `lg` size's `text-base` on links.
+// Focus is an outline, not a ring: its offset gap is transparent, so it reads
+// on ivory, white and pink panels alike and survives Windows high contrast.
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-full border bg-clip-padding font-medium whitespace-nowrap transition-all motion-reduce:transition-none outline-none select-none focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:not-aria-[haspopup]:translate-y-px motion-reduce:active:translate-y-0 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-full border bg-clip-padding font-medium whitespace-nowrap transition-all motion-reduce:transition-none select-none focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-ring active:not-aria-[haspopup]:translate-y-px motion-reduce:active:translate-y-0 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
@@ -22,7 +24,7 @@ const buttonVariants = cva(
         ghost:
           "border-transparent hover:bg-primary/10 hover:text-foreground aria-expanded:bg-primary/10 aria-expanded:text-foreground",
         destructive:
-          "border-transparent bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20",
+          "border-transparent bg-destructive/10 text-destructive hover:bg-destructive/20",
         link: "border-transparent text-primary underline-offset-4 hover:underline",
       },
       size: {
