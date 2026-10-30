@@ -18,7 +18,7 @@ export function SalonOverview({ salon }: { salon: OwnerSalon }) {
     >
       <SalonImage src={salon.image_url} alt={`Photo of ${salon.name}`} />
       <div className="flex flex-col gap-3 p-4">
-        <h2 id="salon-overview-heading" className="text-xl font-bold">
+        <h2 id="salon-overview-heading" className="font-sans text-lg font-bold">
           {salon.name}
         </h2>
         <div className="flex flex-col items-start gap-1.5">
