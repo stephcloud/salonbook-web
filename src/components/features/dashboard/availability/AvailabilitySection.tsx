@@ -31,7 +31,7 @@ export function AvailabilitySection({
   if (stylists.length === 0) {
     return (
       <div className="flex flex-col items-start gap-3 rounded-2xl bg-card p-6 ring-1 ring-border">
-        <h2 className="text-lg font-semibold">No stylists yet</h2>
+        <h2 className="font-sans text-lg font-semibold">No stylists yet</h2>
         <p className="text-muted-foreground">
           Hours belong to a stylist. Add a stylist first, then come back to set
           when they work.
