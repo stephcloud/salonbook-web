@@ -182,6 +182,38 @@ describe("landing page", () => {
     }
   });
 
+  it("groups the features for clients and for owners", async () => {
+    await show();
+    for (const [group, titles] of [
+      [
+        "For your clients",
+        [
+          "Real free times",
+          "Deposits",
+          "Clear cancellations",
+          "One link to share",
+        ],
+      ],
+      [
+        "For you, the owner",
+        [
+          "Services and prices",
+          "Your stylists",
+          "Weekly hours",
+          "Bookings list",
+        ],
+      ],
+    ] as const) {
+      const box = within(screen.getByRole("group", { name: group }));
+      expect(
+        box.getByRole("heading", { level: 3, name: group }),
+      ).toBeInTheDocument();
+      expect(
+        box.getAllByRole("heading", { level: 4 }).map((h) => h.textContent),
+      ).toEqual(titles);
+    }
+  });
+
   it("lists the features and the answers a visitor can open", async () => {
     await show();
     expect(screen.getByText("Real free times")).toBeInTheDocument();

@@ -22,47 +22,61 @@ export const HOME_ANCHORS: HomeAnchor[] = [
 
 export type Feature = { title: string; text: string; icon: LucideIcon };
 
+export type FeatureGroup = { id: string; label: string; features: Feature[] };
+
 /** Only things the app does today. Do not add a feature before it ships. */
-export const FEATURES: Feature[] = [
+export const FEATURE_GROUPS: FeatureGroup[] = [
   {
-    title: "Real free times",
-    text: "Clients see the slots a stylist is actually free, based on hours, breaks and days off.",
-    icon: CalendarClock,
+    id: "features-clients",
+    label: "For your clients",
+    features: [
+      {
+        title: "Real free times",
+        text: "Clients see the slots a stylist is actually free, based on hours, breaks and days off.",
+        icon: CalendarClock,
+      },
+      {
+        title: "Deposits",
+        text: "A deposit holds the booking, so a spot is kept for people who mean it.",
+        icon: WalletCards,
+      },
+      {
+        title: "Clear cancellations",
+        text: "Clients see the refund rule before they cancel and the outcome after.",
+        icon: ShieldCheck,
+      },
+      {
+        title: "One link to share",
+        text: "Every salon gets its own page and link to send to customers.",
+        icon: Link2,
+      },
+    ],
   },
   {
-    title: "Deposits",
-    text: "A deposit holds the booking, so a spot is kept for people who mean it.",
-    icon: WalletCards,
-  },
-  {
-    title: "Services and prices",
-    text: "List your services with a price, or mark the price to be confirmed in person.",
-    icon: Scissors,
-  },
-  {
-    title: "Your stylists",
-    text: "Add stylists and choose which services each one offers. They do not need an account.",
-    icon: Users,
-  },
-  {
-    title: "Weekly hours",
-    text: "Set working hours, breaks and days off for each stylist.",
-    icon: Clock,
-  },
-  {
-    title: "Bookings list",
-    text: "See bookings and filter them by status, stylist and date.",
-    icon: ClipboardList,
-  },
-  {
-    title: "Clear cancellations",
-    text: "Clients see the refund rule before they cancel and the outcome after.",
-    icon: ShieldCheck,
-  },
-  {
-    title: "One link to share",
-    text: "Every salon gets its own page and link to send to customers.",
-    icon: Link2,
+    id: "features-owners",
+    label: "For you, the owner",
+    features: [
+      {
+        title: "Services and prices",
+        text: "List your services with a price, or mark the price to be confirmed in person.",
+        icon: Scissors,
+      },
+      {
+        title: "Your stylists",
+        text: "Add stylists and choose which services each one offers. They do not need an account.",
+        icon: Users,
+      },
+      {
+        title: "Weekly hours",
+        text: "Set working hours, breaks and days off for each stylist.",
+        icon: Clock,
+      },
+      {
+        title: "Bookings list",
+        text: "See bookings and filter them by status, stylist and date.",
+        icon: ClipboardList,
+      },
+    ],
   },
 ];
 
