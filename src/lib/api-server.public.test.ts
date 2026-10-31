@@ -8,6 +8,7 @@ vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 import { ApiError, isMissingResource } from "@/lib/api";
 import {
   getSalon,
+  getSalonAreas,
   getSalonNames,
   getSalonServices,
   getSalonStylists,
@@ -99,6 +100,7 @@ describe("public salon calls", () => {
       return Array.from({ length: count }, (_, i) => ({
         id: `${prefix}-${i}`,
         name: `${prefix} ${i}`,
+        address: "1 Road",
       }));
     }
 
@@ -124,6 +126,23 @@ describe("public salon calls", () => {
       ]);
       expect(result.hasNext).toBe(false);
       expect(result.truncated).toBe(false);
+    });
+
+    it("matches the address too, so an area finds its salons", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue(
+          jsonResponse([
+            { id: "a", name: "Glow", address: "3 Allen Avenue, Ikeja, Lagos" },
+            { id: "b", name: "Pink", address: "Wuse 2, Abuja" },
+            { id: "c", name: "Ikeja Cuts", address: "Yaba" },
+          ]),
+        ),
+      );
+
+      const result = await searchSalons("ikeja");
+
+      expect(result.salons.map((s) => s.id)).toEqual(["a", "c"]);
     });
 
     it("pages the matches and says whether another page exists", async () => {
@@ -170,6 +189,24 @@ describe("public salon calls", () => {
       const error = await searchSalons("pink").catch((e: unknown) => e);
       expect(error).toBeInstanceOf(ApiError);
       expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe("getSalonAreas", () => {
+    it("builds the areas from one batch of real addresses", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(
+        jsonResponse([
+          { id: "a", name: "A", address: "GRA" },
+          { id: "b", name: "B", address: "1 Probe Street, Lagos" },
+          { id: "c", name: "C", address: "-" },
+        ]),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+
+      expect(await getSalonAreas()).toEqual(["GRA", "Lagos"]);
+      expect(calledUrls(fetchMock)).toEqual([
+        `${API_URL}/salons?limit=100&offset=0`,
+      ]);
     });
   });
 

@@ -17,7 +17,7 @@ import type { components } from "@/lib/api-types";
 import { TOKEN_COOKIE } from "@/lib/auth/cookie";
 import { safeNextPath } from "@/lib/auth/safe-next";
 import { apiBaseUrl, fetchUpstream } from "@/lib/proxy/upstream";
-import { matchesSalonName, normalizeSearch } from "@/lib/salon-search";
+import { matchesSalon, normalizeSearch, salonAreas } from "@/lib/salon-search";
 
 export type CurrentUser = components["schemas"]["UserResponse"];
 
@@ -128,6 +128,15 @@ export async function getSalonNames(): Promise<string[]> {
   return names.slice(0, MAX_LIST_LIMIT);
 }
 
+/**
+ * Area chips for the search, built from the first batch's addresses.
+ * shortcut: only the first 100 salons feed the chips, scan more batches when there are more salons.
+ */
+export async function getSalonAreas(): Promise<string[]> {
+  const batch = await getSalonBatch(0);
+  return salonAreas(batch.map((salon) => salon.address));
+}
+
 // The sitemap reads at most this many pages of 100 salons.
 const MAX_SITEMAP_SCAN = 5;
 
@@ -146,13 +155,13 @@ export async function getSitemapSalonIds(): Promise<string[]> {
   return ids;
 }
 
-// The API has no name search, so a search scans up to this many pages of 100.
+// The API has no search, so a search scans up to this many pages of 100.
 const MAX_SEARCH_SCAN = 5;
 
 /**
- * Salons whose name contains `query`, one page of them. The API cannot search,
+ * Salons whose name or address contains `query`, one page of them. The API cannot search,
  * so this reads salons 100 at a time (at most 500) and filters here. Replace
- * with a single call once the API accepts a name parameter.
+ * with a single call once the API accepts a search parameter.
  */
 export async function searchSalons(
   query: string,
@@ -163,7 +172,7 @@ export async function searchSalons(
   for (let i = 0; i < MAX_SEARCH_SCAN; i++) {
     const batch = await getSalonBatch(i * MAX_LIST_LIMIT);
     for (const salon of batch) {
-      if (matchesSalonName(salon.name, query)) matches.push(salon);
+      if (matchesSalon(salon, query)) matches.push(salon);
     }
     if (batch.length < MAX_LIST_LIMIT) break;
     truncated = i === MAX_SEARCH_SCAN - 1;
