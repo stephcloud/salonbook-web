@@ -22,6 +22,11 @@ const VARIANTS = {
     link: "border-primary bg-transparent text-primary hover:bg-primary/10 hover:text-primary-dark",
     badge: "bg-primary text-primary-foreground",
   },
+  // For plum panels: a white ring with a plum gap, since plum on plum is invisible.
+  light: {
+    link: "border-transparent bg-card text-primary hover:bg-secondary focus-visible:ring-primary-foreground focus-visible:ring-offset-primary",
+    badge: "bg-primary text-primary-foreground",
+  },
 } as const;
 
 const ICONS = { search: Search, arrow: ArrowRight } as const;
