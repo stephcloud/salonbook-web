@@ -46,13 +46,19 @@ describe("SalonResults", () => {
 
   it("explains an empty search, in the title and to screen readers", async () => {
     render(await SalonResults({ query: "zzz", page: 1 }));
-    expect(screen.getAllByText("No salons match 'zzz'")).toHaveLength(2);
-    expect(screen.getByRole("status")).toHaveTextContent(
-      "No salons match 'zzz'",
-    );
     expect(
-      screen.getByRole("link", { name: "Show all salons" }),
-    ).toHaveAttribute("href", "/salons");
+      screen.getByText("No salons found in that area"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Nothing matches 'zzz' by name or area."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "No salons found in that area. Nothing matches 'zzz'.",
+    );
+    expect(screen.getByRole("link", { name: "Clear search" })).toHaveAttribute(
+      "href",
+      "/salons",
+    );
   });
 
   it("tells the reader when only the first 500 salons were searched", async () => {

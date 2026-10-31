@@ -164,7 +164,7 @@ describe("SalonList search", () => {
 describe("SalonSearchForm", () => {
   it("is a labelled GET form that Enter submits", () => {
     render(<SalonSearchForm query="" />);
-    const input = screen.getByLabelText("Search salons by name");
+    const input = screen.getByLabelText("Search by salon name or area");
     expect(input).toHaveAttribute("name", "q");
     const form = screen.getByRole("search");
     expect(form).toHaveAttribute("method", "get");
@@ -177,7 +177,7 @@ describe("SalonSearchForm", () => {
 
   it("links the input to the suggestions list and keeps its label", () => {
     render(<SalonSearchForm query="" />);
-    const input = screen.getByLabelText("Search salons by name");
+    const input = screen.getByLabelText("Search by salon name or area");
     expect(input).toHaveAttribute("list", "salon-name-suggestions");
   });
 
@@ -185,7 +185,9 @@ describe("SalonSearchForm", () => {
     const { rerender } = render(<SalonSearchForm query="" />);
     expect(screen.queryByRole("link", { name: "Clear search" })).toBeNull();
     rerender(<SalonSearchForm query="pink" />);
-    expect(screen.getByLabelText("Search salons by name")).toHaveValue("pink");
+    expect(screen.getByLabelText("Search by salon name or area")).toHaveValue(
+      "pink",
+    );
     expect(screen.getByRole("link", { name: "Clear search" })).toHaveAttribute(
       "href",
       "/salons",
