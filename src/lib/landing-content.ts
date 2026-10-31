@@ -80,6 +80,46 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
   },
 ];
 
+export type Audience = {
+  id: string;
+  tag: string;
+  title: string;
+  points: string[];
+  cta: { href: string; label: string };
+  /** light: white card, plum button. plum: plum card, white button. */
+  tone: "light" | "plum";
+};
+
+/** Same claims as the features; do not add one before it ships. */
+export const AUDIENCES: Audience[] = [
+  {
+    id: "audience-clients",
+    tag: "For clients",
+    title: "Clients",
+    points: [
+      "Choose a service and a stylist",
+      "See when they are really free",
+      "Book without waiting for a reply",
+      "Manage your bookings in one place",
+    ],
+    cta: { href: "/salons", label: "Find a salon" },
+    tone: "light",
+  },
+  {
+    id: "audience-owners",
+    tag: "For owners",
+    title: "Salon owners",
+    points: [
+      "Register and set up your salon, services, stylists and hours",
+      "Share your salon link",
+      "Deposits help protect your time",
+    ],
+    // /register has no role query param; the visitor picks the role there.
+    cta: { href: "/register", label: "Set up your salon" },
+    tone: "plum",
+  },
+];
+
 export const BENEFITS: string[] = [
   "Clients book themselves, without waiting for a reply.",
   "Clients choose from the free times you set, not from a guess.",

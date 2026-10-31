@@ -318,3 +318,14 @@
 - On `feat/features-cards`: the features section is two labelled groups, "For your clients" (Real free times, Deposits, Clear cancellations, One link to share) and "For you, the owner" (Services and prices, Your stylists, Weekly hours, Bookings list). Each group is a `role="group"` named by its h3, a small uppercase plum label with a thin divider; card titles are h4. Card text is unchanged; `FEATURES` became `FEATURE_GROUPS` in `landing-content.ts`.
 - Cards: white, rounded-3xl, 26px padding, a 46px plum icon tile with a white icon, and a 110px pink (`--secondary`) circle clipped in the top-right corner behind the content. Reveal stagger restarts per group. Hover lifts the card with a soft plum shadow. With `prefers-reduced-motion` the lift and the shadow are off, and on the problem cards the lift, the shadow and the bar growth are all off too.
 - Checked at 390px and 1440px in headless Chrome: no horizontal scroll, 1 and 4 columns. Lowest new contrast is muted text over the pink circle, 5.75:1.
+
+## 2026-10-31 (who it's for)
+
+- On `feat/who-its-for`: "Who SalonBook is for" is two cards, Clients (white) then Salon owners (solid plum), side by side from `lg`. Each card is a `role="group"` named by its h3, with an uppercase pill ("For clients", "For owners"), a `ul` of `CircleCheck` ticks (aria-hidden) and a pill link with an arrow. The copy is the old paragraphs split into list items, no new claims; it now lives in `AUDIENCES` in `landing-content.ts`.
+- "Find a salon" goes to `/salons`. "Set up your salon" goes to plain `/register`: the register page reads only `next`, and the role is chosen on the form, so there is no role query param to pass.
+- `CtaButton` has a `light` variant (white pill, plum text) for the plum card. Its focus ring is white with a plum gap, because the plum ring disappears on plum.
+- The plum card's decorative circle (white at 7%) overflows the card's bottom-right corner. With the Card's `overflow-hidden`, `scrollIntoView` scrolled the card's own content up by 64px in headless Chrome, hiding the pill. The cards use `overflow-clip`, which cannot be scrolled, and a test checks the class.
+- Reveal stagger 80ms. The hover lift and shadow are `motion-safe:` only.
+- Contrast: white on plum 8.11:1, over the circle 6.90:1, on the 15% pill 5.69:1 (4.92:1 if over the circle), plum on the `--secondary` pill 7.10:1. Checked at 390, 700 and 1440px in headless Chrome: no horizontal scroll, buttons 56px tall, focus rings visible on both cards.
+- Code and UI reviews: nothing to fix. Added a tick count, hover and stagger checks to the test. Left as specified: the hover lift on a card that is not itself a link, and the pill repeating the title for screen readers.
+- `RegisterForm.test.tsx` (owner sign-up) timed out at 5s once in a full run slowed by the reviews running alongside; it passes alone. Not changed here.

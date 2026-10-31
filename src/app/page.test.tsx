@@ -182,6 +182,74 @@ describe("landing page", () => {
     }
   });
 
+  it("shows a Clients card then a Salon owners card, each with its list and link", async () => {
+    await show();
+    const section = within(
+      screen.getByRole("region", { name: "Who SalonBook is for" }),
+    );
+    const cards = section.getAllByRole("group");
+    expect(cards.map((card) => card.getAttribute("aria-labelledby"))).toEqual([
+      "audience-clients",
+      "audience-owners",
+    ]);
+    for (const [index, [title, tag, points, link, href]] of (
+      [
+        [
+          "Clients",
+          "For clients",
+          [
+            "Choose a service and a stylist",
+            "See when they are really free",
+            "Book without waiting for a reply",
+            "Manage your bookings in one place",
+          ],
+          "Find a salon",
+          "/salons",
+        ],
+        [
+          "Salon owners",
+          "For owners",
+          [
+            "Register and set up your salon, services, stylists and hours",
+            "Share your salon link",
+            "Deposits help protect your time",
+          ],
+          "Set up your salon",
+          "/register",
+        ],
+      ] as const
+    ).entries()) {
+      const card = within(section.getByRole("group", { name: title }));
+      expect(cards[index]).toBe(section.getByRole("group", { name: title }));
+      // Not overflow-hidden: focus could scroll the card to the clipped circle.
+      expect(cards[index]).toHaveClass("overflow-clip");
+      expect(
+        card.getByRole("heading", { level: 3, name: title }),
+      ).toBeInTheDocument();
+      expect(card.getByText(tag)).toBeInTheDocument();
+      expect(
+        card.getAllByRole("listitem").map((item) => item.textContent),
+      ).toEqual(points);
+      const ticks = card.getByRole("list").querySelectorAll("svg");
+      expect(ticks).toHaveLength(points.length);
+      for (const tick of ticks) {
+        expect(tick).toHaveAttribute("aria-hidden", "true");
+      }
+      expect(cards[index]).toHaveClass(
+        "motion-safe:hover:-translate-y-1",
+        "motion-safe:hover:shadow-lg",
+      );
+      // The Reveal wrapper staggers the second card by 80ms.
+      expect(cards[index]?.parentElement?.style.transitionDelay).toBe(
+        index ? "80ms" : "",
+      );
+      expect(card.getByRole("link", { name: link })).toHaveAttribute(
+        "href",
+        href,
+      );
+    }
+  });
+
   it("groups the features for clients and for owners", async () => {
     await show();
     for (const [group, titles] of [

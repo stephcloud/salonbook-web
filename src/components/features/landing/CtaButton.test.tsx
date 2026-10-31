@@ -56,6 +56,32 @@ describe("CtaButton", () => {
     expect(svg).toHaveAttribute("data-icon", "arrow");
   });
 
+  it("makes the light pill white with plum text and a white focus ring for plum panels", () => {
+    render(
+      <CtaButton href="/register" variant="light" icon="arrow">
+        Set up your salon
+      </CtaButton>,
+    );
+    const link = screen.getByRole("link");
+    expect(link).toHaveClass(
+      "bg-card",
+      "text-primary",
+      "min-h-11",
+      "focus-visible:ring-3",
+      "focus-visible:ring-primary-foreground",
+      "focus-visible:ring-offset-primary",
+    );
+    expect(link).not.toHaveClass(
+      "bg-primary",
+      "focus-visible:ring-ring",
+      "focus-visible:ring-offset-background",
+    );
+    expect(badgeOf(link).badge).toHaveClass(
+      "bg-primary",
+      "text-primary-foreground",
+    );
+  });
+
   it("nudges only the arrow on hover or focus, and not with reduced motion", () => {
     const { rerender } = render(
       <CtaButton href="/register" variant="outline" icon="arrow">
