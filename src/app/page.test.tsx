@@ -230,9 +230,19 @@ describe("landing page", () => {
       expect(
         card.getAllByRole("listitem").map((item) => item.textContent),
       ).toEqual(points);
-      for (const tick of card.getByRole("list").querySelectorAll("svg")) {
+      const ticks = card.getByRole("list").querySelectorAll("svg");
+      expect(ticks).toHaveLength(points.length);
+      for (const tick of ticks) {
         expect(tick).toHaveAttribute("aria-hidden", "true");
       }
+      expect(cards[index]).toHaveClass(
+        "motion-safe:hover:-translate-y-1",
+        "motion-safe:hover:shadow-lg",
+      );
+      // The Reveal wrapper staggers the second card by 80ms.
+      expect(cards[index]?.parentElement?.style.transitionDelay).toBe(
+        index ? "80ms" : "",
+      );
       expect(card.getByRole("link", { name: link })).toHaveAttribute(
         "href",
         href,

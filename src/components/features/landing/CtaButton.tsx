@@ -3,7 +3,8 @@ import Link from "next/link";
 import { ArrowRight, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Landing-only pill links (hero and final call to action) with a round icon
+// Landing-only pill links (hero, final call to action and the who-it's-for
+// cards; `light` sits on the plum card) with a round icon
 // badge on the right. They set their own padding and size, so the global
 // `Button` look stays untouched; the focus ring copies `button.tsx`, keep the
 // two in step. 56px tall: 40px badge + 12px padding + 4px border, with a 44px
