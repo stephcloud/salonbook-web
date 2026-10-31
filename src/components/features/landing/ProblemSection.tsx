@@ -33,7 +33,7 @@ export function ProblemSection() {
             <Reveal className="h-full" delay={index * 80}>
               {/* Bar inset by the corner radius so the curve never clips it.
                   On hover it thickens with a transform, not its width. */}
-              <Card className="relative h-full gap-2 rounded-3xl p-7 ring-rose/40 before:absolute before:inset-y-6 before:left-0 before:w-1 before:origin-left before:rounded-r-full before:bg-primary hover:shadow-md hover:shadow-primary/10 hover:before:scale-x-150 motion-safe:transition-[translate,box-shadow] motion-safe:duration-300 motion-safe:before:transition-transform motion-safe:before:duration-300 motion-safe:hover:-translate-y-1">
+              <Card className="relative h-full gap-2 rounded-3xl p-7 ring-rose/40 before:absolute before:inset-y-6 before:left-0 before:w-1 before:origin-left before:rounded-r-full before:bg-primary motion-safe:hover:shadow-md motion-safe:hover:shadow-primary/10 hover:before:scale-x-150 motion-safe:transition-[translate,box-shadow] motion-safe:duration-300 motion-safe:before:transition-transform motion-safe:before:duration-300 motion-safe:hover:-translate-y-1">
                 <h3 className="text-xl font-semibold">{problem.title}</h3>
                 <p className="text-base text-muted-foreground">
                   {problem.text}

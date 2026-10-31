@@ -40,7 +40,7 @@ export function FeaturesSection() {
                   <Reveal className="h-full" delay={index * 80}>
                     {/* The circle is a pseudo-element clipped by the card;
                      *:relative keeps every child painted above it. */}
-                    <Card className="relative h-full gap-3 rounded-3xl p-6.5 *:relative before:absolute before:-top-8 before:-right-8 before:size-27.5 before:rounded-full before:bg-secondary hover:shadow-lg hover:shadow-primary/15 motion-safe:transition-[translate,box-shadow] motion-safe:duration-300 motion-safe:hover:-translate-y-1">
+                    <Card className="relative h-full gap-3 rounded-3xl p-6.5 *:relative before:absolute before:-top-8 before:-right-8 before:size-27.5 before:rounded-full before:bg-secondary motion-safe:hover:shadow-lg motion-safe:hover:shadow-primary/15 motion-safe:transition-[translate,box-shadow] motion-safe:duration-300 motion-safe:hover:-translate-y-1">
                       <span className="flex size-11.5 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
                         <Icon aria-hidden="true" className="size-5" />
                       </span>
