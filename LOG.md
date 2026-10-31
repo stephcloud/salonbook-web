@@ -305,3 +305,10 @@
 - The global `Button` focus indicator is now a 3px plum outline with a 2px transparent offset (`outline-3 outline-offset-2 outline-ring`), replacing the ring with an ivory offset, which showed as a pale halo on pink (`--secondary`) panels. Dropping `outline-none` also keeps it in Windows high-contrast mode (the follow-up noted in the hero entry). The destructive variant no longer fades it to 20%. A test checks every variant has the plum outline and no competing focus colour; it fails on the old `button.tsx`.
 - `private-pages.test.ts` and `DaysOffSection.test.tsx` now set a 20s test timeout (and `DaysOffSection` a 5s `findBy`/`waitFor` timeout) for their own file only. Neither is skipped. The full run is still about 360s; the jsdom speed-up noted in the hero entry remains open.
 - Lint, typecheck, the full test suite (1492 tests) and the build pass.
+
+## 2026-10-31 (scroll reveal)
+
+- On `feat/scroll-reveal`: landing sections fade and rise into view as you scroll, through one small client component, `Reveal` (IntersectionObserver, no new dependency). It hides content only from its effect, so the server HTML, a failed script, reduced motion and anything already on screen at load stay visible. Opacity and transform only, never hidden in print. `Reveal.test.tsx` covers it.
+- Problem cards lift slightly on hover with a soft shadow, and the plum bar grows wider via a transform. Motion is off with `prefers-reduced-motion`.
+- Reviews done.
+- The full test suite was re-run by the owner and passes.

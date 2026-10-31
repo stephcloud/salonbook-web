@@ -168,3 +168,18 @@
     );
   }
 }
+
+/* Landing scroll reveal (Reveal.tsx sets data-reveal from JS only). Opacity
+   and transform only, so nothing shifts; never hidden in print or with
+   reduced motion. Only the way in is animated, so hiding never fades out. */
+@media screen and (prefers-reduced-motion: no-preference) {
+  [data-reveal="shown"] {
+    transition:
+      opacity 500ms ease-out,
+      transform 500ms ease-out;
+  }
+  [data-reveal="hidden"] {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
