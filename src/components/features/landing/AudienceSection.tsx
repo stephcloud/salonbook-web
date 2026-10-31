@@ -13,7 +13,8 @@ const TONES = {
     tick: "text-primary",
     button: "primary",
   },
-  // The circle is a pseudo-element clipped by the card; *:relative keeps
+  // The circle is a pseudo-element clipped by the card (overflow-clip, so
+  // focus or scrollIntoView cannot scroll the card to it); *:relative keeps
   // every child painted above it. White text stays 4.9:1 or better over it.
   plum: {
     card: "bg-primary text-primary-foreground ring-primary before:absolute before:-right-16 before:-bottom-16 before:size-48 before:rounded-full before:bg-primary-foreground/7",
@@ -38,7 +39,7 @@ export function AudienceSection() {
                 role="group"
                 aria-labelledby={id}
                 className={cn(
-                  "relative h-full gap-5 rounded-3xl p-8.5 text-base *:relative motion-safe:transition-[translate,box-shadow] motion-safe:duration-300 motion-safe:hover:-translate-y-1 motion-safe:hover:shadow-lg motion-safe:hover:shadow-primary/15",
+                  "relative h-full gap-5 overflow-clip rounded-3xl p-8.5 text-base *:relative motion-safe:transition-[translate,box-shadow] motion-safe:duration-300 motion-safe:hover:-translate-y-1 motion-safe:hover:shadow-lg motion-safe:hover:shadow-primary/15",
                   style.card,
                 )}
               >

@@ -221,6 +221,8 @@ describe("landing page", () => {
     ).entries()) {
       const card = within(section.getByRole("group", { name: title }));
       expect(cards[index]).toBe(section.getByRole("group", { name: title }));
+      // Not overflow-hidden: focus could scroll the card to the clipped circle.
+      expect(cards[index]).toHaveClass("overflow-clip");
       expect(
         card.getByRole("heading", { level: 3, name: title }),
       ).toBeInTheDocument();
