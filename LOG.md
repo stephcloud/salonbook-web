@@ -316,5 +316,5 @@
 ## 2026-10-31 (features cards)
 
 - On `feat/features-cards`: the features section is two labelled groups, "For your clients" (Real free times, Deposits, Clear cancellations, One link to share) and "For you, the owner" (Services and prices, Your stylists, Weekly hours, Bookings list). Each group is a `role="group"` named by its h3, a small uppercase plum label with a thin divider; card titles are h4. Card text is unchanged; `FEATURES` became `FEATURE_GROUPS` in `landing-content.ts`.
-- Cards: white, rounded-3xl, 26px padding, a 46px plum icon tile with a white icon, and a 110px pink (`--secondary`) circle clipped in the top-right corner behind the content. Reveal stagger restarts per group. Hover lifts the card with a soft plum shadow; the lift is off with reduced motion.
+- Cards: white, rounded-3xl, 26px padding, a 46px plum icon tile with a white icon, and a 110px pink (`--secondary`) circle clipped in the top-right corner behind the content. Reveal stagger restarts per group. Hover lifts the card with a soft plum shadow. With `prefers-reduced-motion` the lift and the shadow are off, and on the problem cards the lift, the shadow and the bar growth are all off too.
 - Checked at 390px and 1440px in headless Chrome: no horizontal scroll, 1 and 4 columns. Lowest new contrast is muted text over the pink circle, 5.75:1.
