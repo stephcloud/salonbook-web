@@ -96,6 +96,7 @@ describe("public salon calls", () => {
   });
 
   describe("searchSalons", () => {
+    const PINK = { name: "pink", area: "" };
     function salons(count: number, prefix: string) {
       return Array.from({ length: count }, (_, i) => ({
         id: `${prefix}-${i}`,
@@ -113,7 +114,7 @@ describe("public salon calls", () => {
         .mockResolvedValueOnce(jsonResponse(salons(2, "pink")));
       vi.stubGlobal("fetch", fetchMock);
 
-      const result = await searchSalons("PINK");
+      const result = await searchSalons({ name: "PINK", area: "" });
 
       expect(calledUrls(fetchMock)).toEqual([
         `${API_URL}/salons?limit=100&offset=0`,
@@ -128,10 +129,10 @@ describe("public salon calls", () => {
       expect(result.truncated).toBe(false);
     });
 
-    it("matches the address too, so an area finds its salons", async () => {
+    it("matches the area on the address and the name on the name", async () => {
       vi.stubGlobal(
         "fetch",
-        vi.fn().mockResolvedValue(
+        vi.fn().mockImplementation(async () =>
           jsonResponse([
             { id: "a", name: "Glow", address: "3 Allen Avenue, Ikeja, Lagos" },
             { id: "b", name: "Pink", address: "Wuse 2, Abuja" },
@@ -140,9 +141,13 @@ describe("public salon calls", () => {
         ),
       );
 
-      const result = await searchSalons("ikeja");
-
-      expect(result.salons.map((s) => s.id)).toEqual(["a", "c"]);
+      const byArea = await searchSalons({ name: "", area: "ikeja" });
+      expect(byArea.salons.map((s) => s.id)).toEqual(["a"]);
+      const both = await searchSalons({ name: "glow", area: "lagos" });
+      expect(both.salons.map((s) => s.id)).toEqual(["a"]);
+      // An old ?q= link (no ?area=) still matches the name or the address.
+      const old = await searchSalons({ name: "ikeja", area: null });
+      expect(old.salons.map((s) => s.id)).toEqual(["a", "c"]);
     });
 
     it("pages the matches and says whether another page exists", async () => {
@@ -153,15 +158,15 @@ describe("public salon calls", () => {
           .mockImplementation(async () => jsonResponse(salons(25, "Pink"))),
       );
 
-      const first = await searchSalons("pink", 1);
+      const first = await searchSalons(PINK, 1);
       expect(first.salons).toHaveLength(20);
       expect(first.hasNext).toBe(true);
 
-      const second = await searchSalons("pink", 2);
+      const second = await searchSalons(PINK, 2);
       expect(second.salons).toHaveLength(5);
       expect(second.hasNext).toBe(false);
 
-      expect((await searchSalons("pink", 3)).salons).toEqual([]);
+      expect((await searchSalons(PINK, 3)).salons).toEqual([]);
     });
 
     it("stops after 5 requests even when every page is full", async () => {
@@ -170,7 +175,7 @@ describe("public salon calls", () => {
         .mockImplementation(async () => jsonResponse(salons(100, "Other")));
       vi.stubGlobal("fetch", fetchMock);
 
-      await expect(searchSalons("zzz")).resolves.toEqual({
+      await expect(searchSalons({ name: "zzz", area: "" })).resolves.toEqual({
         salons: [],
         hasNext: false,
         truncated: true,
@@ -186,7 +191,7 @@ describe("public salon calls", () => {
         );
       vi.stubGlobal("fetch", fetchMock);
 
-      const error = await searchSalons("pink").catch((e: unknown) => e);
+      const error = await searchSalons(PINK).catch((e: unknown) => e);
       expect(error).toBeInstanceOf(ApiError);
       expect(fetchMock).toHaveBeenCalledTimes(2);
     });

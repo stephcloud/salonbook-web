@@ -2,9 +2,27 @@ export const MAX_QUERY_LENGTH = 80;
 /** The id that links the search input to its suggestions <datalist>. */
 export const SALON_SUGGESTIONS_ID = "salon-name-suggestions";
 
-/** Lower-case, accent-folded and trimmed, so "Café " matches "cafe". */
+/** Lower-case, accent-folded, trimmed and single-spaced, so "Café  Glam " matches "cafe glam". */
 export function normalizeSearch(text: string): string {
-  return text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().trim();
+  return text
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * A search from the URL: ?q= is the salon name, ?area= the location. `area` is
+ * null when ?area= is absent, which only old links do (the form always sends
+ * it); then ?q= matches the name or the address, as it did before.
+ */
+export type SalonSearch = { name: string; area: string | null };
+
+export const NO_SEARCH: SalonSearch = { name: "", area: "" };
+
+export function isSearching(search: SalonSearch): boolean {
+  return search.name !== "" || (search.area ?? "") !== "";
 }
 
 /** Reads ?q= into a trimmed, length-limited term ("" when absent). */
@@ -13,17 +31,27 @@ export function parseQuery(raw: string | string[] | undefined): string {
   return (value ?? "").trim().slice(0, MAX_QUERY_LENGTH).trim();
 }
 
-/** True when the term is empty or found in the salon's name or address. */
+/** Reads ?q= and ?area= (see SalonSearch). */
+export function parseSearch(
+  q: string | string[] | undefined,
+  area: string | string[] | undefined,
+): SalonSearch {
+  return {
+    name: parseQuery(q),
+    area: area === undefined ? null : parseQuery(area),
+  };
+}
+
+/** Name in the name AND area in the address; an empty field matches anything. */
 export function matchesSalon(
   salon: { name: string; address: string },
-  query: string,
+  search: SalonSearch,
 ): boolean {
-  const needle = normalizeSearch(query);
-  return (
-    needle === "" ||
-    normalizeSearch(salon.name).includes(needle) ||
-    normalizeSearch(salon.address).includes(needle)
-  );
+  const name = normalizeSearch(salon.name);
+  const address = normalizeSearch(salon.address);
+  const q = normalizeSearch(search.name);
+  if (search.area === null) return name.includes(q) || address.includes(q);
+  return name.includes(q) && address.includes(normalizeSearch(search.area));
 }
 
 export const MAX_AREAS = 8;
@@ -59,10 +87,13 @@ export function salonAreas(addresses: string[]): string[] {
     .map((area) => area.label);
 }
 
-/** The /salons URL for a search term and page (page 1 and empty term omitted). */
-export function salonsHref(query: string, page: number): string {
+/** The /salons URL for a search and page (page 1 and empty fields omitted). */
+export function salonsHref(search: SalonSearch, page: number): string {
   const params = new URLSearchParams();
-  if (query) params.set("q", query);
+  if (search.name) params.set("q", search.name);
+  if (search.area) params.set("area", search.area);
+  // Keeps a name-only search name-only on the next page (see SalonSearch).
+  else if (search.area === "" && search.name) params.set("area", "");
   if (page > 1) params.set("page", String(page));
   const qs = params.toString();
   return qs ? `/salons?${qs}` : "/salons";

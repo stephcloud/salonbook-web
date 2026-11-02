@@ -123,19 +123,20 @@ describe("SalonList paging", () => {
 });
 
 describe("SalonList search", () => {
+  const PINK = { name: "pink", area: "" };
   const two = [makeSalon({ id: "a" }), makeSalon({ id: "b" })];
 
   it("keeps the term in the paging links and trusts hasNext", () => {
     render(
-      <SalonList salons={two} page={2} pageSize={20} query="pink" hasNext />,
+      <SalonList salons={two} page={2} pageSize={20} search={PINK} hasNext />,
     );
     expect(screen.getByRole("link", { name: "Previous" })).toHaveAttribute(
       "href",
-      "/salons?q=pink",
+      "/salons?q=pink&area=",
     );
     expect(screen.getByRole("link", { name: "Next" })).toHaveAttribute(
       "href",
-      "/salons?q=pink&page=3",
+      "/salons?q=pink&area=&page=3",
     );
   });
 
@@ -145,7 +146,7 @@ describe("SalonList search", () => {
         salons={two}
         page={1}
         pageSize={2}
-        query="pink"
+        search={PINK}
         hasNext={false}
       />,
     );
@@ -153,45 +154,59 @@ describe("SalonList search", () => {
   });
 
   it("offers the first page of the same search when a later page is empty", () => {
-    render(<SalonList salons={[]} page={4} pageSize={20} query="pink" />);
+    render(<SalonList salons={[]} page={4} pageSize={20} search={PINK} />);
     expect(screen.getByText("No more results")).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "Back to the first page" }),
-    ).toHaveAttribute("href", "/salons?q=pink");
+    ).toHaveAttribute("href", "/salons?q=pink&area=");
   });
 });
 
 describe("SalonSearchForm", () => {
-  it("is a labelled GET form that Enter submits", () => {
-    render(<SalonSearchForm query="" />);
-    const input = screen.getByLabelText("Search by salon name or area");
-    expect(input).toHaveAttribute("name", "q");
+  const NONE = { name: "", area: "" };
+
+  it("is a GET form with labelled name and location fields and a Search button", () => {
+    render(<SalonSearchForm search={NONE} />);
     const form = screen.getByRole("search");
     expect(form).toHaveAttribute("method", "get");
     expect(form).toHaveAttribute("action", "/salons");
+    expect(screen.getByLabelText("Salon name")).toHaveAttribute("name", "q");
+    const area = screen.getByLabelText("Location");
+    expect(area).toHaveAttribute("name", "area");
+    expect(area).toHaveAttribute("placeholder", "Area or street");
     expect(screen.getByRole("button", { name: "Search" })).toHaveAttribute(
       "type",
       "submit",
     );
   });
 
-  it("links the input to the suggestions list and keeps its label", () => {
-    render(<SalonSearchForm query="" />);
-    const input = screen.getByLabelText("Search by salon name or area");
-    expect(input).toHaveAttribute("list", "salon-name-suggestions");
+  it("gives both fields a 44px minimum height and a focus style", () => {
+    render(<SalonSearchForm search={NONE} />);
+    for (const label of ["Salon name", "Location"]) {
+      const input = screen.getByLabelText(label);
+      expect(input).toHaveClass("min-h-11");
+      expect(input.className).toContain("focus-visible:");
+    }
   });
 
-  it("shows the clear link only while a term is set", () => {
-    const { rerender } = render(<SalonSearchForm query="" />);
-    expect(screen.queryByRole("link", { name: "Clear search" })).toBeNull();
-    rerender(<SalonSearchForm query="pink" />);
-    expect(screen.getByLabelText("Search by salon name or area")).toHaveValue(
-      "pink",
+  it("links only the name field to the salon name suggestions", () => {
+    render(<SalonSearchForm search={NONE} />);
+    expect(screen.getByLabelText("Salon name")).toHaveAttribute(
+      "list",
+      "salon-name-suggestions",
     );
-    expect(screen.getByRole("link", { name: "Clear search" })).toHaveAttribute(
-      "href",
-      "/salons",
+    expect(screen.getByLabelText("Location")).not.toHaveAttribute("list");
+  });
+
+  it("fills the fields from the search, and an old link fills only the name", () => {
+    const { unmount } = render(
+      <SalonSearchForm search={{ name: "pink", area: "Ikeja" }} />,
     );
+    expect(screen.getByLabelText("Salon name")).toHaveValue("pink");
+    expect(screen.getByLabelText("Location")).toHaveValue("Ikeja");
+    unmount();
+    render(<SalonSearchForm search={{ name: "lagos", area: null }} />);
+    expect(screen.getByLabelText("Location")).toHaveValue("");
   });
 });
 
