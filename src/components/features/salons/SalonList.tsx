@@ -105,7 +105,7 @@ export function SalonList({
 
   return (
     <>
-      <ul className="grid gap-4 md:grid-cols-2">
+      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {salons.map((salon) => (
           <SalonCard key={salon.id} salon={salon} />
         ))}
