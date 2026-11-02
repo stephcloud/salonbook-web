@@ -135,4 +135,9 @@ describe("SalonResultsFallback", () => {
     expect(note).toHaveClass("invisible");
     expect(note.className).toContain("reveal-late");
   });
+
+  it("shows placeholder cards shaped like the salon cards", () => {
+    render(<SalonResultsFallback searching={false} />);
+    expect(screen.getByTestId("salon-card-skeletons")).toBeInTheDocument();
+  });
 });

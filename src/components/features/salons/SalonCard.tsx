@@ -5,7 +5,7 @@ import type { Salon } from "@/lib/api";
 import { formatNaira } from "@/lib/money";
 
 /** Matches the grid in SalonList: 1 column, 2 from sm, 3 from lg (inside max-w-5xl). */
-export const SALON_CARD_SIZES =
+const SALON_CARD_SIZES =
   "(min-width: 1024px) 320px, (min-width: 640px) 50vw, 100vw";
 
 /** The whole card is one link; the deposit chip is read as its description. */
@@ -17,7 +17,7 @@ export function SalonCard({ salon }: { salon: Salon }) {
         href={`/salons/${salon.id}`}
         aria-label={`${salon.name}, ${salon.address}`}
         aria-describedby={depositId}
-        className="group relative isolate block aspect-[5/6] overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-primary-dark shadow-sm shadow-primary/10 outline-none hover:shadow-lg hover:shadow-primary/20 focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-safe:transition motion-safe:duration-300 motion-safe:hover:-translate-y-1"
+        className="group relative isolate block aspect-[5/6] overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-primary-dark shadow-sm shadow-primary/10 hover:shadow-lg hover:shadow-primary/20 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-ring motion-safe:transition-[translate,box-shadow] motion-safe:duration-300 motion-safe:hover:-translate-y-1"
       >
         {salon.image_url ? (
           <Image
@@ -36,7 +36,7 @@ export function SalonCard({ salon }: { salon: Salon }) {
           >
             <div className="absolute -top-12 -right-12 size-48 rounded-full bg-primary-foreground/10" />
             <span className="font-heading text-[9rem] leading-none text-primary-foreground/15 select-none">
-              {salon.name.trim().charAt(0).toUpperCase()}
+              {(Array.from(salon.name.trim())[0] ?? "").toUpperCase()}
             </span>
           </div>
         )}
