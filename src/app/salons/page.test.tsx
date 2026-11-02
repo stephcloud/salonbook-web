@@ -16,6 +16,10 @@ vi.mock("@/components/features/salons/SalonNameSuggestions", () => ({
   SalonNameSuggestions: () => null,
 }));
 
+vi.mock("@/components/features/salons/SalonAreaChips", () => ({
+  SalonAreaChips: () => null,
+}));
+
 import SalonsPage from "./page";
 
 function searchParams(page?: string, q?: string) {
@@ -50,19 +54,25 @@ describe("SalonsPage", () => {
     expect(
       screen.getByRole("heading", { level: 1, name: "Salons" }),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText("Search salons by name")).toHaveValue("");
+    expect(screen.getByLabelText("Search by salon name or area")).toHaveValue(
+      "",
+    );
   });
 
   it("passes the trimmed ?q= on and keeps it in the box", async () => {
     await renderPage("2", "  pink ");
     expect(screen.getByTestId("results")).toHaveTextContent('"pink" page 2');
-    expect(screen.getByLabelText("Search salons by name")).toHaveValue("pink");
+    expect(screen.getByLabelText("Search by salon name or area")).toHaveValue(
+      "pink",
+    );
   });
 
   it("still shows the search box and results without suggestions", async () => {
     await renderPage();
     expect(document.querySelector("datalist")).toBeNull();
-    expect(screen.getByLabelText("Search salons by name")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Search by salon name or area"),
+    ).toBeInTheDocument();
     expect(screen.getByTestId("results")).toBeInTheDocument();
   });
 

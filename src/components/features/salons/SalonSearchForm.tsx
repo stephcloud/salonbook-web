@@ -14,16 +14,16 @@ export function SalonSearchForm({ query }: { query: string }) {
       role="search"
       className="flex flex-col gap-2"
     >
-      <Label htmlFor="salon-search">Search salons by name</Label>
+      <Label htmlFor="salon-search">Search by salon name or area</Label>
       <div className="flex gap-2">
-        <div className="relative flex-1">
+        <div className="relative min-w-0 flex-1">
           <Input
             id="salon-search"
             name="q"
             type="search"
             defaultValue={query}
             maxLength={MAX_QUERY_LENGTH}
-            placeholder="Salon name"
+            placeholder="Salon name or area"
             autoComplete="off"
             list={SALON_SUGGESTIONS_ID}
             className={`[&::-webkit-search-cancel-button]:hidden${query ? " pr-11" : ""}`}

@@ -1,20 +1,84 @@
 import { describe, expect, it } from "vitest";
 import {
   MAX_QUERY_LENGTH,
-  matchesSalonName,
+  MAX_AREAS,
+  matchesSalon,
   parseQuery,
+  salonAreas,
   salonsHref,
 } from "./salon-search";
 
-describe("matchesSalonName", () => {
+describe("matchesSalon", () => {
+  const address = "12 Allen Avenue, Ikeja, Lagos";
   it.each([
     ["Pink Studio", "pink", true],
     ["Pink Studio", "  STUDIO ", true],
     ["Café Glam", "cafe", true],
     ["Pink Studio", "blue", false],
     ["Pink Studio", "", true],
+    ["Pink Studio", " ikeja ", true],
+    ["Pink Studio", "LAGOS", true],
+    ["Pink Studio", "Abuja", false],
   ])("%s with %j is %s", (name, query, expected) => {
-    expect(matchesSalonName(name, query)).toBe(expected);
+    expect(matchesSalon({ name, address }, query)).toBe(expected);
+  });
+
+  it("folds accents in the address too", () => {
+    expect(matchesSalon({ name: "X", address: "Rue Café, Lomé" }, "lome")).toBe(
+      true,
+    );
+  });
+});
+
+describe("salonAreas", () => {
+  it("takes areas from real addresses and skips street lines and blanks", () => {
+    expect(
+      salonAreas([
+        "GRA",
+        "1 Test Street",
+        "-",
+        "1 Probe Street, Lagos",
+        "1 Probe Street, Lagos",
+        "No 36 Imoke street GRA",
+      ]),
+    ).toEqual(["Lagos", "GRA"]);
+  });
+
+  it("skips street names even without a house number", () => {
+    expect(
+      salonAreas(["Imoke street GRA", "Allen Avenue, Off Awolowo Road, Ikeja"]),
+    ).toEqual(["Ikeja"]);
+  });
+
+  it("uses every part after the first and merges case and accents", () => {
+    expect(
+      salonAreas([
+        "5 Road, Ikeja, Lagos",
+        "Allen Avenue, ikeja ",
+        "Lekki,lagos",
+      ]),
+    ).toEqual(["Ikeja", "Lagos"]);
+  });
+
+  it("orders by how many salons share the area, then A to Z", () => {
+    expect(salonAreas(["a, Yaba", "b, Yaba", "c, Ajah", "d, Lekki"])).toEqual([
+      "Yaba",
+      "Ajah",
+      "Lekki",
+    ]);
+  });
+
+  it(`keeps at most ${MAX_AREAS}`, () => {
+    const many = Array.from(
+      { length: 12 },
+      (_, i) => `Street, Area ${"x".repeat(i + 1)}`,
+    );
+    expect(salonAreas(many)).toHaveLength(MAX_AREAS);
+  });
+
+  it("returns nothing when no address names an area", () => {
+    expect(salonAreas([])).toEqual([]);
+    expect(salonAreas(["1 Test Street", "-", ""])).toEqual([]);
   });
 });
 

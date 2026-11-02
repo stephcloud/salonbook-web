@@ -16,7 +16,7 @@ export async function SalonResults({
   const status = !query
     ? ""
     : salons.length === 0 && page === 1
-      ? `No salons match '${query}'`
+      ? `No salons found in that area. Nothing matches '${query}'.`
       : `Showing salons that match '${query}', page ${page}`;
 
   return (

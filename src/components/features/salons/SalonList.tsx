@@ -37,13 +37,18 @@ export function SalonList({
     }
     if (query) {
       return (
-        <EmptyState title={`No salons match '${query}'`}>
-          <Link
-            href="/salons"
-            className={buttonVariants({ variant: "outline" })}
-          >
-            Show all salons
-          </Link>
+        <EmptyState title="No salons found in that area">
+          <div className="flex flex-col items-start gap-3">
+            <p className="break-words">
+              {`Nothing matches '${query}' by name or area.`}
+            </p>
+            <Link
+              href="/salons"
+              className={buttonVariants({ variant: "outline" })}
+            >
+              Clear search
+            </Link>
+          </div>
         </EmptyState>
       );
     }
