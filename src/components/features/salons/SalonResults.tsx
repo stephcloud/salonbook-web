@@ -1,23 +1,28 @@
 import { SalonList } from "@/components/features/salons/SalonList";
 import { SALONS_PAGE_SIZE } from "@/lib/api";
-import { getSalons, searchSalons } from "@/lib/api-server";
+import { getSalonAreas, getSalons, searchSalons } from "@/lib/api-server";
+import { isSearching, type SalonSearch } from "@/lib/salon-search";
 
 /** Fetches one page of salons (or search matches) and lists them. */
 export async function SalonResults({
-  query,
+  search,
   page,
 }: {
-  query: string;
+  search: SalonSearch;
   page: number;
 }) {
-  const { salons, hasNext, truncated } = query
-    ? await searchSalons(query, page)
+  const searching = isSearching(search);
+  const { salons, hasNext, truncated } = searching
+    ? await searchSalons(search, page)
     : { salons: await getSalons(page), hasNext: undefined, truncated: false };
-  const status = !query
+  const noMatches = searching && salons.length === 0 && page === 1;
+  // Areas for the empty state; the search batch is cached, so no extra call.
+  const areas = noMatches ? await getSalonAreas().catch(() => []) : [];
+  const status = !searching
     ? ""
-    : salons.length === 0 && page === 1
-      ? `No salons found in that area. Nothing matches '${query}'.`
-      : `Showing salons that match '${query}', page ${page}`;
+    : noMatches
+      ? "No salons match your search."
+      : `Showing salons that match your search, page ${page}`;
 
   return (
     <>
@@ -33,7 +38,8 @@ export async function SalonResults({
         salons={salons}
         page={page}
         pageSize={SALONS_PAGE_SIZE}
-        query={query}
+        search={search}
+        areas={areas}
         hasNext={hasNext}
       />
     </>

@@ -17,7 +17,12 @@ import type { components } from "@/lib/api-types";
 import { TOKEN_COOKIE } from "@/lib/auth/cookie";
 import { safeNextPath } from "@/lib/auth/safe-next";
 import { apiBaseUrl, fetchUpstream } from "@/lib/proxy/upstream";
-import { matchesSalon, normalizeSearch, salonAreas } from "@/lib/salon-search";
+import {
+  matchesSalon,
+  normalizeSearch,
+  salonAreas,
+  type SalonSearch,
+} from "@/lib/salon-search";
 
 export type CurrentUser = components["schemas"]["UserResponse"];
 
@@ -129,8 +134,8 @@ export async function getSalonNames(): Promise<string[]> {
 }
 
 /**
- * Area chips for the search, built from the first batch's addresses.
- * shortcut: only the first 100 salons feed the chips, scan more batches when there are more salons.
+ * Areas offered when a search finds nothing, built from the first batch's addresses.
+ * shortcut: only the first 100 salons feed them (the search scans 500), scan more batches when there are more salons.
  */
 export async function getSalonAreas(): Promise<string[]> {
   const batch = await getSalonBatch(0);
@@ -159,12 +164,12 @@ export async function getSitemapSalonIds(): Promise<string[]> {
 const MAX_SEARCH_SCAN = 5;
 
 /**
- * Salons whose name or address contains `query`, one page of them. The API cannot search,
+ * Salons matching the search (see matchesSalon), one page of them. The API cannot search,
  * so this reads salons 100 at a time (at most 500) and filters here. Replace
  * with a single call once the API accepts a search parameter.
  */
 export async function searchSalons(
-  query: string,
+  search: SalonSearch,
   page = 1,
 ): Promise<{ salons: Salon[]; hasNext: boolean; truncated: boolean }> {
   const matches: Salon[] = [];
@@ -172,7 +177,7 @@ export async function searchSalons(
   for (let i = 0; i < MAX_SEARCH_SCAN; i++) {
     const batch = await getSalonBatch(i * MAX_LIST_LIMIT);
     for (const salon of batch) {
-      if (matchesSalon(salon, query)) matches.push(salon);
+      if (matchesSalon(salon, search)) matches.push(salon);
     }
     if (batch.length < MAX_LIST_LIMIT) break;
     truncated = i === MAX_SEARCH_SCAN - 1;

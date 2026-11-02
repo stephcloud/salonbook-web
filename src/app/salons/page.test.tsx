@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
@@ -6,8 +6,8 @@ vi.mock("next/headers", () => ({ cookies: async () => ({ get: vi.fn() }) }));
 vi.mock("next/navigation", () => ({ redirect: vi.fn(), notFound: vi.fn() }));
 // The results are an async server component; its own test covers the fetching.
 vi.mock("@/components/features/salons/SalonResults", () => ({
-  SalonResults: ({ query, page }: { query: string; page: number }) => (
-    <p data-testid="results">{`${JSON.stringify(query)} page ${page}`}</p>
+  SalonResults: ({ search, page }: { search: unknown; page: number }) => (
+    <p data-testid="results">{`${JSON.stringify(search)} page ${page}`}</p>
   ),
 }));
 
@@ -16,22 +16,21 @@ vi.mock("@/components/features/salons/SalonNameSuggestions", () => ({
   SalonNameSuggestions: () => null,
 }));
 
-vi.mock("@/components/features/salons/SalonAreaChips", () => ({
-  SalonAreaChips: () => null,
-}));
-
 import SalonsPage from "./page";
 
-function searchParams(page?: string, q?: string) {
+function searchParams(page?: string, q?: string, area?: string) {
   return Promise.resolve({
     ...(page === undefined ? {} : { page }),
     ...(q === undefined ? {} : { q }),
+    ...(area === undefined ? {} : { area }),
   });
 }
 
-async function renderPage(page?: string, q?: string) {
-  render(await SalonsPage({ searchParams: searchParams(page, q) }));
+async function renderPage(page?: string, q?: string, area?: string) {
+  render(await SalonsPage({ searchParams: searchParams(page, q, area) }));
 }
+
+const NONE = `{"name":"","area":null}`;
 
 describe("SalonsPage", () => {
   it.each([
@@ -44,7 +43,7 @@ describe("SalonsPage", () => {
   ])("reads ?page=%s as page %i", async (raw, expected) => {
     await renderPage(raw);
     expect(screen.getByTestId("results")).toHaveTextContent(
-      `"" page ${expected}`,
+      `${NONE} page ${expected}`,
     );
   });
 
@@ -54,30 +53,48 @@ describe("SalonsPage", () => {
     expect(
       screen.getByRole("heading", { level: 1, name: "Salons" }),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText("Search by salon name or area")).toHaveValue(
-      "",
-    );
+    expect(screen.getByLabelText("Salon name")).toHaveValue("");
+    expect(screen.getByLabelText("Location")).toHaveValue("");
   });
 
-  it("passes the trimmed ?q= on and keeps it in the box", async () => {
-    await renderPage("2", "  pink ");
-    expect(screen.getByTestId("results")).toHaveTextContent('"pink" page 2');
-    expect(screen.getByLabelText("Search by salon name or area")).toHaveValue(
-      "pink",
+  it("passes the trimmed ?q= and ?area= on and keeps them in the fields", async () => {
+    await renderPage("2", "  pink ", " Ikeja  ");
+    expect(screen.getByTestId("results")).toHaveTextContent(
+      `{"name":"pink","area":"Ikeja"} page 2`,
+    );
+    expect(screen.getByLabelText("Salon name")).toHaveValue("pink");
+    expect(screen.getByLabelText("Location")).toHaveValue("Ikeja");
+  });
+
+  it("keeps an old ?q= link working as a name-or-area search", async () => {
+    await renderPage(undefined, "Lagos");
+    expect(screen.getByTestId("results")).toHaveTextContent(
+      `{"name":"Lagos","area":null} page 1`,
     );
   });
 
   it("still shows the search box and results without suggestions", async () => {
     await renderPage();
     expect(document.querySelector("datalist")).toBeNull();
-    expect(
-      screen.getByLabelText("Search by salon name or area"),
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Salon name")).toBeInTheDocument();
     expect(screen.getByTestId("results")).toBeInTheDocument();
   });
 
+  it("offers Clear search only while a search is set", async () => {
+    await renderPage();
+    expect(screen.queryByRole("link", { name: "Clear search" })).toBeNull();
+    cleanup();
+    await renderPage(undefined, undefined, "Ikeja");
+    expect(screen.getByRole("link", { name: "Clear search" })).toHaveAttribute(
+      "href",
+      "/salons",
+    );
+  });
+
   it("treats a blank ?q= as no search", async () => {
-    await renderPage(undefined, "   ");
-    expect(screen.getByTestId("results")).toHaveTextContent('"" page 1');
+    await renderPage(undefined, "   ", " ");
+    expect(screen.getByTestId("results")).toHaveTextContent(
+      `{"name":"","area":""} page 1`,
+    );
   });
 });

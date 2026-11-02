@@ -2,31 +2,68 @@ import { describe, expect, it } from "vitest";
 import {
   MAX_QUERY_LENGTH,
   MAX_AREAS,
+  isSearching,
   matchesSalon,
   parseQuery,
+  parseSearch,
   salonAreas,
   salonsHref,
 } from "./salon-search";
 
 describe("matchesSalon", () => {
-  const address = "12 Allen Avenue, Ikeja, Lagos";
+  const address = "12 Allen  Avenue, Ikeja, Lagos";
+  const salon = (name: string) => ({ name, address });
+
   it.each([
     ["Pink Studio", "pink", true],
     ["Pink Studio", "  STUDIO ", true],
+    ["Pink  Studio", "pink studio", true],
+    ["Pink Studio", "pink   studio", true],
     ["Café Glam", "cafe", true],
     ["Pink Studio", "blue", false],
     ["Pink Studio", "", true],
-    ["Pink Studio", " ikeja ", true],
-    ["Pink Studio", "LAGOS", true],
-    ["Pink Studio", "Abuja", false],
-  ])("%s with %j is %s", (name, query, expected) => {
-    expect(matchesSalon({ name, address }, query)).toBe(expected);
+    ["Pink Studio", "ikeja", false],
+  ])("name %s with %j is %s", (name, q, expected) => {
+    expect(matchesSalon(salon(name), { name: q, area: "" })).toBe(expected);
+  });
+
+  it.each([
+    [" ikeja ", true],
+    ["LAGOS", true],
+    ["allen avenue", true],
+    ["Allen   Avenue, IKEJA", true],
+    ["Abuja", false],
+    ["pink", false],
+  ])("area %j is %s", (area, expected) => {
+    expect(matchesSalon(salon("Pink Studio"), { name: "", area })).toBe(
+      expected,
+    );
+  });
+
+  it("needs both the name and the area when both are set", () => {
+    const pink = salon("Pink Studio");
+    expect(matchesSalon(pink, { name: "pink", area: "ikeja" })).toBe(true);
+    expect(matchesSalon(pink, { name: "pink", area: "abuja" })).toBe(false);
+    expect(matchesSalon(pink, { name: "blue", area: "ikeja" })).toBe(false);
+  });
+
+  it("matches an old ?q= link (no ?area=) on the name or the address", () => {
+    const pink = salon("Pink Studio");
+    expect(matchesSalon(pink, { name: "ikeja", area: null })).toBe(true);
+    expect(matchesSalon(pink, { name: "pink", area: null })).toBe(true);
+    expect(matchesSalon(pink, { name: "abuja", area: null })).toBe(false);
   });
 
   it("folds accents in the address too", () => {
-    expect(matchesSalon({ name: "X", address: "Rue Café, Lomé" }, "lome")).toBe(
-      true,
-    );
+    expect(
+      matchesSalon(
+        { name: "X", address: "Rue Café, Lomé" },
+        {
+          name: "",
+          area: "lome",
+        },
+      ),
+    ).toBe(true);
   });
 });
 
@@ -91,11 +128,57 @@ describe("parseQuery", () => {
   });
 });
 
+describe("parseSearch", () => {
+  it("reads ?q= as the name and ?area= as the location", () => {
+    expect(parseSearch(" pink ", "  ikeja ")).toEqual({
+      name: "pink",
+      area: "ikeja",
+    });
+    expect(parseSearch(undefined, "")).toEqual({ name: "", area: "" });
+  });
+
+  it("takes the first of a repeated ?area=", () => {
+    expect(parseSearch(undefined, ["Yaba", "Ikeja"])).toEqual({
+      name: "",
+      area: "Yaba",
+    });
+  });
+
+  it("marks an old link without ?area= with a null area", () => {
+    expect(parseSearch("lagos", undefined)).toEqual({
+      name: "lagos",
+      area: null,
+    });
+  });
+});
+
+describe("isSearching", () => {
+  it("is true when either field has text", () => {
+    expect(isSearching({ name: "", area: "" })).toBe(false);
+    expect(isSearching({ name: "", area: null })).toBe(false);
+    expect(isSearching({ name: "a", area: null })).toBe(true);
+    expect(isSearching({ name: "", area: "b" })).toBe(true);
+  });
+});
+
 describe("salonsHref", () => {
-  it("omits an empty term and page 1, and encodes the term", () => {
-    expect(salonsHref("", 1)).toBe("/salons");
-    expect(salonsHref("", 3)).toBe("/salons?page=3");
-    expect(salonsHref("a&b c", 1)).toBe("/salons?q=a%26b+c");
-    expect(salonsHref("ana", 2)).toBe("/salons?q=ana&page=2");
+  it("omits empty fields and page 1, and encodes the terms", () => {
+    expect(salonsHref({ name: "", area: "" }, 1)).toBe("/salons");
+    expect(salonsHref({ name: "", area: null }, 3)).toBe("/salons?page=3");
+    expect(salonsHref({ name: "", area: "a&b c" }, 1)).toBe(
+      "/salons?area=a%26b+c",
+    );
+    expect(salonsHref({ name: "ana", area: "yaba" }, 2)).toBe(
+      "/salons?q=ana&area=yaba&page=2",
+    );
+  });
+
+  it("keeps a name-only search name-only and an old link old", () => {
+    expect(salonsHref({ name: "ana", area: "" }, 2)).toBe(
+      "/salons?q=ana&area=&page=2",
+    );
+    expect(salonsHref({ name: "ana", area: null }, 2)).toBe(
+      "/salons?q=ana&page=2",
+    );
   });
 });

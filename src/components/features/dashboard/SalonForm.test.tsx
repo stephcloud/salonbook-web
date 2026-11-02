@@ -315,6 +315,18 @@ describe("SalonForm: create", () => {
   });
 });
 
+describe("SalonForm: address hint", () => {
+  it.each([
+    ["create", <SalonForm key="c" mode="create" />],
+    ["edit", <SalonForm key="e" mode="edit" salon={SALON} />],
+  ])("tells the owner to include the area when they %s", (_, form) => {
+    render(form);
+    expect(screen.getByLabelText("Address")).toHaveAccessibleDescription(
+      "Include your area or street so clients can find you.",
+    );
+  });
+});
+
 describe("SalonForm: edit", () => {
   it("starts with the salon's values, with the deposit in naira", () => {
     render(<SalonForm mode="edit" salon={SALON} />);
