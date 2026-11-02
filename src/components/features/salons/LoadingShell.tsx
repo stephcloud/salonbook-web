@@ -1,3 +1,5 @@
+import { SalonCardSkeletons } from "@/components/features/salons/SalonCardSkeletons";
+
 function Bar({ className }: { className: string }) {
   return (
     <div
@@ -11,7 +13,7 @@ function Bar({ className }: { className: string }) {
 export function LoadingShell({
   variant = "list",
 }: {
-  variant?: "list" | "detail";
+  variant?: "list" | "detail" | "salons";
 }) {
   return (
     <main
@@ -39,6 +41,8 @@ export function LoadingShell({
             </div>
           </div>
         </div>
+      ) : variant === "salons" ? (
+        <SalonCardSkeletons />
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {[0, 1].map((i) => (
