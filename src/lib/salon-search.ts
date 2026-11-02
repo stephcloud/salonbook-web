@@ -1,5 +1,5 @@
 export const MAX_QUERY_LENGTH = 80;
-/** The id that links the search input to its suggestions <datalist>. */
+/** The id that links the salon name input to its suggestions <datalist>. */
 export const SALON_SUGGESTIONS_ID = "salon-name-suggestions";
 
 /** Lower-case, accent-folded, trimmed and single-spaced, so "Café  Glam " matches "cafe glam". */

@@ -137,6 +137,13 @@ describe("parseSearch", () => {
     expect(parseSearch(undefined, "")).toEqual({ name: "", area: "" });
   });
 
+  it("takes the first of a repeated ?area=", () => {
+    expect(parseSearch(undefined, ["Yaba", "Ikeja"])).toEqual({
+      name: "",
+      area: "Yaba",
+    });
+  });
+
   it("marks an old link without ?area= with a null area", () => {
     expect(parseSearch("lagos", undefined)).toEqual({
       name: "lagos",

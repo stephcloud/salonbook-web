@@ -134,8 +134,8 @@ export async function getSalonNames(): Promise<string[]> {
 }
 
 /**
- * Area chips for the search, built from the first batch's addresses.
- * shortcut: only the first 100 salons feed the chips, scan more batches when there are more salons.
+ * Areas offered when a search finds nothing, built from the first batch's addresses.
+ * shortcut: only the first 100 salons feed them (the search scans 500), scan more batches when there are more salons.
  */
 export async function getSalonAreas(): Promise<string[]> {
   const batch = await getSalonBatch(0);
