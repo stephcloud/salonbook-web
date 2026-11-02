@@ -55,7 +55,9 @@ export function SalonList({
       return (
         <EmptyState
           title={
-            area ? `No salons in “${area}” yet` : "No salons match your search"
+            area && !search.name
+              ? `No salons in “${area}” yet`
+              : "No salons match your search"
           }
         >
           <div className="flex flex-col items-start gap-3">

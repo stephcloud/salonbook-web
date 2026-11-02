@@ -76,6 +76,14 @@ describe("SalonResults", () => {
     expect(screen.getByText("No salons match your search")).toBeInTheDocument();
   });
 
+  it("does not claim the location is empty when a name was typed too", async () => {
+    render(
+      await SalonResults({ search: { name: "Glow", area: "Wuse" }, page: 1 }),
+    );
+    expect(screen.getByText("No salons match your search")).toBeInTheDocument();
+    expect(screen.queryByText(/No salons in/)).toBeNull();
+  });
+
   it("leaves out the area just searched and still offers Clear search", async () => {
     getSalonAreas.mockResolvedValue(["Lagos"]);
     render(
