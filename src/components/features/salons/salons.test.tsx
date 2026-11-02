@@ -5,6 +5,7 @@ import type { Salon, Service } from "@/lib/api";
 import { CopySalonLinkButton } from "./CopySalonLinkButton";
 import { LoadError } from "./LoadError";
 import { LoadingShell } from "./LoadingShell";
+import { SalonCard } from "./SalonCard";
 import { SalonHeader } from "./SalonHeader";
 import { SalonImage } from "./SalonImage";
 import { SalonList } from "./SalonList";
@@ -347,6 +348,60 @@ describe("SalonHeader", () => {
   });
 });
 
+describe("SalonCard", () => {
+  const renderCard = (overrides: Partial<Salon> = {}) =>
+    render(
+      <ul>
+        <SalonCard salon={makeSalon(overrides)} />
+      </ul>,
+    );
+
+  it("is one link to the salon, named by its name and address", () => {
+    renderCard();
+    const link = screen.getByRole("link", {
+      name: "Pink Studio, 12 Admiralty Way, Lekki",
+    });
+    expect(link).toHaveAttribute("href", `/salons/${SALON_ID}`);
+    expect(link).toHaveAccessibleDescription("₦5,000 deposit");
+    expect(screen.getAllByRole("link")).toHaveLength(1);
+    expect(screen.queryByRole("button")).toBeNull();
+  });
+
+  it("shows the plum tile with the initial when there is no photo", () => {
+    renderCard({ name: "  pink studio" });
+    expect(screen.getByTestId("salon-card-fallback")).toHaveTextContent("P");
+    expect(document.querySelector("img")).toBeNull();
+  });
+
+  it("fills the card with the owner photo as decoration", () => {
+    renderCard({ image_url: "https://img.test/s.jpg" });
+    const img = document.querySelector("img");
+    expect(img).toHaveAttribute("src", "https://img.test/s.jpg");
+    expect(img).toHaveAttribute("alt", "");
+    expect(img).toHaveClass("object-cover");
+    expect(screen.queryByTestId("salon-card-fallback")).toBeNull();
+  });
+
+  it("says 'No deposit' when the deposit is 0", () => {
+    renderCard({ deposit_amount: 0 });
+    expect(screen.getByText("No deposit")).toBeInTheDocument();
+    expect(screen.queryByText(/₦/)).toBeNull();
+  });
+
+  it("clamps a long name to 2 lines and the address to 1", () => {
+    const name =
+      "The Very Long Named Beauty, Braids and Barbing Lounge of Lekki";
+    const address =
+      "Plot 1234, Block 56, Off Admiralty Way, Lekki Phase 1, Lagos";
+    renderCard({ name, address });
+    expect(screen.getByRole("heading", { name })).toHaveClass("line-clamp-2");
+    expect(screen.getByText(address)).toHaveClass("truncate");
+    expect(
+      screen.getByRole("link", { name: `${name}, ${address}` }),
+    ).toBeInTheDocument();
+  });
+});
+
 describe("LoadingShell", () => {
   it("tells the visitor the server may be waking up", () => {
     render(<LoadingShell />);
@@ -358,5 +413,10 @@ describe("LoadingShell", () => {
   it("renders the detail variant too", () => {
     render(<LoadingShell variant="detail" />);
     expect(screen.getByRole("status")).toBeInTheDocument();
+  });
+
+  it("shows salon card placeholders for the salons variant", () => {
+    render(<LoadingShell variant="salons" />);
+    expect(screen.getByTestId("salon-card-skeletons")).toBeInTheDocument();
   });
 });
