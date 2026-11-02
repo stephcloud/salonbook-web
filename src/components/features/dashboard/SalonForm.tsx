@@ -148,6 +148,7 @@ export function SalonForm(props: SalonFormProps) {
         id="address"
         label="Address"
         autoComplete="street-address"
+        hint="Include your area or street so clients can find you."
         value={values.address}
         onChange={(e) => set("address", e.target.value)}
         error={errors.address}
