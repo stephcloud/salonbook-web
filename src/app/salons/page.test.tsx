@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
@@ -78,6 +78,17 @@ describe("SalonsPage", () => {
     expect(document.querySelector("datalist")).toBeNull();
     expect(screen.getByLabelText("Salon name")).toBeInTheDocument();
     expect(screen.getByTestId("results")).toBeInTheDocument();
+  });
+
+  it("offers Clear search only while a search is set", async () => {
+    await renderPage();
+    expect(screen.queryByRole("link", { name: "Clear search" })).toBeNull();
+    cleanup();
+    await renderPage(undefined, undefined, "Ikeja");
+    expect(screen.getByRole("link", { name: "Clear search" })).toHaveAttribute(
+      "href",
+      "/salons",
+    );
   });
 
   it("treats a blank ?q= as no search", async () => {

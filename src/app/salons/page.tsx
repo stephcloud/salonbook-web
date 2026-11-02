@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 import { SalonNameSuggestions } from "@/components/features/salons/SalonNameSuggestions";
 import { SalonResults } from "@/components/features/salons/SalonResults";
 import { SalonResultsFallback } from "@/components/features/salons/SalonResultsFallback";
 import { SalonSearchForm } from "@/components/features/salons/SalonSearchForm";
+import { buttonVariants } from "@/components/ui/button";
 import { isSearching, parseSearch } from "@/lib/salon-search";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -44,6 +47,17 @@ export default async function SalonsPage({
       </header>
       {/* Keyed so the fields show the new terms after an area link or Clear navigates. */}
       <SalonSearchForm key={key} search={search} />
+      {isSearching(search) ? (
+        <Link
+          href="/salons"
+          className={cn(
+            buttonVariants({ variant: "link" }),
+            "-mt-3 self-start px-0",
+          )}
+        >
+          Clear search
+        </Link>
+      ) : null}
       <Suspense fallback={null}>
         <SalonNameSuggestions />
       </Suspense>
